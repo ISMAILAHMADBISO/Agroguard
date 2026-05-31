@@ -1,0 +1,3 @@
+- [OpenAPI body naming collision](openapi-naming.md) — body schema names must be entity-shaped (FarmerInput not CreateFarmerBody) to avoid TS2308; query params with same name also collide — remove query params or rename operationId
+- [DB lib rebuild required](db-lib-rebuild.md) — after adding schema files to lib/db/src/schema/, must run `pnpm run typecheck:libs` before api-server can typecheck (types not emitted until rebuild)
+- [IoT reading ingestion pattern](iot-ingestion.md) — POST /api/readings accepts deviceId as hardware string, server resolves to DB integer ID; device status auto-updated to online on each reading

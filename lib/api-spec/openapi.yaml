@@ -3,13 +3,28 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: AgroGuard Limited - Agricultural IoT Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: farmers
+    description: Farmer management
+  - name: devices
+    description: IoT device management
+  - name: readings
+    description: Sensor data readings
+  - name: alerts
+    description: Farm alerts and notifications
+  - name: recommendations
+    description: AI crop recommendations
+  - name: dashboard
+    description: Dashboard analytics
+  - name: staff
+    description: Staff management
+
 paths:
   /healthz:
     get:
@@ -24,6 +39,526 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── FARMERS ──────────────────────────────────────────────────────────────────
+  /farmers:
+    get:
+      operationId: listFarmers
+      tags: [farmers]
+      summary: List all farmers
+      responses:
+        "200":
+          description: List of farmers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Farmer"
+    post:
+      operationId: createFarmer
+      tags: [farmers]
+      summary: Create a new farmer account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FarmerInput"
+      responses:
+        "201":
+          description: Farmer created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Farmer"
+        "400":
+          description: Invalid input
+
+  /farmers/{id}:
+    get:
+      operationId: getFarmer
+      tags: [farmers]
+      summary: Get farmer by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Farmer found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Farmer"
+        "404":
+          description: Farmer not found
+    patch:
+      operationId: updateFarmer
+      tags: [farmers]
+      summary: Update farmer details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FarmerUpdate"
+      responses:
+        "200":
+          description: Farmer updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Farmer"
+        "404":
+          description: Farmer not found
+    delete:
+      operationId: deleteFarmer
+      tags: [farmers]
+      summary: Delete farmer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Farmer deleted
+        "404":
+          description: Farmer not found
+
+  /farmers/{id}/devices:
+    get:
+      operationId: getFarmerDevices
+      tags: [farmers]
+      summary: Get all devices assigned to a farmer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Device"
+
+  # ── DEVICES ──────────────────────────────────────────────────────────────────
+  /devices:
+    get:
+      operationId: listDevices
+      tags: [devices]
+      summary: List all IoT devices
+      responses:
+        "200":
+          description: List of devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Device"
+    post:
+      operationId: createDevice
+      tags: [devices]
+      summary: Register a new IoT device
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceInput"
+      responses:
+        "201":
+          description: Device registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "400":
+          description: Invalid input
+
+  /devices/{id}:
+    get:
+      operationId: getDevice
+      tags: [devices]
+      summary: Get device by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Device found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "404":
+          description: Device not found
+    patch:
+      operationId: updateDevice
+      tags: [devices]
+      summary: Update device info or assign to farmer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceUpdate"
+      responses:
+        "200":
+          description: Device updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "404":
+          description: Device not found
+    delete:
+      operationId: deleteDevice
+      tags: [devices]
+      summary: Remove device
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Device deleted
+        "404":
+          description: Device not found
+
+  /devices/{id}/readings:
+    get:
+      operationId: getDeviceReadings
+      tags: [devices]
+      summary: Get recent readings for a device (last 50)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of readings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SensorReading"
+
+  # ── SENSOR READINGS ──────────────────────────────────────────────────────────
+  /readings:
+    get:
+      operationId: listReadings
+      tags: [readings]
+      summary: List recent sensor readings (all devices)
+      responses:
+        "200":
+          description: List of readings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SensorReading"
+    post:
+      operationId: createReading
+      tags: [readings]
+      summary: Ingest sensor data from IoT device (ESP32)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SensorReadingInput"
+      responses:
+        "201":
+          description: Reading ingested
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SensorReading"
+        "400":
+          description: Invalid data
+        "404":
+          description: Device not found
+
+  # ── ALERTS ───────────────────────────────────────────────────────────────────
+  /alerts:
+    get:
+      operationId: listAlerts
+      tags: [alerts]
+      summary: List all farm alerts
+      responses:
+        "200":
+          description: List of alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+    post:
+      operationId: createAlert
+      tags: [alerts]
+      summary: Create a farm alert
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlertInput"
+      responses:
+        "201":
+          description: Alert created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+
+  /alerts/{id}/resolve:
+    patch:
+      operationId: resolveAlert
+      tags: [alerts]
+      summary: Mark alert as resolved
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Alert resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+        "404":
+          description: Alert not found
+
+  # ── AI RECOMMENDATIONS ───────────────────────────────────────────────────────
+  /recommendations:
+    get:
+      operationId: listRecommendations
+      tags: [recommendations]
+      summary: List all AI-generated recommendations
+      responses:
+        "200":
+          description: List of recommendations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Recommendation"
+    post:
+      operationId: createRecommendation
+      tags: [recommendations]
+      summary: Create AI crop/irrigation recommendation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecommendationInput"
+      responses:
+        "201":
+          description: Recommendation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Recommendation"
+
+  /recommendations/{id}/apply:
+    patch:
+      operationId: applyRecommendation
+      tags: [recommendations]
+      summary: Mark recommendation as applied
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Recommendation applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Recommendation"
+        "404":
+          description: Recommendation not found
+
+  # ── STAFF ────────────────────────────────────────────────────────────────────
+  /staff:
+    get:
+      operationId: listStaff
+      tags: [staff]
+      summary: List all staff members
+      responses:
+        "200":
+          description: List of staff
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StaffMember"
+    post:
+      operationId: createStaff
+      tags: [staff]
+      summary: Create staff member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffInput"
+      responses:
+        "201":
+          description: Staff member created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffMember"
+
+  /staff/{id}:
+    patch:
+      operationId: updateStaff
+      tags: [staff]
+      summary: Update staff member
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffUpdate"
+      responses:
+        "200":
+          description: Staff updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffMember"
+        "404":
+          description: Staff not found
+    delete:
+      operationId: deleteStaff
+      tags: [staff]
+      summary: Remove staff member
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Staff deleted
+        "404":
+          description: Staff not found
+
+  # ── DASHBOARD ────────────────────────────────────────────────────────────────
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get platform-wide dashboard statistics
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/farm-overview:
+    get:
+      operationId: getFarmOverview
+      tags: [dashboard]
+      summary: Get per-farm health overview for admin
+      responses:
+        "200":
+          description: Farm health overview list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FarmOverview"
+
+  /dashboard/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent platform activity feed
+      responses:
+        "200":
+          description: Recent activity events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityEvent"
+
+  /dashboard/sensor-trends/{deviceId}:
+    get:
+      operationId: getSensorTrends
+      tags: [dashboard]
+      summary: Get 24h sensor trend data for charts
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Sensor trend data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SensorTrendPoint"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +569,483 @@ components:
       required:
         - status
 
+    # ── FARMER ──────────────────────────────────────────────────────────────────
+    Farmer:
+      type: object
+      required: [id, name, email, phone, location, status, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        location:
+          type: string
+        farmName:
+          type: ["string", "null"]
+        farmSizeHectares:
+          type: ["number", "null"]
+        cropTypes:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [active, inactive, pending]
+        whatsappNumber:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    FarmerInput:
+      type: object
+      required: [name, email, phone, location]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        location:
+          type: string
+        farmName:
+          type: string
+        farmSizeHectares:
+          type: number
+        cropTypes:
+          type: string
+        whatsappNumber:
+          type: string
+        notes:
+          type: string
+
+    FarmerUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        location:
+          type: string
+        farmName:
+          type: string
+        farmSizeHectares:
+          type: number
+        cropTypes:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive, pending]
+        whatsappNumber:
+          type: string
+        notes:
+          type: string
+
+    # ── DEVICE ──────────────────────────────────────────────────────────────────
+    Device:
+      type: object
+      required: [id, deviceId, name, status, createdAt]
+      properties:
+        id:
+          type: integer
+        deviceId:
+          type: string
+          description: Unique hardware identifier (ESP32 chip ID)
+        name:
+          type: string
+        farmerId:
+          type: ["integer", "null"]
+          description: Assigned farmer ID, null if unassigned
+        location:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [online, offline, maintenance]
+        lastSeenAt:
+          type: ["string", "null"]
+          format: date-time
+        firmwareVersion:
+          type: ["string", "null"]
+        batteryLevel:
+          type: ["number", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    DeviceInput:
+      type: object
+      required: [deviceId, name]
+      properties:
+        deviceId:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        farmerId:
+          type: integer
+        location:
+          type: string
+        firmwareVersion:
+          type: string
+        notes:
+          type: string
+
+    DeviceUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        farmerId:
+          type: ["integer", "null"]
+        location:
+          type: string
+        status:
+          type: string
+          enum: [online, offline, maintenance]
+        firmwareVersion:
+          type: string
+        batteryLevel:
+          type: number
+        notes:
+          type: string
+
+    # ── SENSOR READING ───────────────────────────────────────────────────────────
+    SensorReading:
+      type: object
+      required: [id, deviceId, soilMoisture, temperature, humidity, heatIndex, recordedAt]
+      properties:
+        id:
+          type: integer
+        deviceId:
+          type: integer
+        soilMoisture:
+          type: number
+          description: Soil moisture percentage (0-100)
+        temperature:
+          type: number
+          description: Temperature in Celsius
+        humidity:
+          type: number
+          description: Relative humidity percentage (0-100)
+        heatIndex:
+          type: number
+          description: Computed heat index in Celsius
+        rainfall:
+          type: ["number", "null"]
+          description: Rainfall in mm
+        lightIntensity:
+          type: ["number", "null"]
+          description: Light intensity in lux
+        recordedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    SensorReadingInput:
+      type: object
+      required: [deviceId, soilMoisture, temperature, humidity, heatIndex]
+      properties:
+        deviceId:
+          type: string
+          description: Hardware device ID (deviceId field)
+        soilMoisture:
+          type: number
+        temperature:
+          type: number
+        humidity:
+          type: number
+        heatIndex:
+          type: number
+        rainfall:
+          type: number
+        lightIntensity:
+          type: number
+
+    # ── ALERT ────────────────────────────────────────────────────────────────────
+    Alert:
+      type: object
+      required: [id, farmerId, type, severity, message, status, createdAt]
+      properties:
+        id:
+          type: integer
+        farmerId:
+          type: ["integer", "null"]
+        deviceId:
+          type: ["integer", "null"]
+        type:
+          type: string
+          enum: [soil_moisture, temperature, humidity, pest, disease, irrigation, general]
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        message:
+          type: string
+        status:
+          type: string
+          enum: [active, resolved, dismissed]
+        resolvedAt:
+          type: ["string", "null"]
+          format: date-time
+        whatsappSent:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    AlertInput:
+      type: object
+      required: [type, severity, message]
+      properties:
+        farmerId:
+          type: integer
+        deviceId:
+          type: integer
+        type:
+          type: string
+          enum: [soil_moisture, temperature, humidity, pest, disease, irrigation, general]
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        message:
+          type: string
+
+    # ── RECOMMENDATION ───────────────────────────────────────────────────────────
+    Recommendation:
+      type: object
+      required: [id, farmerId, category, title, description, status, createdAt]
+      properties:
+        id:
+          type: integer
+        farmerId:
+          type: integer
+        deviceId:
+          type: ["integer", "null"]
+        category:
+          type: string
+          enum: [irrigation, crop, pest, disease, climate, fertilizer]
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high]
+        status:
+          type: string
+          enum: [pending, applied, dismissed]
+        appliedAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    RecommendationInput:
+      type: object
+      required: [farmerId, category, title, description]
+      properties:
+        farmerId:
+          type: integer
+        deviceId:
+          type: integer
+        category:
+          type: string
+          enum: [irrigation, crop, pest, disease, climate, fertilizer]
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        priority:
+          type: string
+          enum: [low, medium, high]
+
+    # ── STAFF ────────────────────────────────────────────────────────────────────
+    StaffMember:
+      type: object
+      required: [id, name, email, role, status, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [admin, agronomist, field_officer, support]
+        status:
+          type: string
+          enum: [active, inactive]
+        department:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    StaffInput:
+      type: object
+      required: [name, email, role]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [admin, agronomist, field_officer, support]
+        department:
+          type: string
+
+    StaffUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [admin, agronomist, field_officer, support]
+        status:
+          type: string
+          enum: [active, inactive]
+        department:
+          type: string
+
+    # ── DASHBOARD ────────────────────────────────────────────────────────────────
+    DashboardStats:
+      type: object
+      required:
+        - totalFarmers
+        - totalDevices
+        - onlineDevices
+        - offlineDevices
+        - activeAlerts
+        - criticalAlerts
+        - totalReadingsToday
+        - pendingRecommendations
+        - avgSoilMoisture
+        - avgTemperature
+        - avgHumidity
+      properties:
+        totalFarmers:
+          type: integer
+        activeFarmers:
+          type: integer
+        totalDevices:
+          type: integer
+        onlineDevices:
+          type: integer
+        offlineDevices:
+          type: integer
+        activeAlerts:
+          type: integer
+        criticalAlerts:
+          type: integer
+        totalReadingsToday:
+          type: integer
+        pendingRecommendations:
+          type: integer
+        avgSoilMoisture:
+          type: number
+        avgTemperature:
+          type: number
+        avgHumidity:
+          type: number
+
+    FarmOverview:
+      type: object
+      required: [farmerId, farmerName, farmName, location, deviceCount, onlineDevices, alertCount, lastReadingAt, status]
+      properties:
+        farmerId:
+          type: integer
+        farmerName:
+          type: string
+        farmName:
+          type: ["string", "null"]
+        location:
+          type: string
+        deviceCount:
+          type: integer
+        onlineDevices:
+          type: integer
+        alertCount:
+          type: integer
+        lastReadingAt:
+          type: ["string", "null"]
+          format: date-time
+        status:
+          type: string
+          enum: [healthy, warning, critical, no_data]
+        latestSoilMoisture:
+          type: ["number", "null"]
+        latestTemperature:
+          type: ["number", "null"]
+
+    ActivityEvent:
+      type: object
+      required: [id, type, message, timestamp]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [alert, reading, farmer_created, device_assigned, recommendation]
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        farmerId:
+          type: ["integer", "null"]
+        deviceId:
+          type: ["integer", "null"]
+        severity:
+          type: ["string", "null"]
+
+    SensorTrendPoint:
+      type: object
+      required: [timestamp, soilMoisture, temperature, humidity, heatIndex]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        soilMoisture:
+          type: number
+        temperature:
+          type: number
+        humidity:
+          type: number
+        heatIndex:
+          type: number
