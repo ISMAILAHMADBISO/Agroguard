@@ -3,7 +3,7 @@
  * Represents smallholder farmers registered on the AgroGuard platform.
  * Each farmer can be linked to one or more IoT devices.
  */
-import { pgTable, text, serial, timestamp, real } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, real, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -20,6 +20,8 @@ export const farmersTable = pgTable("farmers", {
   status: text("status").notNull().default("pending"),
   whatsappNumber: text("whatsapp_number"),
   notes: text("notes"),
+  /** FK to staff.id — field officer assigned to this farmer */
+  fieldOfficerId: integer("field_officer_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

@@ -1,10 +1,9 @@
 /**
  * Recommendations routes — AI-generated agricultural advisories.
- * The AI engine creates recommendations based on sensor data and climate models.
- * Farmers can mark recommendations as applied.
+ * RBAC: field_officers see only recommendations for their assigned farmers.
  */
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db, recommendationsTable } from "@workspace/db";
 import {
   CreateRecommendationBody,
@@ -12,15 +11,24 @@ import {
   ListRecommendationsResponse,
   ApplyRecommendationResponse,
 } from "@workspace/api-zod";
+import { getAssignedFarmerIds } from "../lib/rbac";
 
 const router: IRouter = Router();
 
-/** GET /recommendations — list all AI recommendations */
-router.get("/recommendations", async (_req, res): Promise<void> => {
+/** GET /recommendations — list (scoped by role) */
+router.get("/recommendations", async (req, res): Promise<void> => {
+  const assignedIds = await getAssignedFarmerIds(req);
+
   const recs = await db
     .select()
     .from(recommendationsTable)
+    .where(
+      assignedIds !== null
+        ? inArray(recommendationsTable.farmerId, assignedIds.length ? assignedIds : [-1])
+        : undefined,
+    )
     .orderBy(recommendationsTable.createdAt);
+
   res.json(ListRecommendationsResponse.parse(recs));
 });
 
@@ -34,11 +42,7 @@ router.post("/recommendations", async (req, res): Promise<void> => {
 
   const [rec] = await db
     .insert(recommendationsTable)
-    .values({
-      ...parsed.data,
-      status: "pending",
-      priority: parsed.data.priority ?? "medium",
-    })
+    .values(parsed.data)
     .returning();
 
   res.status(201).json(rec);
@@ -54,7 +58,7 @@ router.patch("/recommendations/:id/apply", async (req, res): Promise<void> => {
 
   const [rec] = await db
     .update(recommendationsTable)
-    .set({ status: "applied", appliedAt: new Date() })
+    .set({ status: "applied" })
     .where(eq(recommendationsTable.id, params.data.id))
     .returning();
 

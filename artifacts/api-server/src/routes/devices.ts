@@ -1,10 +1,10 @@
 /**
  * Device routes — IoT device registration and management.
- * Devices are ESP32-based sensors assigned to farmers.
+ * RBAC: field_officers see only devices belonging to their farmers.
  */
 import { Router, type IRouter } from "express";
-import { eq, desc } from "drizzle-orm";
-import { db, devicesTable, sensorReadingsTable } from "@workspace/db";
+import { eq, desc, inArray } from "drizzle-orm";
+import { db, devicesTable, sensorReadingsTable, farmersTable } from "@workspace/db";
 import {
   CreateDeviceBody,
   UpdateDeviceBody,
@@ -17,20 +17,34 @@ import {
   UpdateDeviceResponse,
   GetDeviceReadingsResponse,
 } from "@workspace/api-zod";
+import { getAssignedFarmerIds, canWrite, isAdmin } from "../lib/rbac";
 
 const router: IRouter = Router();
 
-/** GET /devices — list all registered IoT devices */
-router.get("/devices", async (_req, res): Promise<void> => {
+/** GET /devices — list devices (scoped by role) */
+router.get("/devices", async (req, res): Promise<void> => {
+  const assignedIds = await getAssignedFarmerIds(req);
+
   const devices = await db
     .select()
     .from(devicesTable)
+    .where(
+      assignedIds !== null
+        ? inArray(devicesTable.farmerId, assignedIds.length ? assignedIds : [-1])
+        : undefined,
+    )
     .orderBy(devicesTable.createdAt);
+
   res.json(ListDevicesResponse.parse(devices));
 });
 
-/** POST /devices — register a new IoT device */
+/** POST /devices — register a new IoT device (admin/agronomist) */
 router.post("/devices", async (req, res): Promise<void> => {
+  if (!canWrite(req)) {
+    res.status(403).json({ error: "Insufficient permissions" });
+    return;
+  }
+
   const parsed = CreateDeviceBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -63,11 +77,23 @@ router.get("/devices/:id", async (req, res): Promise<void> => {
     return;
   }
 
+  // Field officer: verify the device belongs to one of their farmers
+  const assignedIds = await getAssignedFarmerIds(req);
+  if (assignedIds !== null && device.farmerId !== null && !assignedIds.includes(device.farmerId)) {
+    res.status(403).json({ error: "Access denied" });
+    return;
+  }
+
   res.json(GetDeviceResponse.parse(device));
 });
 
 /** PATCH /devices/:id — update device or assign to farmer */
 router.patch("/devices/:id", async (req, res): Promise<void> => {
+  if (!canWrite(req)) {
+    res.status(403).json({ error: "Insufficient permissions" });
+    return;
+  }
+
   const params = UpdateDeviceParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -94,8 +120,13 @@ router.patch("/devices/:id", async (req, res): Promise<void> => {
   res.json(UpdateDeviceResponse.parse(device));
 });
 
-/** DELETE /devices/:id — remove a device */
+/** DELETE /devices/:id — remove a device (admin only) */
 router.delete("/devices/:id", async (req, res): Promise<void> => {
+  if (!isAdmin(req)) {
+    res.status(403).json({ error: "Admin access required" });
+    return;
+  }
+
   const params = DeleteDeviceParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -115,12 +146,25 @@ router.delete("/devices/:id", async (req, res): Promise<void> => {
   res.sendStatus(204);
 });
 
-/** GET /devices/:id/readings — get last 50 sensor readings for a device */
+/** GET /devices/:id/readings — last 50 sensor readings for a device */
 router.get("/devices/:id/readings", async (req, res): Promise<void> => {
   const params = GetDeviceReadingsParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
+  }
+
+  // For field officers: confirm device belongs to their farmer
+  const assignedIds = await getAssignedFarmerIds(req);
+  if (assignedIds !== null) {
+    const [device] = await db
+      .select({ farmerId: devicesTable.farmerId })
+      .from(devicesTable)
+      .where(eq(devicesTable.id, params.data.id));
+    if (!device || (device.farmerId !== null && !assignedIds.includes(device.farmerId))) {
+      res.status(403).json({ error: "Access denied" });
+      return;
+    }
   }
 
   const readings = await db

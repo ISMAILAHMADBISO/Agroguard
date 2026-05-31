@@ -1,10 +1,9 @@
 /**
  * Alerts routes — farm alert management.
- * Alerts are triggered by sensor thresholds or AI engine.
- * Critical alerts are sent to farmers via WhatsApp Cloud API.
+ * RBAC: field_officers see only alerts for their assigned farmers.
  */
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db, alertsTable } from "@workspace/db";
 import {
   CreateAlertBody,
@@ -12,15 +11,24 @@ import {
   ListAlertsResponse,
   ResolveAlertResponse,
 } from "@workspace/api-zod";
+import { getAssignedFarmerIds } from "../lib/rbac";
 
 const router: IRouter = Router();
 
-/** GET /alerts — list all alerts (most recent first) */
-router.get("/alerts", async (_req, res): Promise<void> => {
+/** GET /alerts — list alerts (scoped by role) */
+router.get("/alerts", async (req, res): Promise<void> => {
+  const assignedIds = await getAssignedFarmerIds(req);
+
   const alerts = await db
     .select()
     .from(alertsTable)
+    .where(
+      assignedIds !== null
+        ? inArray(alertsTable.farmerId, assignedIds.length ? assignedIds : [-1])
+        : undefined,
+    )
     .orderBy(alertsTable.createdAt);
+
   res.json(ListAlertsResponse.parse(alerts));
 });
 
@@ -34,11 +42,7 @@ router.post("/alerts", async (req, res): Promise<void> => {
 
   const [alert] = await db
     .insert(alertsTable)
-    .values({
-      ...parsed.data,
-      status: "active",
-      whatsappSent: false,
-    })
+    .values(parsed.data)
     .returning();
 
   res.status(201).json(alert);
@@ -54,7 +58,7 @@ router.patch("/alerts/:id/resolve", async (req, res): Promise<void> => {
 
   const [alert] = await db
     .update(alertsTable)
-    .set({ status: "resolved", resolvedAt: new Date() })
+    .set({ status: "resolved" })
     .where(eq(alertsTable.id, params.data.id))
     .returning();
 

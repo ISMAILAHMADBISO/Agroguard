@@ -1,9 +1,10 @@
 /**
  * Farmer routes — CRUD for AgroGuard farmer accounts.
- * Farmers are created by admin and linked to one or more IoT devices.
+ * RBAC: field_officers see only their assigned farmers.
+ *       admins / agronomists / support see all.
  */
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db, farmersTable, devicesTable } from "@workspace/db";
 import {
   CreateFarmerBody,
@@ -17,20 +18,30 @@ import {
   UpdateFarmerResponse,
   GetFarmerDevicesResponse,
 } from "@workspace/api-zod";
+import { getAssignedFarmerIds, canWrite, isAdmin } from "../lib/rbac";
 
 const router: IRouter = Router();
 
-/** GET /farmers — list all farmers */
-router.get("/farmers", async (_req, res): Promise<void> => {
+/** GET /farmers — list farmers (scoped by role) */
+router.get("/farmers", async (req, res): Promise<void> => {
+  const assignedIds = await getAssignedFarmerIds(req);
+
   const farmers = await db
     .select()
     .from(farmersTable)
+    .where(assignedIds !== null ? inArray(farmersTable.id, assignedIds.length ? assignedIds : [-1]) : undefined)
     .orderBy(farmersTable.createdAt);
+
   res.json(ListFarmersResponse.parse(farmers));
 });
 
-/** POST /farmers — create a new farmer account */
+/** POST /farmers — create a new farmer account (admin/agronomist only) */
 router.post("/farmers", async (req, res): Promise<void> => {
+  if (!canWrite(req)) {
+    res.status(403).json({ error: "Insufficient permissions" });
+    return;
+  }
+
   const parsed = CreateFarmerBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -63,11 +74,23 @@ router.get("/farmers/:id", async (req, res): Promise<void> => {
     return;
   }
 
+  // Field officers can only access their assigned farmers
+  const assignedIds = await getAssignedFarmerIds(req);
+  if (assignedIds !== null && !assignedIds.includes(farmer.id)) {
+    res.status(403).json({ error: "Access denied" });
+    return;
+  }
+
   res.json(GetFarmerResponse.parse(farmer));
 });
 
 /** PATCH /farmers/:id — update farmer details */
 router.patch("/farmers/:id", async (req, res): Promise<void> => {
+  if (!canWrite(req)) {
+    res.status(403).json({ error: "Insufficient permissions" });
+    return;
+  }
+
   const params = UpdateFarmerParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -94,8 +117,13 @@ router.patch("/farmers/:id", async (req, res): Promise<void> => {
   res.json(UpdateFarmerResponse.parse(farmer));
 });
 
-/** DELETE /farmers/:id — delete farmer */
+/** DELETE /farmers/:id — delete farmer (admin only) */
 router.delete("/farmers/:id", async (req, res): Promise<void> => {
+  if (!isAdmin(req)) {
+    res.status(403).json({ error: "Admin access required" });
+    return;
+  }
+
   const params = DeleteFarmerParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -120,6 +148,12 @@ router.get("/farmers/:id/devices", async (req, res): Promise<void> => {
   const params = GetFarmerDevicesParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const assignedIds = await getAssignedFarmerIds(req);
+  if (assignedIds !== null && !assignedIds.includes(params.data.id)) {
+    res.status(403).json({ error: "Access denied" });
     return;
   }
 

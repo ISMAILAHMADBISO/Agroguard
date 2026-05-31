@@ -109,6 +109,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <h1 className="font-semibold text-lg capitalize">
                 {location.split("/")[1] || "Dashboard"}
               </h1>
+              {user?.role === "field_officer" && (
+                <span className="hidden sm:inline-flex items-center gap-1 text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5">
+                  My Assignments Only
+                </span>
+              )}
             </div>
 
             {user && (
