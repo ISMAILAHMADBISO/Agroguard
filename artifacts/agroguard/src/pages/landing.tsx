@@ -20,7 +20,7 @@ export default function LandingPage() {
             <a href="#team" className="hover:text-primary transition-colors">Team</a>
           </nav>
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="hidden md:inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
+            <Link href="/login" className="hidden md:inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
               Platform Login
             </Link>
           </div>
@@ -31,7 +31,7 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
           <div className="absolute inset-0 z-0">
-            <img src="/farm-bg.webp" alt="Nigerian Farmland" className="w-full h-full object-cover" />
+            <img src="/farm-bg.jpg" alt="Nigerian Farmland" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/60 mix-blend-multiply" />
           </div>
           <div className="container relative z-10 mx-auto px-4 text-center md:text-left">
@@ -43,7 +43,7 @@ export default function LandingPage() {
                 Empowering smallholder farmers with real-time IoT monitoring, AI-driven crop recommendations, and precision farm management.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                <Link href="/dashboard" className="inline-flex h-12 items-center justify-center rounded-md bg-primary px-8 text-base font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
+                <Link href="/login" className="inline-flex h-12 items-center justify-center rounded-md bg-primary px-8 text-base font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
                   Access Platform
                 </Link>
                 <Button variant="outline" size="lg" className="bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white backdrop-blur">
@@ -162,7 +162,7 @@ export default function LandingPage() {
           <div>
             <h4 className="font-semibold text-sidebar-foreground mb-4">Platform</h4>
             <ul className="space-y-2 text-sidebar-foreground/70">
-              <li><Link href="/dashboard" className="hover:text-primary transition-colors">Dashboard Login</Link></li>
+              <li><Link href="/login" className="hover:text-primary transition-colors">Platform Login</Link></li>
               <li><a href="#" className="hover:text-primary transition-colors">IoT Devices</a></li>
               <li><a href="#" className="hover:text-primary transition-colors">Analytics</a></li>
             </ul>

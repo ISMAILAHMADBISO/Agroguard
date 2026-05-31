@@ -1,3 +1,5 @@
-- [OpenAPI body naming collision](openapi-naming.md) — body schema names must be entity-shaped (FarmerInput not CreateFarmerBody) to avoid TS2308; query params with same name also collide — remove query params or rename operationId
-- [DB lib rebuild required](db-lib-rebuild.md) — after adding schema files to lib/db/src/schema/, must run `pnpm run typecheck:libs` before api-server can typecheck (types not emitted until rebuild)
+- [OpenAPI body naming collision](openapi-naming.md) — body schema names must be entity-shaped (FarmerInput not CreateFarmerBody) to avoid TS2308; query params with same name also collide
+- [DB lib rebuild required](db-lib-rebuild.md) — after adding schema files to lib/db/src/schema/, must run `pnpm run typecheck:libs` before api-server can typecheck
 - [IoT reading ingestion pattern](iot-ingestion.md) — POST /api/readings accepts deviceId as hardware string, server resolves to DB integer ID; device status auto-updated to online on each reading
+- [connect-pg-simple bundling issue](session-store.md) — connect-pg-simple reads table.sql from __dirname at runtime; when esbuild bundles it, __dirname is wrong. Fix: pre-create table manually + remove createTableIfMissing
+- [WebSocket path routing](websocket-routing.md) — WS server must use path /api/ws so the shared Replit proxy routes it to the API server (port 8080); path /ws goes to frontend

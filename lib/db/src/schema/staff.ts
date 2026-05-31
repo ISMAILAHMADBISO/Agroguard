@@ -16,6 +16,7 @@ export const staffTable = pgTable("staff", {
   /** active | inactive */
   status: text("status").notNull().default("active"),
   department: text("department"),
+  passwordHash: text("password_hash"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

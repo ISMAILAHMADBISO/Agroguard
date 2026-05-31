@@ -10,6 +10,7 @@ import {
   CreateReadingBody,
   ListReadingsResponse,
 } from "@workspace/api-zod";
+import { broadcastReading } from "../lib/ws";
 
 const router: IRouter = Router();
 
@@ -66,6 +67,9 @@ router.post("/readings", async (req, res): Promise<void> => {
     .update(devicesTable)
     .set({ status: "online", lastSeenAt: new Date() })
     .where(eq(devicesTable.id, device.id));
+
+  // Broadcast to any connected WebSocket clients watching this device
+  broadcastReading(device.id, reading);
 
   res.status(201).json(reading);
 });
