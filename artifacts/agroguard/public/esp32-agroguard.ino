@@ -1,185 +1,271 @@
 /**
- * AgroGuard ESP32 Sensor Node — Firmware v1.0
- * ============================================
- * Hardware required:
- *   - ESP32 development board (e.g. DOIT ESP32 DevKit V1)
- *   - DHT22 sensor  → data pin D4 (GPIO 4)
- *   - Capacitive soil moisture sensor → analog pin A0 (GPIO 34)
- *   - (Optional) Rain sensor analog output → GPIO 35
+ * AgroGuard ESP32 Firmware — 7-in-1 Soil Sensor + DHT22
+ * =========================================================
+ * Compatible hardware:
+ *   - ESP32 Dev Board (any variant)
+ *   - 7-in-1 RS485 Soil Sensor (Modbus RTU)
+ *       Channels: Moisture · Temperature · EC · pH · N · P · K
+ *   - DHT22 (AM2302) — ambient temperature & humidity
  *
- * Libraries (install via Arduino Library Manager):
+ * Wiring:
+ *   DHT22  DATA  → GPIO 4
+ *   RS485  DE/RE → GPIO 5   (MAX485 driver enable)
+ *   RS485  DI    → GPIO 17  (ESP32 TX2)
+ *   RS485  RO    → GPIO 16  (ESP32 RX2)
+ *   RS485  A/B   → sensor A/B terminals
+ *
+ * Setup:
+ *   1. Flash this sketch onto your ESP32.
+ *   2. Set DEVICE_ID to match the hardware ID registered in the platform
+ *      (copy the AGR-XXXX-XXXX code from the device registration modal).
+ *   3. Configure your Wi-Fi SSID/password below.
+ *   4. Set API_HOST to your AgroGuard platform domain.
+ *
+ * Data flow:
+ *   ESP32 reads sensors every READING_INTERVAL_MS, then POSTs JSON to
+ *   POST /api/readings. The platform resolves DEVICE_ID → internal DB id.
+ *
+ * Dependencies (install via Arduino Library Manager):
  *   - DHT sensor library by Adafruit
- *   - ArduinoJson by Benoit Blanchon (v6.x)
- *   - WiFiClientSecure (built-in ESP32 Arduino core)
- *   - HTTPClient (built-in ESP32 Arduino core)
- *
- * Setup steps:
- *   1. Register this device in AgroGuard > Devices with a matching DEVICE_ID.
- *   2. Assign it to a farmer in the Device detail page.
- *   3. Flash this sketch and open Serial Monitor at 115200 baud.
+ *   - Adafruit Unified Sensor
+ *   - ArduinoJson (v6+)
+ *   - ModbusMaster by 4-20mA
  */
 
 #include <WiFi.h>
-#include <WiFiClientSecure.h>
 #include <HTTPClient.h>
+#include <DHT.h>
+#include <ModbusMaster.h>
 #include <ArduinoJson.h>
-#include "DHT.h"
 
-// ─── CONFIGURATION ────────────────────────────────────────────────────────────
-// WiFi credentials
+// ── USER CONFIGURATION ────────────────────────────────────────────────────────
+
+/** Wi-Fi credentials */
 const char* WIFI_SSID     = "YOUR_WIFI_SSID";
 const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
 
-// AgroGuard server — your Replit domain (no trailing slash)
-// Example: "https://agroguard.yourusername.repl.co"
-const char* SERVER_HOST   = "https://YOUR_REPLIT_DOMAIN";
-const char* READINGS_PATH = "/api/readings";
+/**
+ * AgroGuard hardware device ID.
+ * Must match exactly the Device ID registered in the platform (Devices page).
+ * Copy it from the device detail page or registration modal — e.g. "AGR-K8NP-X3QW"
+ */
+const char* DEVICE_ID = "AGR-XXXX-XXXX";
 
-// Device ID — must match exactly what is registered in AgroGuard > Devices
-// Example: "ESP32-AGG-001"
-const char* DEVICE_ID     = "ESP32-AGG-001";
+/**
+ * AgroGuard platform API base URL.
+ * Production:  "https://your-app.replit.app"
+ * Development: "http://<your-replit-dev-domain>"
+ */
+const char* API_HOST = "https://your-agroguard-domain.replit.app";
 
-// How often to send a reading (milliseconds) — 30 seconds
-const unsigned long SEND_INTERVAL_MS = 30000;
+/** Reading interval in milliseconds (default: 60 seconds) */
+const unsigned long READING_INTERVAL_MS = 60000UL;
 
-// ─── PIN DEFINITIONS ──────────────────────────────────────────────────────────
-#define DHT_PIN           4       // GPIO 4 — DHT22 data
-#define DHT_TYPE          DHT22
-#define SOIL_MOISTURE_PIN 34      // GPIO 34 — capacitive soil moisture (ADC)
-#define RAIN_SENSOR_PIN   35      // GPIO 35 — analog rain sensor (optional)
+// ── PIN ASSIGNMENTS ───────────────────────────────────────────────────────────
 
-// Soil moisture ADC calibration:
-//   DRY_VALUE  = raw ADC reading when sensor is in dry air
-//   WET_VALUE  = raw ADC reading when sensor is submerged in water
-const int SOIL_DRY_VALUE  = 3200;
-const int SOIL_WET_VALUE  = 1400;
+#define DHT_PIN   4      // DHT22 data pin
+#define DHT_TYPE  DHT22
+#define RS485_DE  5      // MAX485 driver enable (HIGH=TX, LOW=RX)
+#define RS485_RX  16     // ESP32 RX2 ← RS485 RO
+#define RS485_TX  17     // ESP32 TX2 → RS485 DI
 
-// ─── GLOBALS ──────────────────────────────────────────────────────────────────
-DHT dht(DHT_PIN, DHT_TYPE);
-unsigned long lastSendTime = 0;
-WiFiClientSecure wifiClient;
+// ── MODBUS REGISTER MAP (7-in-1 soil sensor, slave 0x01) ────────────────────
+#define MODBUS_SLAVE_ID  0x01
+#define REG_MOISTURE     0x0000  // raw ÷10 → % (0–1000 → 0–100%)
+#define REG_TEMPERATURE  0x0001  // raw ÷10 → °C (values >400 are negative offset)
+#define REG_EC           0x0002  // raw mS/m (no scaling needed)
+#define REG_PH           0x0003  // raw ÷10 → pH (0–140 → 0–14)
+#define REG_NITROGEN     0x0004  // raw mg/kg
+#define REG_PHOSPHORUS   0x0005  // raw mg/kg
+#define REG_POTASSIUM    0x0006  // raw mg/kg
+#define NUM_REGISTERS    7
 
-// ─── SETUP ────────────────────────────────────────────────────────────────────
-void setup() {
-  Serial.begin(115200);
-  delay(500);
-  Serial.println("\n=== AgroGuard ESP32 Sensor Node v1.0 ===");
-  Serial.print("Device ID: ");
-  Serial.println(DEVICE_ID);
+// ── HARDWARE OBJECTS ──────────────────────────────────────────────────────────
 
-  dht.begin();
+DHT          dht(DHT_PIN, DHT_TYPE);
+ModbusMaster modbus;
 
-  // Configure ADC resolution (12-bit = 0-4095)
-  analogReadResolution(12);
-  analogSetAttenuation(ADC_11db); // allows reading up to ~3.3V
+// MAX485 direction control callbacks
+void preTransmission()  { digitalWrite(RS485_DE, HIGH); }
+void postTransmission() { digitalWrite(RS485_DE, LOW);  }
 
-  // Connect to WiFi
-  connectWiFi();
+// ── DATA STRUCT ───────────────────────────────────────────────────────────────
 
-  // Accept any TLS certificate (suitable for dev; use setCACert() in production)
-  wifiClient.setInsecure();
+struct SensorData {
+  // Core
+  float soilMoisture;     // %
+  float temperature;      // °C (ambient from DHT22)
+  float humidity;         // %
+  float heatIndex;        // °C
 
-  Serial.println("Setup complete. Starting sensor loop.");
+  // 7-in-1 extra channels
+  float soilTemperature;  // °C (from RS485 sensor itself)
+  float ec;               // mS/m
+  float ph;               // 0–14
+  float nitrogen;         // mg/kg
+  float phosphorus;       // mg/kg
+  float potassium;        // mg/kg
+
+  bool soilOk;            // Modbus read succeeded
+  bool dhtOk;             // DHT22 read succeeded
+};
+
+// ── SENSOR READS ──────────────────────────────────────────────────────────────
+
+bool readSoilSensor(SensorData& d) {
+  uint8_t result = modbus.readHoldingRegisters(REG_MOISTURE, NUM_REGISTERS);
+  if (result != modbus.ku8MBSuccess) {
+    Serial.printf("[MODBUS] Error 0x%02X — check RS485 wiring and slave ID\n", result);
+    return false;
+  }
+
+  d.soilMoisture   = modbus.getResponseBuffer(0) / 10.0f;
+  uint16_t rawTemp = modbus.getResponseBuffer(1);
+  // Sensors encode negative temps as (value + 400), e.g. -5°C = 395
+  d.soilTemperature = (rawTemp > 400) ? (rawTemp - 400) / 10.0f - 40.0f : rawTemp / 10.0f;
+  d.ec             = (float)modbus.getResponseBuffer(2);
+  d.ph             = modbus.getResponseBuffer(3) / 10.0f;
+  d.nitrogen       = (float)modbus.getResponseBuffer(4);
+  d.phosphorus     = (float)modbus.getResponseBuffer(5);
+  d.potassium      = (float)modbus.getResponseBuffer(6);
+  return true;
 }
 
-// ─── LOOP ─────────────────────────────────────────────────────────────────────
-void loop() {
-  // Reconnect WiFi if dropped
+bool readDHT22(SensorData& d) {
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+  if (isnan(h) || isnan(t)) {
+    Serial.println("[DHT22] Read failed — check data pin wiring");
+    return false;
+  }
+  d.humidity  = h;
+  d.temperature = t;
+  d.heatIndex = dht.computeHeatIndex(t, h, false);
+  return true;
+}
+
+// ── HTTP POST ─────────────────────────────────────────────────────────────────
+
+bool postReading(const SensorData& d) {
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("[WiFi] Connection lost — reconnecting...");
-    connectWiFi();
+    Serial.println("[WIFI] Not connected — skipping POST");
+    return false;
   }
 
-  unsigned long now = millis();
-  if (now - lastSendTime >= SEND_INTERVAL_MS || lastSendTime == 0) {
-    lastSendTime = now;
-    readAndSend();
+  HTTPClient http;
+  String url = String(API_HOST) + "/api/readings";
+  http.begin(url);
+  http.addHeader("Content-Type", "application/json");
+  http.setTimeout(10000);
+
+  StaticJsonDocument<512> doc;
+  doc["deviceId"]   = DEVICE_ID;
+  doc["soilMoisture"] = d.soilOk ? d.soilMoisture : 0.0f;
+  doc["temperature"]  = d.dhtOk  ? d.temperature  : d.soilTemperature;
+  doc["humidity"]     = d.dhtOk  ? d.humidity      : 0.0f;
+  doc["heatIndex"]    = d.dhtOk  ? d.heatIndex     : d.soilTemperature;
+
+  // 7-in-1 extra fields (only sent when Modbus read succeeded)
+  if (d.soilOk) {
+    doc["soilMoisture"]           = d.soilMoisture;   // override with real value
+    doc["electricalConductivity"] = d.ec;
+    doc["ph"]                     = d.ph;
+    doc["nitrogen"]               = d.nitrogen;
+    doc["phosphorus"]             = d.phosphorus;
+    doc["potassium"]              = d.potassium;
   }
-}
-
-// ─── READ SENSORS & POST TO AGROGUARD ─────────────────────────────────────────
-void readAndSend() {
-  // Read DHT22
-  float temperature  = dht.readTemperature();   // Celsius
-  float humidity     = dht.readHumidity();       // %RH
-
-  if (isnan(temperature) || isnan(humidity)) {
-    Serial.println("[DHT22] Read failed — check wiring. Skipping this cycle.");
-    return;
-  }
-
-  // Calculate heat index (Celsius)
-  float heatIndex = dht.computeHeatIndex(temperature, humidity, false);
-
-  // Read soil moisture and convert to percentage
-  int rawSoil       = analogRead(SOIL_MOISTURE_PIN);
-  float soilMoisture = mapFloat(rawSoil, SOIL_DRY_VALUE, SOIL_WET_VALUE, 0.0, 100.0);
-  soilMoisture       = constrain(soilMoisture, 0.0, 100.0);
-
-  // Read rain sensor (optional — set to null if not connected)
-  int rawRain        = analogRead(RAIN_SENSOR_PIN);
-  float rainfall     = mapFloat(rawRain, 4095, 0, 0.0, 25.0); // 0–25 mm approximation
-
-  // Print to Serial Monitor
-  Serial.printf("\n[SENSOR] Temp: %.1f°C  Humidity: %.1f%%  HeatIdx: %.1f°C  Soil: %.1f%%  Rain: %.1fmm\n",
-                temperature, humidity, heatIndex, soilMoisture, rainfall);
-
-  // Build JSON payload
-  StaticJsonDocument<256> doc;
-  doc["deviceId"]     = DEVICE_ID;
-  doc["temperature"]  = round2dp(temperature);
-  doc["humidity"]     = round2dp(humidity);
-  doc["heatIndex"]    = round2dp(heatIndex);
-  doc["soilMoisture"] = round2dp(soilMoisture);
-  doc["rainfall"]     = round2dp(rainfall);
 
   String payload;
   serializeJson(doc, payload);
 
-  // POST to AgroGuard
-  String url = String(SERVER_HOST) + READINGS_PATH;
-  HTTPClient http;
-  http.begin(wifiClient, url);
-  http.addHeader("Content-Type", "application/json");
-  http.setTimeout(10000); // 10 second timeout
+  Serial.println("[HTTP] POST " + url);
+  Serial.println("[HTTP] " + payload);
 
-  int responseCode = http.POST(payload);
-
-  if (responseCode > 0) {
-    String response = http.getString();
-    Serial.printf("[HTTP] %d — %s\n", responseCode, responseCode == 201 ? "Reading saved" : response.c_str());
-  } else {
-    Serial.printf("[HTTP] Error: %s\n", http.errorToString(responseCode).c_str());
+  int code = http.POST(payload);
+  Serial.printf("[HTTP] Status: %d\n", code);
+  if (code != 201) {
+    Serial.println("[HTTP] Response: " + http.getString());
   }
-
   http.end();
+  return (code == 201);
 }
 
-// ─── WIFI HELPER ──────────────────────────────────────────────────────────────
+// ── WI-FI ─────────────────────────────────────────────────────────────────────
+
 void connectWiFi() {
-  Serial.printf("[WiFi] Connecting to %s", WIFI_SSID);
-  WiFi.mode(WIFI_STA);
+  if (WiFi.status() == WL_CONNECTED) return;
+  Serial.printf("[WIFI] Connecting to %s", WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-
-  int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 30) {
-    delay(500);
-    Serial.print(".");
-    attempts++;
+  unsigned long t = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - t < 20000UL) {
+    delay(500); Serial.print(".");
   }
-
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.printf("\n[WiFi] Connected! IP: %s\n", WiFi.localIP().toString().c_str());
+    Serial.println("\n[WIFI] IP: " + WiFi.localIP().toString());
   } else {
-    Serial.println("\n[WiFi] Failed to connect — will retry in loop.");
+    Serial.println("\n[WIFI] Connection failed — will retry");
   }
 }
 
-// ─── UTILITY HELPERS ──────────────────────────────────────────────────────────
-float mapFloat(float x, float inMin, float inMax, float outMin, float outMax) {
-  return (x - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+// ── SETUP ─────────────────────────────────────────────────────────────────────
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("=== AgroGuard Node ===");
+  Serial.println("Device: " + String(DEVICE_ID));
+
+  pinMode(RS485_DE, OUTPUT);
+  digitalWrite(RS485_DE, LOW);
+
+  dht.begin();
+
+  // Serial2 for RS485 Modbus
+  Serial2.begin(9600, SERIAL_8N1, RS485_RX, RS485_TX);
+  modbus.begin(MODBUS_SLAVE_ID, Serial2);
+  modbus.preTransmission(preTransmission);
+  modbus.postTransmission(postTransmission);
+
+  connectWiFi();
+  Serial.println("[SETUP] Ready. First reading in 5 s...");
+  delay(5000);
 }
 
-float round2dp(float val) {
-  return roundf(val * 100.0f) / 100.0f;
+// ── LOOP ──────────────────────────────────────────────────────────────────────
+
+unsigned long lastReading = 0;
+
+void loop() {
+  connectWiFi(); // ensure connected
+
+  unsigned long now = millis();
+  if (now - lastReading >= READING_INTERVAL_MS || lastReading == 0) {
+    lastReading = now;
+
+    SensorData data = {};
+
+    data.soilOk = readSoilSensor(data);
+    if (data.soilOk) {
+      Serial.printf("[SOIL] M=%.1f%% T=%.1f°C EC=%.0f pH=%.1f N=%.0f P=%.0f K=%.0f\n",
+        data.soilMoisture, data.soilTemperature,
+        data.ec, data.ph, data.nitrogen, data.phosphorus, data.potassium);
+    }
+
+    delay(200); // stability gap between sensor reads
+    data.dhtOk = readDHT22(data);
+    if (data.dhtOk) {
+      Serial.printf("[DHT22] T=%.1f°C H=%.1f%% HI=%.1f°C\n",
+        data.temperature, data.humidity, data.heatIndex);
+    }
+
+    if (!data.soilOk && !data.dhtOk) {
+      Serial.println("[ERROR] All sensors failed — check wiring and power");
+      return;
+    }
+
+    bool ok = postReading(data);
+    Serial.println(ok ? "[OK] Submitted." : "[FAIL] Will retry next cycle.");
+  }
+
+  delay(1000);
 }

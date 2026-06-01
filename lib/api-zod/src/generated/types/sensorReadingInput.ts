@@ -3,16 +3,35 @@
  * Do not edit manually.
  * Api
  * AgroGuard Limited - Agricultural IoT Platform API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
+/**
+ * Sensor payload from ESP32. deviceId is the hardware string ID.
+Supports 7-in-1 sensor fields (EC, pH, NPK) — send only what your sensor provides.
+
+ */
 export interface SensorReadingInput {
-  /** Hardware device ID (deviceId field) */
+  /** Hardware device ID string (matches devices.deviceId) */
   deviceId: string;
+  /** Soil moisture (%) */
   soilMoisture: number;
+  /** Temperature (°C) */
   temperature: number;
+  /** Relative humidity (%) */
   humidity: number;
+  /** Computed heat index (°C) */
   heatIndex: number;
+  /** Soil EC in mS/m (7-in-1 sensor only) */
+  electricalConductivity?: number;
+  /** Soil pH (7-in-1 sensor only) */
+  ph?: number;
+  /** Nitrogen mg/kg (7-in-1 sensor only) */
+  nitrogen?: number;
+  /** Phosphorus mg/kg (7-in-1 sensor only) */
+  phosphorus?: number;
+  /** Potassium mg/kg (7-in-1 sensor only) */
+  potassium?: number;
   rainfall?: number;
   lightIntensity?: number;
 }

@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * AgroGuard Limited - Agricultural IoT Platform API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 export interface HealthStatus {
   status: string;
@@ -35,6 +35,11 @@ export interface Farmer {
   whatsappNumber?: string | null;
   /** @nullable */
   notes?: string | null;
+  /**
+     * ID of the field officer assigned to manage this farmer
+     * @nullable
+     */
+  fieldOfficerId?: number | null;
   createdAt: string;
   updatedAt?: string;
 }
@@ -50,6 +55,8 @@ export interface FarmerInput {
   cropTypes?: string;
   whatsappNumber?: string;
   notes?: string;
+  /** Assign a field officer at creation time */
+  fieldOfficerId?: number;
 }
 
 export type FarmerUpdateStatus = typeof FarmerUpdateStatus[keyof typeof FarmerUpdateStatus];
@@ -72,6 +79,11 @@ export interface FarmerUpdate {
   status?: FarmerUpdateStatus;
   whatsappNumber?: string;
   notes?: string;
+  /**
+     * Assign or unassign a field officer (null to unassign)
+     * @nullable
+     */
+  fieldOfficerId?: number | null;
 }
 
 export type DeviceStatus = typeof DeviceStatus[keyof typeof DeviceStatus];
@@ -85,7 +97,7 @@ export const DeviceStatus = {
 
 export interface Device {
   id: number;
-  /** Unique hardware identifier (ESP32 chip ID) */
+  /** Unique hardware identifier (ESP32 chip ID / auto-generated UUID) */
   deviceId: string;
   name: string;
   /**
@@ -109,7 +121,10 @@ export interface Device {
 }
 
 export interface DeviceInput {
-  /** @minLength 1 */
+  /**
+     * Unique hardware ID (use the auto-generated AGR-XXXX-XXXX format or ESP32 MAC)
+     * @minLength 1
+     */
   deviceId: string;
   /** @minLength 1 */
   name: string;
@@ -151,6 +166,31 @@ export interface SensorReading {
   /** Computed heat index in Celsius */
   heatIndex: number;
   /**
+     * Soil EC in mS/m (7-in-1 sensor)
+     * @nullable
+     */
+  electricalConductivity?: number | null;
+  /**
+     * Soil pH 0-14 (7-in-1 sensor)
+     * @nullable
+     */
+  ph?: number | null;
+  /**
+     * Available nitrogen in mg/kg (7-in-1 sensor)
+     * @nullable
+     */
+  nitrogen?: number | null;
+  /**
+     * Available phosphorus in mg/kg (7-in-1 sensor)
+     * @nullable
+     */
+  phosphorus?: number | null;
+  /**
+     * Available potassium in mg/kg (7-in-1 sensor)
+     * @nullable
+     */
+  potassium?: number | null;
+  /**
      * Rainfall in mm
      * @nullable
      */
@@ -164,13 +204,32 @@ export interface SensorReading {
   createdAt?: string;
 }
 
+/**
+ * Sensor payload from ESP32. deviceId is the hardware string ID.
+Supports 7-in-1 sensor fields (EC, pH, NPK) — send only what your sensor provides.
+
+ */
 export interface SensorReadingInput {
-  /** Hardware device ID (deviceId field) */
+  /** Hardware device ID string (matches devices.deviceId) */
   deviceId: string;
+  /** Soil moisture (%) */
   soilMoisture: number;
+  /** Temperature (°C) */
   temperature: number;
+  /** Relative humidity (%) */
   humidity: number;
+  /** Computed heat index (°C) */
   heatIndex: number;
+  /** Soil EC in mS/m (7-in-1 sensor only) */
+  electricalConductivity?: number;
+  /** Soil pH (7-in-1 sensor only) */
+  ph?: number;
+  /** Nitrogen mg/kg (7-in-1 sensor only) */
+  nitrogen?: number;
+  /** Phosphorus mg/kg (7-in-1 sensor only) */
+  phosphorus?: number;
+  /** Potassium mg/kg (7-in-1 sensor only) */
+  potassium?: number;
   rainfall?: number;
   lightIntensity?: number;
 }

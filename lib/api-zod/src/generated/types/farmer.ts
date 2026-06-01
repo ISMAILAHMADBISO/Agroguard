@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * AgroGuard Limited - Agricultural IoT Platform API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import type { FarmerStatus } from './farmerStatus';
 
@@ -24,6 +24,11 @@ export interface Farmer {
   whatsappNumber?: string | null;
   /** @nullable */
   notes?: string | null;
+  /**
+     * ID of the field officer assigned to manage this farmer
+     * @nullable
+     */
+  fieldOfficerId?: number | null;
   createdAt: Date;
   updatedAt?: Date;
 }

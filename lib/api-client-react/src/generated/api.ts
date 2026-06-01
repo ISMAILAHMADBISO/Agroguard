@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * AgroGuard Limited - Agricultural IoT Platform API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import {
   useMutation,
@@ -141,7 +141,7 @@ export const getListFarmersUrl = () => {
 }
 
 /**
- * @summary List all farmers
+ * @summary List all farmers (scoped by role for field officers)
  */
 export const listFarmers = async ( options?: RequestInit): Promise<Farmer[]> => {
 
@@ -188,7 +188,7 @@ export type ListFarmersQueryError = ErrorType<unknown>
 
 
 /**
- * @summary List all farmers
+ * @summary List all farmers (scoped by role for field officers)
  */
 
 export function useListFarmers<TData = Awaited<ReturnType<typeof listFarmers>>, TError = ErrorType<unknown>>(
@@ -366,7 +366,7 @@ export const getUpdateFarmerUrl = (id: number,) => {
 }
 
 /**
- * @summary Update farmer details
+ * @summary Update farmer details (admin can assign field officer)
  */
 export const updateFarmer = async (id: number,
     farmerUpdate: FarmerUpdate, options?: RequestInit): Promise<Farmer> => {
@@ -416,7 +416,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateFarmerMutationError = ErrorType<void>
 
     /**
- * @summary Update farmer details
+ * @summary Update farmer details (admin can assign field officer)
  */
 export const useUpdateFarmer = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateFarmer>>, TError,{id: number;data: BodyType<FarmerUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -438,7 +438,7 @@ export const getDeleteFarmerUrl = (id: number,) => {
 }
 
 /**
- * @summary Delete farmer
+ * @summary Delete farmer (admin only)
  */
 export const deleteFarmer = async (id: number, options?: RequestInit): Promise<void> => {
 
@@ -486,7 +486,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteFarmerMutationError = ErrorType<void>
 
     /**
- * @summary Delete farmer
+ * @summary Delete farmer (admin only)
  */
 export const useDeleteFarmer = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteFarmer>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -585,7 +585,7 @@ export const getListDevicesUrl = () => {
 }
 
 /**
- * @summary List all IoT devices
+ * @summary List IoT devices (scoped by role for field officers)
  */
 export const listDevices = async ( options?: RequestInit): Promise<Device[]> => {
 
@@ -632,7 +632,7 @@ export type ListDevicesQueryError = ErrorType<unknown>
 
 
 /**
- * @summary List all IoT devices
+ * @summary List IoT devices (scoped by role for field officers)
  */
 
 export function useListDevices<TData = Awaited<ReturnType<typeof listDevices>>, TError = ErrorType<unknown>>(
@@ -882,7 +882,7 @@ export const getDeleteDeviceUrl = (id: number,) => {
 }
 
 /**
- * @summary Remove device
+ * @summary Remove device (admin only)
  */
 export const deleteDevice = async (id: number, options?: RequestInit): Promise<void> => {
 
@@ -930,7 +930,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteDeviceMutationError = ErrorType<void>
 
     /**
- * @summary Remove device
+ * @summary Remove device (admin only)
  */
 export const useDeleteDevice = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDevice>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -1106,6 +1106,10 @@ export const getCreateReadingUrl = () => {
 }
 
 /**
+ * Called directly by the ESP32 firmware. Accepts the hardware deviceId string.
+Supports the full 7-in-1 soil sensor payload (moisture, temperature, EC, pH, N, P, K)
+as well as simpler sensors that only send moisture + temperature + humidity.
+
  * @summary Ingest sensor data from IoT device (ESP32)
  */
 export const createReading = async (sensorReadingInput: SensorReadingInput, options?: RequestInit): Promise<SensorReading> => {
@@ -1690,7 +1694,7 @@ export const getCreateStaffUrl = () => {
 }
 
 /**
- * @summary Create staff member
+ * @summary Create staff member (admin only)
  */
 export const createStaff = async (staffInput: StaffInput, options?: RequestInit): Promise<StaffMember> => {
 
@@ -1739,7 +1743,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateStaffMutationError = ErrorType<unknown>
 
     /**
- * @summary Create staff member
+ * @summary Create staff member (admin only)
  */
 export const useCreateStaff = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createStaff>>, TError,{data: BodyType<StaffInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -1761,7 +1765,7 @@ export const getUpdateStaffUrl = (id: number,) => {
 }
 
 /**
- * @summary Update staff member
+ * @summary Update staff member (admin only)
  */
 export const updateStaff = async (id: number,
     staffUpdate: StaffUpdate, options?: RequestInit): Promise<StaffMember> => {
@@ -1811,7 +1815,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateStaffMutationError = ErrorType<void>
 
     /**
- * @summary Update staff member
+ * @summary Update staff member (admin only)
  */
 export const useUpdateStaff = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateStaff>>, TError,{id: number;data: BodyType<StaffUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -1833,7 +1837,7 @@ export const getDeleteStaffUrl = (id: number,) => {
 }
 
 /**
- * @summary Remove staff member
+ * @summary Remove staff member (admin only)
  */
 export const deleteStaff = async (id: number, options?: RequestInit): Promise<void> => {
 
@@ -1881,7 +1885,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteStaffMutationError = ErrorType<void>
 
     /**
- * @summary Remove staff member
+ * @summary Remove staff member (admin only)
  */
 export const useDeleteStaff = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStaff>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}

@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
+  version: 0.2.0
   description: AgroGuard Limited - Agricultural IoT Platform API
 servers:
   - url: /api
@@ -45,7 +45,7 @@ paths:
     get:
       operationId: listFarmers
       tags: [farmers]
-      summary: List all farmers
+      summary: List all farmers (scoped by role for field officers)
       responses:
         "200":
           description: List of farmers
@@ -98,7 +98,7 @@ paths:
     patch:
       operationId: updateFarmer
       tags: [farmers]
-      summary: Update farmer details
+      summary: Update farmer details (admin can assign field officer)
       parameters:
         - name: id
           in: path
@@ -123,7 +123,7 @@ paths:
     delete:
       operationId: deleteFarmer
       tags: [farmers]
-      summary: Delete farmer
+      summary: Delete farmer (admin only)
       parameters:
         - name: id
           in: path
@@ -162,7 +162,7 @@ paths:
     get:
       operationId: listDevices
       tags: [devices]
-      summary: List all IoT devices
+      summary: List IoT devices (scoped by role for field officers)
       responses:
         "200":
           description: List of devices
@@ -240,7 +240,7 @@ paths:
     delete:
       operationId: deleteDevice
       tags: [devices]
-      summary: Remove device
+      summary: Remove device (admin only)
       parameters:
         - name: id
           in: path
@@ -293,6 +293,10 @@ paths:
       operationId: createReading
       tags: [readings]
       summary: Ingest sensor data from IoT device (ESP32)
+      description: |
+        Called directly by the ESP32 firmware. Accepts the hardware deviceId string.
+        Supports the full 7-in-1 soil sensor payload (moisture, temperature, EC, pH, N, P, K)
+        as well as simpler sensors that only send moisture + temperature + humidity.
       requestBody:
         required: true
         content:
@@ -437,7 +441,7 @@ paths:
     post:
       operationId: createStaff
       tags: [staff]
-      summary: Create staff member
+      summary: Create staff member (admin only)
       requestBody:
         required: true
         content:
@@ -456,7 +460,7 @@ paths:
     patch:
       operationId: updateStaff
       tags: [staff]
-      summary: Update staff member
+      summary: Update staff member (admin only)
       parameters:
         - name: id
           in: path
@@ -481,7 +485,7 @@ paths:
     delete:
       operationId: deleteStaff
       tags: [staff]
-      summary: Remove staff member
+      summary: Remove staff member (admin only)
       parameters:
         - name: id
           in: path
@@ -597,6 +601,9 @@ components:
           type: ["string", "null"]
         notes:
           type: ["string", "null"]
+        fieldOfficerId:
+          type: ["integer", "null"]
+          description: ID of the field officer assigned to manage this farmer
         createdAt:
           type: string
           format: date-time
@@ -628,6 +635,9 @@ components:
           type: string
         notes:
           type: string
+        fieldOfficerId:
+          type: integer
+          description: Assign a field officer at creation time
 
     FarmerUpdate:
       type: object
@@ -653,6 +663,9 @@ components:
           type: string
         notes:
           type: string
+        fieldOfficerId:
+          type: ["integer", "null"]
+          description: Assign or unassign a field officer (null to unassign)
 
     # ── DEVICE ──────────────────────────────────────────────────────────────────
     Device:
@@ -663,7 +676,7 @@ components:
           type: integer
         deviceId:
           type: string
-          description: Unique hardware identifier (ESP32 chip ID)
+          description: Unique hardware identifier (ESP32 chip ID / auto-generated UUID)
         name:
           type: string
         farmerId:
@@ -697,6 +710,7 @@ components:
         deviceId:
           type: string
           minLength: 1
+          description: Unique hardware ID (use the auto-generated AGR-XXXX-XXXX format or ESP32 MAC)
         name:
           type: string
           minLength: 1
@@ -749,6 +763,21 @@ components:
         heatIndex:
           type: number
           description: Computed heat index in Celsius
+        electricalConductivity:
+          type: ["number", "null"]
+          description: Soil EC in mS/m (7-in-1 sensor)
+        ph:
+          type: ["number", "null"]
+          description: Soil pH 0-14 (7-in-1 sensor)
+        nitrogen:
+          type: ["number", "null"]
+          description: Available nitrogen in mg/kg (7-in-1 sensor)
+        phosphorus:
+          type: ["number", "null"]
+          description: Available phosphorus in mg/kg (7-in-1 sensor)
+        potassium:
+          type: ["number", "null"]
+          description: Available potassium in mg/kg (7-in-1 sensor)
         rainfall:
           type: ["number", "null"]
           description: Rainfall in mm
@@ -765,18 +794,40 @@ components:
     SensorReadingInput:
       type: object
       required: [deviceId, soilMoisture, temperature, humidity, heatIndex]
+      description: |
+        Sensor payload from ESP32. deviceId is the hardware string ID.
+        Supports 7-in-1 sensor fields (EC, pH, NPK) — send only what your sensor provides.
       properties:
         deviceId:
           type: string
-          description: Hardware device ID (deviceId field)
+          description: Hardware device ID string (matches devices.deviceId)
         soilMoisture:
           type: number
+          description: Soil moisture (%)
         temperature:
           type: number
+          description: Temperature (°C)
         humidity:
           type: number
+          description: Relative humidity (%)
         heatIndex:
           type: number
+          description: Computed heat index (°C)
+        electricalConductivity:
+          type: number
+          description: Soil EC in mS/m (7-in-1 sensor only)
+        ph:
+          type: number
+          description: Soil pH (7-in-1 sensor only)
+        nitrogen:
+          type: number
+          description: Nitrogen mg/kg (7-in-1 sensor only)
+        phosphorus:
+          type: number
+          description: Phosphorus mg/kg (7-in-1 sensor only)
+        potassium:
+          type: number
+          description: Potassium mg/kg (7-in-1 sensor only)
         rainfall:
           type: number
         lightIntensity:

@@ -10,8 +10,8 @@ export default function FarmerDetailPage() {
   const params = useParams();
   const id = parseInt(params.id || "0");
 
-  const { data: farmer, isLoading: farmerLoading } = useGetFarmer(id, { query: { enabled: !!id } });
-  const { data: devices, isLoading: devicesLoading } = useGetFarmerDevices(id, { query: { enabled: !!id } });
+  const { data: farmer, isLoading: farmerLoading } = useGetFarmer(id);
+  const { data: devices, isLoading: devicesLoading } = useGetFarmerDevices(id);
 
   if (farmerLoading) {
     return <div className="space-y-6"><Skeleton className="h-48 w-full" /><Skeleton className="h-64 w-full" /></div>;

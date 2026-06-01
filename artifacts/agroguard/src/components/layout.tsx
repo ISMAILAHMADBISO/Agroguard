@@ -1,17 +1,30 @@
+/**
+ * AppLayout — persistent shell wrapping all dashboard pages.
+ *
+ * Structure:
+ *   <SidebarProvider>
+ *     <Sidebar>   — brand + navigation links (role-aware)
+ *     <main area> — top header + page content slot
+ *
+ * RBAC visibility:
+ *   - "Staff" section (sidebar) is hidden from field_officer and support roles
+ *   - "My Assignments Only" badge appears for field_officer sessions
+ *   - Admin badge appears for admin sessions
+ */
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/context/auth";
-import { 
-  Sidebar, 
-  SidebarContent, 
-  SidebarGroup, 
-  SidebarGroupContent, 
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader, 
-  SidebarMenu, 
-  SidebarMenuButton, 
-  SidebarMenuItem, 
-  SidebarProvider, 
-  SidebarTrigger 
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -22,8 +35,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LayoutDashboard, Users, Cpu, Bell, Lightbulb, UsersRound, LineChart, LogOut, User } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  Cpu,
+  Bell,
+  Lightbulb,
+  UsersRound,
+  LineChart,
+  LogOut,
+  User,
+  ShieldCheck,
+} from "lucide-react";
 
+/** Human-readable role labels */
 const ROLE_LABELS: Record<string, string> = {
   admin: "Administrator",
   agronomist: "Agronomist",
@@ -39,16 +64,25 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     ? user.name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()
     : "?";
 
+  const isAdmin = user?.role === "admin";
+  const isFieldOfficer = user?.role === "field_officer";
+
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full overflow-hidden bg-background">
         <Sidebar className="border-r border-sidebar-border">
           <SidebarHeader className="h-16 flex items-center px-4 border-b border-sidebar-border">
-            <Link href="/" className="flex items-center gap-2 font-bold text-lg text-sidebar-foreground">
-              <img src="/agroguard-logo.png" alt="AgroGuard" className="h-8 w-8 object-contain" />
+            <Link href="/" className="flex items-center gap-2.5 font-bold text-lg text-sidebar-foreground">
+              {/* Circular logo */}
+              <img
+                src="/agroguard-logo.png"
+                alt="AgroGuard"
+                className="h-8 w-8 rounded-full object-cover ring-2 ring-primary/20"
+              />
               <span>AgroGuard</span>
             </Link>
           </SidebarHeader>
+
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupLabel>Platform</SidebarGroupLabel>
@@ -56,66 +90,93 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={location === "/dashboard"}>
-                      <Link href="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link>
+                      <Link href="/dashboard">
+                        <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={location.startsWith("/farmers")}>
-                      <Link href="/farmers"><Users className="mr-2 h-4 w-4" /> Farmers</Link>
+                      <Link href="/farmers">
+                        <Users className="mr-2 h-4 w-4" /> Farmers
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={location.startsWith("/devices")}>
-                      <Link href="/devices"><Cpu className="mr-2 h-4 w-4" /> Devices</Link>
+                      <Link href="/devices">
+                        <Cpu className="mr-2 h-4 w-4" /> Devices
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={location === "/alerts"}>
-                      <Link href="/alerts"><Bell className="mr-2 h-4 w-4" /> Alerts</Link>
+                      <Link href="/alerts">
+                        <Bell className="mr-2 h-4 w-4" /> Alerts
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={location === "/recommendations"}>
-                      <Link href="/recommendations"><Lightbulb className="mr-2 h-4 w-4" /> Recommendations</Link>
+                      <Link href="/recommendations">
+                        <Lightbulb className="mr-2 h-4 w-4" /> Recommendations
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={location === "/analytics"}>
-                      <Link href="/analytics"><LineChart className="mr-2 h-4 w-4" /> Analytics</Link>
+                      <Link href="/analytics">
+                        <LineChart className="mr-2 h-4 w-4" /> Analytics
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-            <SidebarGroup>
-              <SidebarGroupLabel>Administration</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={location === "/staff"}>
-                      <Link href="/staff"><UsersRound className="mr-2 h-4 w-4" /> Staff</Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+
+            {/* Administration section — visible to admin and agronomist only */}
+            {(isAdmin || user?.role === "agronomist") && (
+              <SidebarGroup>
+                <SidebarGroupLabel>Administration</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={location === "/staff"}>
+                        <Link href="/staff">
+                          <UsersRound className="mr-2 h-4 w-4" /> Staff
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
           </SidebarContent>
         </Sidebar>
 
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          {/* Top header */}
           <header className="h-16 flex items-center justify-between px-4 border-b bg-card text-card-foreground">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="mr-2" />
               <h1 className="font-semibold text-lg capitalize">
                 {location.split("/")[1] || "Dashboard"}
               </h1>
-              {user?.role === "field_officer" && (
+
+              {/* Role scope badges */}
+              {isFieldOfficer && (
                 <span className="hidden sm:inline-flex items-center gap-1 text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5">
                   My Assignments Only
                 </span>
               )}
+              {isAdmin && (
+                <span className="hidden sm:inline-flex items-center gap-1 text-xs font-medium bg-primary/10 text-primary border border-primary/20 rounded-full px-2.5 py-0.5">
+                  <ShieldCheck className="h-3 w-3" /> Admin
+                </span>
+              )}
             </div>
 
+            {/* User dropdown */}
             {user && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -127,7 +188,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     </Avatar>
                     <div className="hidden sm:block text-left">
                       <p className="text-sm font-medium leading-none">{user.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{ROLE_LABELS[user.role] ?? user.role}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {ROLE_LABELS[user.role] ?? user.role}
+                      </p>
                     </div>
                   </button>
                 </DropdownMenuTrigger>
@@ -155,6 +218,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </DropdownMenu>
             )}
           </header>
+
           <main className="flex-1 overflow-y-auto p-6">
             {children}
           </main>

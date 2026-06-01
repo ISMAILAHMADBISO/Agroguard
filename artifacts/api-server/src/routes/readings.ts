@@ -1,7 +1,14 @@
 /**
  * Sensor readings routes — data ingestion from ESP32 IoT devices.
- * The POST endpoint is called directly by field sensors.
- * Device status is updated on each reading.
+ *
+ * POST /readings  — called directly by ESP32 firmware (no auth required).
+ *                   Accepts the hardware deviceId string and stores sensor data.
+ *                   Supports the full 7-in-1 soil sensor payload:
+ *                     moisture, temperature, EC, pH, nitrogen, phosphorus, potassium
+ *                   as well as simpler sensors that only send the core 4 channels.
+ *
+ * GET  /readings  — returns the 100 most recent readings across all devices
+ *                   (used by the analytics dashboard; requires session auth).
  */
 import { Router, type IRouter } from "express";
 import { eq, desc } from "drizzle-orm";
@@ -14,7 +21,7 @@ import { broadcastReading } from "../lib/ws";
 
 const router: IRouter = Router();
 
-/** GET /readings — list the most recent sensor readings across all devices */
+/** GET /readings — list the 100 most recent readings across all devices */
 router.get("/readings", async (_req, res): Promise<void> => {
   const readings = await db
     .select()
@@ -26,8 +33,15 @@ router.get("/readings", async (_req, res): Promise<void> => {
 
 /**
  * POST /readings — ingest sensor data from an ESP32 device.
- * Accepts deviceId (hardware ID string) and sensor values.
- * Updates the device's lastSeenAt and status to "online".
+ *
+ * Auth: intentionally open — the ESP32 identifies itself via deviceId.
+ * The device must be registered in the platform before data is accepted.
+ *
+ * On success:
+ *   1. Resolves the hardware deviceId string to the internal DB device ID.
+ *   2. Inserts the reading (stores all 7-in-1 fields when present).
+ *   3. Updates device.status → "online" and device.lastSeenAt → now.
+ *   4. Broadcasts the reading over WebSocket to any subscribed dashboard clients.
  */
 router.post("/readings", async (req, res): Promise<void> => {
   const parsed = CreateReadingBody.safeParse(req.body);
@@ -36,39 +50,46 @@ router.post("/readings", async (req, res): Promise<void> => {
     return;
   }
 
-  // Resolve hardware deviceId string to internal DB device ID
+  // Resolve hardware deviceId string → internal DB integer ID
   const [device] = await db
     .select()
     .from(devicesTable)
     .where(eq(devicesTable.deviceId, parsed.data.deviceId));
 
   if (!device) {
-    res.status(404).json({ error: "Device not found — register it first" });
+    res.status(404).json({ error: "Device not found — register it first in the platform" });
     return;
   }
 
-  // Insert the sensor reading
+  // Insert the reading; 7-in-1 fields are optional (null when not provided)
   const [reading] = await db
     .insert(sensorReadingsTable)
     .values({
       deviceId: device.id,
-      soilMoisture: parsed.data.soilMoisture,
-      temperature: parsed.data.temperature,
-      humidity: parsed.data.humidity,
-      heatIndex: parsed.data.heatIndex,
-      rainfall: parsed.data.rainfall ?? null,
-      lightIntensity: parsed.data.lightIntensity ?? null,
+      soilMoisture:           parsed.data.soilMoisture,
+      temperature:            parsed.data.temperature,
+      humidity:               parsed.data.humidity,
+      heatIndex:              parsed.data.heatIndex,
+      // 7-in-1 soil sensor channels (null if sensor doesn't support them)
+      electricalConductivity: parsed.data.electricalConductivity ?? null,
+      ph:                     parsed.data.ph ?? null,
+      nitrogen:               parsed.data.nitrogen ?? null,
+      phosphorus:             parsed.data.phosphorus ?? null,
+      potassium:              parsed.data.potassium ?? null,
+      // Optional environmental channels
+      rainfall:               parsed.data.rainfall ?? null,
+      lightIntensity:         parsed.data.lightIntensity ?? null,
       recordedAt: new Date(),
     })
     .returning();
 
-  // Update device status and last seen timestamp
+  // Mark device online with a fresh timestamp
   await db
     .update(devicesTable)
     .set({ status: "online", lastSeenAt: new Date() })
     .where(eq(devicesTable.id, device.id));
 
-  // Broadcast to any connected WebSocket clients watching this device
+  // Push to WebSocket subscribers (device-detail live view)
   broadcastReading(device.id, reading);
 
   res.status(201).json(reading);

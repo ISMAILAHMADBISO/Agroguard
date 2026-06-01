@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * AgroGuard Limited - Agricultural IoT Platform API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export interface SensorReading {
@@ -17,6 +17,31 @@ export interface SensorReading {
   humidity: number;
   /** Computed heat index in Celsius */
   heatIndex: number;
+  /**
+     * Soil EC in mS/m (7-in-1 sensor)
+     * @nullable
+     */
+  electricalConductivity?: number | null;
+  /**
+     * Soil pH 0-14 (7-in-1 sensor)
+     * @nullable
+     */
+  ph?: number | null;
+  /**
+     * Available nitrogen in mg/kg (7-in-1 sensor)
+     * @nullable
+     */
+  nitrogen?: number | null;
+  /**
+     * Available phosphorus in mg/kg (7-in-1 sensor)
+     * @nullable
+     */
+  phosphorus?: number | null;
+  /**
+     * Available potassium in mg/kg (7-in-1 sensor)
+     * @nullable
+     */
+  potassium?: number | null;
   /**
      * Rainfall in mm
      * @nullable

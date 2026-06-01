@@ -3,13 +3,13 @@
  * Do not edit manually.
  * Api
  * AgroGuard Limited - Agricultural IoT Platform API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import type { DeviceStatus } from './deviceStatus';
 
 export interface Device {
   id: number;
-  /** Unique hardware identifier (ESP32 chip ID) */
+  /** Unique hardware identifier (ESP32 chip ID / auto-generated UUID) */
   deviceId: string;
   name: string;
   /**

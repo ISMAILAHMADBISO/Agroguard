@@ -3,11 +3,14 @@
  * Do not edit manually.
  * Api
  * AgroGuard Limited - Agricultural IoT Platform API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export interface DeviceInput {
-  /** @minLength 1 */
+  /**
+     * Unique hardware ID (use the auto-generated AGR-XXXX-XXXX format or ESP32 MAC)
+     * @minLength 1
+     */
   deviceId: string;
   /** @minLength 1 */
   name: string;

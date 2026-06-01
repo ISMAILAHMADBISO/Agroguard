@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * AgroGuard Limited - Agricultural IoT Platform API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import * as zod from 'zod';
 
@@ -18,7 +18,7 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
- * @summary List all farmers
+ * @summary List all farmers (scoped by role for field officers)
  */
 export const ListFarmersResponseItem = zod.object({
   "id": zod.number(),
@@ -32,6 +32,7 @@ export const ListFarmersResponseItem = zod.object({
   "status": zod.enum(['active', 'inactive', 'pending']),
   "whatsappNumber": zod.string().nullish(),
   "notes": zod.string().nullish(),
+  "fieldOfficerId": zod.number().nullish().describe('ID of the field officer assigned to manage this farmer'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date().optional()
 })
@@ -53,7 +54,8 @@ export const CreateFarmerBody = zod.object({
   "farmSizeHectares": zod.number().optional(),
   "cropTypes": zod.string().optional(),
   "whatsappNumber": zod.string().optional(),
-  "notes": zod.string().optional()
+  "notes": zod.string().optional(),
+  "fieldOfficerId": zod.number().optional().describe('Assign a field officer at creation time')
 })
 
 
@@ -76,13 +78,14 @@ export const GetFarmerResponse = zod.object({
   "status": zod.enum(['active', 'inactive', 'pending']),
   "whatsappNumber": zod.string().nullish(),
   "notes": zod.string().nullish(),
+  "fieldOfficerId": zod.number().nullish().describe('ID of the field officer assigned to manage this farmer'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date().optional()
 })
 
 
 /**
- * @summary Update farmer details
+ * @summary Update farmer details (admin can assign field officer)
  */
 export const UpdateFarmerParams = zod.object({
   "id": zod.coerce.number()
@@ -98,7 +101,8 @@ export const UpdateFarmerBody = zod.object({
   "cropTypes": zod.string().optional(),
   "status": zod.enum(['active', 'inactive', 'pending']).optional(),
   "whatsappNumber": zod.string().optional(),
-  "notes": zod.string().optional()
+  "notes": zod.string().optional(),
+  "fieldOfficerId": zod.number().nullish().describe('Assign or unassign a field officer (null to unassign)')
 })
 
 export const UpdateFarmerResponse = zod.object({
@@ -113,13 +117,14 @@ export const UpdateFarmerResponse = zod.object({
   "status": zod.enum(['active', 'inactive', 'pending']),
   "whatsappNumber": zod.string().nullish(),
   "notes": zod.string().nullish(),
+  "fieldOfficerId": zod.number().nullish().describe('ID of the field officer assigned to manage this farmer'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date().optional()
 })
 
 
 /**
- * @summary Delete farmer
+ * @summary Delete farmer (admin only)
  */
 export const DeleteFarmerParams = zod.object({
   "id": zod.coerce.number()
@@ -135,7 +140,7 @@ export const GetFarmerDevicesParams = zod.object({
 
 export const GetFarmerDevicesResponseItem = zod.object({
   "id": zod.number(),
-  "deviceId": zod.string().describe('Unique hardware identifier (ESP32 chip ID)'),
+  "deviceId": zod.string().describe('Unique hardware identifier (ESP32 chip ID \/ auto-generated UUID)'),
   "name": zod.string(),
   "farmerId": zod.number().nullish().describe('Assigned farmer ID, null if unassigned'),
   "location": zod.string().nullish(),
@@ -151,11 +156,11 @@ export const GetFarmerDevicesResponse = zod.array(GetFarmerDevicesResponseItem)
 
 
 /**
- * @summary List all IoT devices
+ * @summary List IoT devices (scoped by role for field officers)
  */
 export const ListDevicesResponseItem = zod.object({
   "id": zod.number(),
-  "deviceId": zod.string().describe('Unique hardware identifier (ESP32 chip ID)'),
+  "deviceId": zod.string().describe('Unique hardware identifier (ESP32 chip ID \/ auto-generated UUID)'),
   "name": zod.string(),
   "farmerId": zod.number().nullish().describe('Assigned farmer ID, null if unassigned'),
   "location": zod.string().nullish(),
@@ -178,7 +183,7 @@ export const ListDevicesResponse = zod.array(ListDevicesResponseItem)
 
 
 export const CreateDeviceBody = zod.object({
-  "deviceId": zod.string().min(1),
+  "deviceId": zod.string().min(1).describe('Unique hardware ID (use the auto-generated AGR-XXXX-XXXX format or ESP32 MAC)'),
   "name": zod.string().min(1),
   "farmerId": zod.number().optional(),
   "location": zod.string().optional(),
@@ -196,7 +201,7 @@ export const GetDeviceParams = zod.object({
 
 export const GetDeviceResponse = zod.object({
   "id": zod.number(),
-  "deviceId": zod.string().describe('Unique hardware identifier (ESP32 chip ID)'),
+  "deviceId": zod.string().describe('Unique hardware identifier (ESP32 chip ID \/ auto-generated UUID)'),
   "name": zod.string(),
   "farmerId": zod.number().nullish().describe('Assigned farmer ID, null if unassigned'),
   "location": zod.string().nullish(),
@@ -229,7 +234,7 @@ export const UpdateDeviceBody = zod.object({
 
 export const UpdateDeviceResponse = zod.object({
   "id": zod.number(),
-  "deviceId": zod.string().describe('Unique hardware identifier (ESP32 chip ID)'),
+  "deviceId": zod.string().describe('Unique hardware identifier (ESP32 chip ID \/ auto-generated UUID)'),
   "name": zod.string(),
   "farmerId": zod.number().nullish().describe('Assigned farmer ID, null if unassigned'),
   "location": zod.string().nullish(),
@@ -244,7 +249,7 @@ export const UpdateDeviceResponse = zod.object({
 
 
 /**
- * @summary Remove device
+ * @summary Remove device (admin only)
  */
 export const DeleteDeviceParams = zod.object({
   "id": zod.coerce.number()
@@ -265,6 +270,11 @@ export const GetDeviceReadingsResponseItem = zod.object({
   "temperature": zod.number().describe('Temperature in Celsius'),
   "humidity": zod.number().describe('Relative humidity percentage (0-100)'),
   "heatIndex": zod.number().describe('Computed heat index in Celsius'),
+  "electricalConductivity": zod.number().nullish().describe('Soil EC in mS\/m (7-in-1 sensor)'),
+  "ph": zod.number().nullish().describe('Soil pH 0-14 (7-in-1 sensor)'),
+  "nitrogen": zod.number().nullish().describe('Available nitrogen in mg\/kg (7-in-1 sensor)'),
+  "phosphorus": zod.number().nullish().describe('Available phosphorus in mg\/kg (7-in-1 sensor)'),
+  "potassium": zod.number().nullish().describe('Available potassium in mg\/kg (7-in-1 sensor)'),
   "rainfall": zod.number().nullish().describe('Rainfall in mm'),
   "lightIntensity": zod.number().nullish().describe('Light intensity in lux'),
   "recordedAt": zod.coerce.date(),
@@ -283,6 +293,11 @@ export const ListReadingsResponseItem = zod.object({
   "temperature": zod.number().describe('Temperature in Celsius'),
   "humidity": zod.number().describe('Relative humidity percentage (0-100)'),
   "heatIndex": zod.number().describe('Computed heat index in Celsius'),
+  "electricalConductivity": zod.number().nullish().describe('Soil EC in mS\/m (7-in-1 sensor)'),
+  "ph": zod.number().nullish().describe('Soil pH 0-14 (7-in-1 sensor)'),
+  "nitrogen": zod.number().nullish().describe('Available nitrogen in mg\/kg (7-in-1 sensor)'),
+  "phosphorus": zod.number().nullish().describe('Available phosphorus in mg\/kg (7-in-1 sensor)'),
+  "potassium": zod.number().nullish().describe('Available potassium in mg\/kg (7-in-1 sensor)'),
   "rainfall": zod.number().nullish().describe('Rainfall in mm'),
   "lightIntensity": zod.number().nullish().describe('Light intensity in lux'),
   "recordedAt": zod.coerce.date(),
@@ -292,17 +307,26 @@ export const ListReadingsResponse = zod.array(ListReadingsResponseItem)
 
 
 /**
+ * Called directly by the ESP32 firmware. Accepts the hardware deviceId string.
+Supports the full 7-in-1 soil sensor payload (moisture, temperature, EC, pH, N, P, K)
+as well as simpler sensors that only send moisture + temperature + humidity.
+
  * @summary Ingest sensor data from IoT device (ESP32)
  */
 export const CreateReadingBody = zod.object({
-  "deviceId": zod.string().describe('Hardware device ID (deviceId field)'),
-  "soilMoisture": zod.number(),
-  "temperature": zod.number(),
-  "humidity": zod.number(),
-  "heatIndex": zod.number(),
+  "deviceId": zod.string().describe('Hardware device ID string (matches devices.deviceId)'),
+  "soilMoisture": zod.number().describe('Soil moisture (%)'),
+  "temperature": zod.number().describe('Temperature (°C)'),
+  "humidity": zod.number().describe('Relative humidity (%)'),
+  "heatIndex": zod.number().describe('Computed heat index (°C)'),
+  "electricalConductivity": zod.number().optional().describe('Soil EC in mS\/m (7-in-1 sensor only)'),
+  "ph": zod.number().optional().describe('Soil pH (7-in-1 sensor only)'),
+  "nitrogen": zod.number().optional().describe('Nitrogen mg\/kg (7-in-1 sensor only)'),
+  "phosphorus": zod.number().optional().describe('Phosphorus mg\/kg (7-in-1 sensor only)'),
+  "potassium": zod.number().optional().describe('Potassium mg\/kg (7-in-1 sensor only)'),
   "rainfall": zod.number().optional(),
   "lightIntensity": zod.number().optional()
-})
+}).describe('Sensor payload from ESP32. deviceId is the hardware string ID.\nSupports 7-in-1 sensor fields (EC, pH, NPK) — send only what your sensor provides.\n')
 
 
 /**
@@ -429,7 +453,7 @@ export const ListStaffResponse = zod.array(ListStaffResponseItem)
 
 
 /**
- * @summary Create staff member
+ * @summary Create staff member (admin only)
  */
 
 
@@ -444,7 +468,7 @@ export const CreateStaffBody = zod.object({
 
 
 /**
- * @summary Update staff member
+ * @summary Update staff member (admin only)
  */
 export const UpdateStaffParams = zod.object({
   "id": zod.coerce.number()
@@ -472,7 +496,7 @@ export const UpdateStaffResponse = zod.object({
 
 
 /**
- * @summary Remove staff member
+ * @summary Remove staff member (admin only)
  */
 export const DeleteStaffParams = zod.object({
   "id": zod.coerce.number()
