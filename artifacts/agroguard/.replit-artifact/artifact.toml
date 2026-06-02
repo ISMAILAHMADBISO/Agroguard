@@ -15,10 +15,10 @@ paths = [ "/" ]
 localPort = 21266
 
 [services.development]
-run = "pnpm --filter @workspace/agroguard run dev"
+run = "npm run dev --workspace @workspace/agroguard"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/agroguard", "run", "build" ]
+build = [ "npm", "run", "build", "--workspace", "@workspace/agroguard" ]
 publicDir = "artifacts/agroguard/dist/public"
 serve = "static"
 
