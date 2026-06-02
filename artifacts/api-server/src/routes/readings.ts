@@ -18,11 +18,16 @@ import {
   ListReadingsResponse,
 } from "@workspace/api-zod";
 import { broadcastReading } from "../lib/ws";
+import { isStaffType } from "../lib/rbac";
 
 const router: IRouter = Router();
 
-/** GET /readings — list the 100 most recent readings across all devices */
-router.get("/readings", async (_req, res): Promise<void> => {
+/** GET /readings — list the 100 most recent readings across all devices (internal staff only) */
+router.get("/readings", async (req, res): Promise<void> => {
+  if (!isStaffType(req)) {
+    res.status(403).json({ error: "Staff access required" });
+    return;
+  }
   const readings = await db
     .select()
     .from(sensorReadingsTable)

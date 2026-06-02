@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export type StaffMemberRole = typeof StaffMemberRole[keyof typeof StaffMemberRole];
+export type StaffCreateResultRole = typeof StaffCreateResultRole[keyof typeof StaffCreateResultRole];
 
 
-export const StaffMemberRole = {
+export const StaffCreateResultRole = {
   super_admin: 'super_admin',
   admin: 'admin',
   agronomist: 'agronomist',

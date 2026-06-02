@@ -19,6 +19,7 @@ import {
   GetFarmerDevicesResponse,
 } from "@workspace/api-zod";
 import { getAssignedFarmerIds, canWrite, isAdmin } from "../lib/rbac";
+import { generateTempPassword, hashPassword } from "../lib/password";
 
 const router: IRouter = Router();
 
@@ -48,12 +49,35 @@ router.post("/farmers", async (req, res): Promise<void> => {
     return;
   }
 
+  const tempPassword = generateTempPassword();
+  const passwordHash = await hashPassword(tempPassword);
+
   const [farmer] = await db
     .insert(farmersTable)
-    .values({ ...parsed.data, status: "active" })
+    .values({
+      ...parsed.data,
+      status: "active",
+      passwordHash,
+      mustChangePassword: true,
+    })
     .returning();
 
-  res.status(201).json(GetFarmerResponse.parse(farmer));
+  res.status(201).json({
+    id: farmer.id,
+    name: farmer.name,
+    email: farmer.email,
+    phone: farmer.phone,
+    location: farmer.location,
+    farmName: farmer.farmName,
+    farmSizeHectares: farmer.farmSizeHectares,
+    cropTypes: farmer.cropTypes,
+    status: farmer.status,
+    whatsappNumber: farmer.whatsappNumber,
+    notes: farmer.notes,
+    fieldOfficerId: farmer.fieldOfficerId,
+    createdAt: farmer.createdAt,
+    tempPassword,
+  });
 });
 
 /** GET /farmers/:id — get single farmer */

@@ -77,9 +77,13 @@ router.get("/devices/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  // Field officer: verify the device belongs to one of their farmers
+  // Scoped users (staff / farmer): device must belong to one of their farmers.
+  // Unassigned devices (farmerId === null) are never visible to scoped users.
   const assignedIds = await getAssignedFarmerIds(req);
-  if (assignedIds !== null && device.farmerId !== null && !assignedIds.includes(device.farmerId)) {
+  if (
+    assignedIds !== null &&
+    (device.farmerId === null || !assignedIds.includes(device.farmerId))
+  ) {
     res.status(403).json({ error: "Access denied" });
     return;
   }
@@ -161,7 +165,11 @@ router.get("/devices/:id/readings", async (req, res): Promise<void> => {
       .select({ farmerId: devicesTable.farmerId })
       .from(devicesTable)
       .where(eq(devicesTable.id, params.data.id));
-    if (!device || (device.farmerId !== null && !assignedIds.includes(device.farmerId))) {
+    if (
+      !device ||
+      device.farmerId === null ||
+      !assignedIds.includes(device.farmerId)
+    ) {
       res.status(403).json({ error: "Access denied" });
       return;
     }

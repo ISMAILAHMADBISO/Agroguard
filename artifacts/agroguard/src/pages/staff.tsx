@@ -20,13 +20,21 @@ const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email(),
   phone: z.string().optional(),
-  role: z.enum(["admin", "agronomist", "field_officer", "support"]),
+  role: z.enum(["super_admin", "admin", "agronomist", "staff"]),
   department: z.string().optional(),
 });
+
+const ROLE_OPTIONS: { value: string; label: string }[] = [
+  { value: "super_admin", label: "Super Admin" },
+  { value: "admin", label: "Administrator" },
+  { value: "agronomist", label: "Agronomist" },
+  { value: "staff", label: "Staff" },
+];
 
 export default function StaffPage() {
   const { data: staff, isLoading } = useListStaff();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState<{ name: string; email: string; tempPassword: string } | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -38,7 +46,7 @@ export default function StaffPage() {
     defaultValues: {
       name: "",
       email: "",
-      role: "field_officer",
+      role: "staff",
       department: "",
       phone: "",
     },
@@ -48,11 +56,19 @@ export default function StaffPage() {
     createStaff.mutate(
       { data },
       {
-        onSuccess: () => {
+        onSuccess: (result) => {
           queryClient.invalidateQueries({ queryKey: getListStaffQueryKey() });
           setIsDialogOpen(false);
           form.reset();
-          toast({ title: "Staff member added successfully" });
+          if (result?.tempPassword) {
+            setCreatedCredentials({
+              name: result.name,
+              email: result.email,
+              tempPassword: result.tempPassword,
+            });
+          } else {
+            toast({ title: "Staff member added successfully" });
+          }
         },
         onError: () => {
           toast({ title: "Failed to add staff member", variant: "destructive" });
@@ -128,10 +144,9 @@ export default function StaffPage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="agronomist">Agronomist</SelectItem>
-                            <SelectItem value="field_officer">Field Officer</SelectItem>
-                            <SelectItem value="support">Support</SelectItem>
+                            {ROLE_OPTIONS.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -196,7 +211,7 @@ export default function StaffPage() {
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">
-                      {member.role.replace('_', ' ')}
+                      {ROLE_OPTIONS.find((o) => o.value === member.role)?.label ?? member.role.replace(/_/g, ' ')}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{member.department || '-'}</TableCell>
@@ -221,6 +236,46 @@ export default function StaffPage() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={!!createdCredentials} onOpenChange={(open) => !open && setCreatedCredentials(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Staff Member Created</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Share these credentials with {createdCredentials?.name}. The temporary password is shown
+              only once and must be changed on first sign-in.
+            </p>
+            <div className="rounded-md border bg-muted/40 p-4 space-y-2 text-sm">
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">Email</span>
+                <span className="font-medium break-all">{createdCredentials?.email}</span>
+              </div>
+              <div className="flex justify-between gap-4 border-t pt-2">
+                <span className="text-muted-foreground">Temporary Password</span>
+                <span className="font-mono font-semibold">{createdCredentials?.tempPassword}</span>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (createdCredentials) {
+                    navigator.clipboard?.writeText(
+                      `Email: ${createdCredentials.email}\nTemporary Password: ${createdCredentials.tempPassword}`
+                    );
+                    toast({ title: "Credentials copied to clipboard" });
+                  }
+                }}
+              >
+                Copy
+              </Button>
+              <Button onClick={() => setCreatedCredentials(null)}>Done</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

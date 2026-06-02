@@ -11,7 +11,7 @@ import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider, useAuth } from "@/context/auth";
+import { AuthProvider, useAuth, homePathForUser } from "@/context/auth";
 import NotFound from "@/pages/not-found";
 import { AppLayout } from "@/components/layout";
 import LandingPage from "@/pages/landing";
@@ -25,6 +25,8 @@ import AlertsPage from "@/pages/alerts";
 import RecommendationsPage from "@/pages/recommendations";
 import AnalyticsPage from "@/pages/analytics";
 import StaffPage from "@/pages/staff";
+import ChangePasswordPage from "@/pages/change-password";
+import MyFarmPage from "@/pages/my-farm";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,7 +41,21 @@ const queryClient = new QueryClient({
  * Wraps a page component with auth guard + AppLayout.
  * If not authenticated, redirects to /login.
  */
-function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+type Access = "staff" | "farmer" | "admin";
+
+/**
+ * Auth guard + AppLayout wrapper.
+ *  - unauthenticated → /login
+ *  - users with mustChangePassword → /change-password
+ *  - role mismatch → redirected to their own home
+ */
+function ProtectedRoute({
+  component: Component,
+  access = "staff",
+}: {
+  component: React.ComponentType;
+  access?: Access;
+}) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -59,6 +75,15 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 
   if (!user) return <Redirect to="/login" />;
 
+  if (user.mustChangePassword) return <Redirect to="/change-password" />;
+
+  const isFarmer = user.userType === "farmer";
+  const isAdmin = user.role === "super_admin" || user.role === "admin";
+
+  if (access === "farmer" && !isFarmer) return <Redirect to={homePathForUser(user)} />;
+  if (access === "staff" && isFarmer) return <Redirect to={homePathForUser(user)} />;
+  if (access === "admin" && !isAdmin) return <Redirect to={homePathForUser(user)} />;
+
   return (
     <AppLayout>
       <Component />
@@ -66,11 +91,21 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   );
 }
 
+/** Bare protected route (no layout) used by the change-password gate. */
+function BareProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Redirect to="/login" />;
+  return <Component />;
+}
+
 function Router() {
   return (
     <Switch>
       <Route path="/" component={LandingPage} />
       <Route path="/login" component={LoginPage} />
+      <Route path="/change-password" component={() => <BareProtectedRoute component={ChangePasswordPage} />} />
+      <Route path="/my-farm" component={() => <ProtectedRoute access="farmer" component={MyFarmPage} />} />
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/farmers" component={() => <ProtectedRoute component={FarmersPage} />} />
       <Route path="/farmers/:id" component={() => <ProtectedRoute component={FarmerDetailPage} />} />
@@ -79,7 +114,7 @@ function Router() {
       <Route path="/alerts" component={() => <ProtectedRoute component={AlertsPage} />} />
       <Route path="/recommendations" component={() => <ProtectedRoute component={RecommendationsPage} />} />
       <Route path="/analytics" component={() => <ProtectedRoute component={AnalyticsPage} />} />
-      <Route path="/staff" component={() => <ProtectedRoute component={StaffPage} />} />
+      <Route path="/staff" component={() => <ProtectedRoute access="admin" component={StaffPage} />} />
       <Route component={NotFound} />
     </Switch>
   );

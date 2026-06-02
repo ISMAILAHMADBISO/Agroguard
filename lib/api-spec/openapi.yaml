@@ -71,7 +71,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Farmer"
+                $ref: "#/components/schemas/FarmerCreateResult"
         "400":
           description: Invalid input
 
@@ -454,7 +454,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StaffMember"
+                $ref: "#/components/schemas/StaffCreateResult"
 
   /staff/{id}:
     patch:
@@ -610,6 +610,42 @@ components:
         updatedAt:
           type: string
           format: date-time
+
+    FarmerCreateResult:
+      type: object
+      required: [id, name, email, phone, location, status, createdAt, tempPassword]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        location:
+          type: string
+        farmName:
+          type: ["string", "null"]
+        farmSizeHectares:
+          type: ["number", "null"]
+        cropTypes:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [active, inactive, pending]
+        whatsappNumber:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        fieldOfficerId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        tempPassword:
+          type: string
+          description: One-time temporary password shown only at creation; the farmer must change it on first login.
 
     FarmerInput:
       type: object
@@ -948,7 +984,7 @@ components:
           type: ["string", "null"]
         role:
           type: string
-          enum: [admin, agronomist, field_officer, support]
+          enum: [super_admin, admin, agronomist, staff]
         status:
           type: string
           enum: [active, inactive]
@@ -957,6 +993,33 @@ components:
         createdAt:
           type: string
           format: date-time
+
+    StaffCreateResult:
+      type: object
+      required: [id, name, email, role, status, createdAt, tempPassword]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [super_admin, admin, agronomist, staff]
+        status:
+          type: string
+          enum: [active, inactive]
+        department:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        tempPassword:
+          type: string
+          description: One-time temporary password shown only at creation; the staff member must change it on first login.
 
     StaffInput:
       type: object
@@ -972,7 +1035,7 @@ components:
           type: string
         role:
           type: string
-          enum: [admin, agronomist, field_officer, support]
+          enum: [super_admin, admin, agronomist, staff]
         department:
           type: string
 
@@ -987,7 +1050,7 @@ components:
           type: string
         role:
           type: string
-          enum: [admin, agronomist, field_officer, support]
+          enum: [super_admin, admin, agronomist, staff]
         status:
           type: string
           enum: [active, inactive]

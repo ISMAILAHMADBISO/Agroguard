@@ -7,9 +7,10 @@
  *     <main area> — top header + page content slot
  *
  * RBAC visibility:
- *   - "Staff" section (sidebar) is hidden from field_officer and support roles
- *   - "My Assignments Only" badge appears for field_officer sessions
- *   - Admin badge appears for admin sessions
+ *   - Farmers see a dedicated "My Farm" nav; staff-type users see the platform nav
+ *   - "Administration" section (sidebar) is visible to super_admin/admin only
+ *   - Scope badge appears for staff ("My Assignments Only") and farmer ("My Farm Only") sessions
+ *   - Admin badge appears for super_admin/admin sessions
  */
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/context/auth";
@@ -46,14 +47,16 @@ import {
   LogOut,
   User,
   ShieldCheck,
+  KeyRound,
 } from "lucide-react";
 
 /** Human-readable role labels */
 const ROLE_LABELS: Record<string, string> = {
+  super_admin: "Super Admin",
   admin: "Administrator",
   agronomist: "Agronomist",
-  field_officer: "Field Officer",
-  support: "Support",
+  staff: "Staff",
+  farmer: "Farmer",
 };
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -64,8 +67,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     ? user.name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()
     : "?";
 
-  const isAdmin = user?.role === "admin";
-  const isFieldOfficer = user?.role === "field_officer";
+  const isAdmin = user?.role === "super_admin" || user?.role === "admin";
+  const isScopedStaff = user?.role === "staff";
+  const isFarmer = user?.userType === "farmer";
 
   return (
     <SidebarProvider>
@@ -84,72 +88,91 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </SidebarHeader>
 
           <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>Platform</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={location === "/dashboard"}>
-                      <Link href="/dashboard">
-                        <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={location.startsWith("/farmers")}>
-                      <Link href="/farmers">
-                        <Users className="mr-2 h-4 w-4" /> Farmers
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={location.startsWith("/devices")}>
-                      <Link href="/devices">
-                        <Cpu className="mr-2 h-4 w-4" /> Devices
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={location === "/alerts"}>
-                      <Link href="/alerts">
-                        <Bell className="mr-2 h-4 w-4" /> Alerts
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={location === "/recommendations"}>
-                      <Link href="/recommendations">
-                        <Lightbulb className="mr-2 h-4 w-4" /> Recommendations
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={location === "/analytics"}>
-                      <Link href="/analytics">
-                        <LineChart className="mr-2 h-4 w-4" /> Analytics
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            {/* Administration section — visible to admin and agronomist only */}
-            {(isAdmin || user?.role === "agronomist") && (
+            {isFarmer ? (
               <SidebarGroup>
-                <SidebarGroupLabel>Administration</SidebarGroupLabel>
+                <SidebarGroupLabel>My Farm</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild isActive={location === "/staff"}>
-                        <Link href="/staff">
-                          <UsersRound className="mr-2 h-4 w-4" /> Staff
+                      <SidebarMenuButton asChild isActive={location === "/my-farm"}>
+                        <Link href="/my-farm">
+                          <LayoutDashboard className="mr-2 h-4 w-4" /> Overview
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
+            ) : (
+              <>
+                <SidebarGroup>
+                  <SidebarGroupLabel>Platform</SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={location === "/dashboard"}>
+                          <Link href="/dashboard">
+                            <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={location.startsWith("/farmers")}>
+                          <Link href="/farmers">
+                            <Users className="mr-2 h-4 w-4" /> Farmers
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={location.startsWith("/devices")}>
+                          <Link href="/devices">
+                            <Cpu className="mr-2 h-4 w-4" /> Devices
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={location === "/alerts"}>
+                          <Link href="/alerts">
+                            <Bell className="mr-2 h-4 w-4" /> Alerts
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={location === "/recommendations"}>
+                          <Link href="/recommendations">
+                            <Lightbulb className="mr-2 h-4 w-4" /> Recommendations
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={location === "/analytics"}>
+                          <Link href="/analytics">
+                            <LineChart className="mr-2 h-4 w-4" /> Analytics
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+
+                {/* Administration section — visible to admin-level users only */}
+                {isAdmin && (
+                  <SidebarGroup>
+                    <SidebarGroupLabel>Administration</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton asChild isActive={location === "/staff"}>
+                            <Link href="/staff">
+                              <UsersRound className="mr-2 h-4 w-4" /> Staff
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                )}
+              </>
             )}
           </SidebarContent>
         </Sidebar>
@@ -164,9 +187,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </h1>
 
               {/* Role scope badges */}
-              {isFieldOfficer && (
+              {(isScopedStaff || isFarmer) && (
                 <span className="hidden sm:inline-flex items-center gap-1 text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5">
-                  My Assignments Only
+                  {isFarmer ? "My Farm Only" : "My Assignments Only"}
                 </span>
               )}
               {isAdmin && (
@@ -205,6 +228,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <DropdownMenuItem disabled>
                     <User className="mr-2 h-4 w-4" />
                     <span>{ROLE_LABELS[user.role] ?? user.role}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild className="cursor-pointer">
+                    <Link href="/change-password">
+                      <KeyRound className="mr-2 h-4 w-4" />
+                      <span>Change Password</span>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem

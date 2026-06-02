@@ -10,8 +10,8 @@ export type StaffInputRole = typeof StaffInputRole[keyof typeof StaffInputRole];
 
 
 export const StaffInputRole = {
+  super_admin: 'super_admin',
   admin: 'admin',
   agronomist: 'agronomist',
-  field_officer: 'field_officer',
-  support: 'support',
+  staff: 'staff',
 } as const;

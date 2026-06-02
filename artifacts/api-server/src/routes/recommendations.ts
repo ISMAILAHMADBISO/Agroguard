@@ -11,7 +11,7 @@ import {
   ListRecommendationsResponse,
   ApplyRecommendationResponse,
 } from "@workspace/api-zod";
-import { getAssignedFarmerIds } from "../lib/rbac";
+import { getAssignedFarmerIds, canWrite, canAccessFarmer } from "../lib/rbac";
 
 const router: IRouter = Router();
 
@@ -32,11 +32,21 @@ router.get("/recommendations", async (req, res): Promise<void> => {
   res.json(ListRecommendationsResponse.parse(recs));
 });
 
-/** POST /recommendations — create an AI recommendation */
+/** POST /recommendations — create an AI recommendation (admin / agronomist) */
 router.post("/recommendations", async (req, res): Promise<void> => {
+  if (!canWrite(req)) {
+    res.status(403).json({ error: "Insufficient permissions" });
+    return;
+  }
+
   const parsed = CreateRecommendationBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  if (!(await canAccessFarmer(req, parsed.data.farmerId))) {
+    res.status(403).json({ error: "Access denied" });
     return;
   }
 
@@ -48,11 +58,31 @@ router.post("/recommendations", async (req, res): Promise<void> => {
   res.status(201).json(rec);
 });
 
-/** PATCH /recommendations/:id/apply — mark recommendation as applied */
+/** PATCH /recommendations/:id/apply — mark recommendation as applied (admin / agronomist) */
 router.patch("/recommendations/:id/apply", async (req, res): Promise<void> => {
+  if (!canWrite(req)) {
+    res.status(403).json({ error: "Insufficient permissions" });
+    return;
+  }
+
   const params = ApplyRecommendationParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [existing] = await db
+    .select({ farmerId: recommendationsTable.farmerId })
+    .from(recommendationsTable)
+    .where(eq(recommendationsTable.id, params.data.id));
+
+  if (!existing) {
+    res.status(404).json({ error: "Recommendation not found" });
+    return;
+  }
+
+  if (!(await canAccessFarmer(req, existing.farmerId))) {
+    res.status(403).json({ error: "Access denied" });
     return;
   }
 
@@ -61,11 +91,6 @@ router.patch("/recommendations/:id/apply", async (req, res): Promise<void> => {
     .set({ status: "applied" })
     .where(eq(recommendationsTable.id, params.data.id))
     .returning();
-
-  if (!rec) {
-    res.status(404).json({ error: "Recommendation not found" });
-    return;
-  }
 
   res.json(ApplyRecommendationResponse.parse(rec));
 });

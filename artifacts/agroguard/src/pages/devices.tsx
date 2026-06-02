@@ -73,8 +73,8 @@ export default function DevicesPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const isAdmin = user?.role === "admin";
-  const canWrite = user?.role === "admin" || user?.role === "agronomist";
+  const isAdmin = user?.role === "super_admin" || user?.role === "admin";
+  const canWrite = isAdmin || user?.role === "agronomist";
 
   // Mutations
   const createDevice = useCreateDevice();

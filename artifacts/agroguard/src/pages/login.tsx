@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/context/auth";
+import { useAuth, homePathForUser } from "@/context/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,8 +23,8 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      await login(email, password);
-      setLocation("/dashboard");
+      const u = await login(email, password);
+      setLocation(u.mustChangePassword ? "/change-password" : homePathForUser(u));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -50,9 +50,9 @@ export default function LoginPage() {
 
         <Card className="shadow-xl border-0 ring-1 ring-border">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-xl">Staff Login</CardTitle>
+            <CardTitle className="text-xl">Sign In</CardTitle>
             <CardDescription>
-              Sign in with your staff credentials to access the platform.
+              Sign in with your staff or farmer credentials to access the platform.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -102,10 +102,10 @@ export default function LoginPage() {
               </p>
               <div className="space-y-1.5 text-xs">
                 {[
-                  { role: "Admin", email: "amina.okonkwo@agroguard.ng" },
+                  { role: "Super Admin", email: "amina.okonkwo@agroguard.ng" },
                   { role: "Agronomist", email: "fatima.alhassan@agroguard.ng" },
-                  { role: "Field Officer", email: "ibrahim.garba@agroguard.ng" },
-                  { role: "Support", email: "support@agroguard.ng" },
+                  { role: "Staff", email: "ibrahim.garba@agroguard.ng" },
+                  { role: "Farmer", email: "emeka.chukwu@farm.ng" },
                 ].map(({ role, email: e }) => (
                   <button
                     key={role}

@@ -20,8 +20,13 @@ import {
   GetRecentActivityResponse,
   GetSensorTrendsResponse,
 } from "@workspace/api-zod";
+import { requireStaffType } from "../lib/rbac";
 
 const router: IRouter = Router();
+
+// All dashboard analytics are platform-wide and restricted to internal staff.
+// Farmer logins use their own scoped endpoints (/farmers/:id, /farmers/:id/devices).
+router.use(requireStaffType);
 
 /** GET /dashboard/stats — platform-wide statistics */
 router.get("/dashboard/stats", async (_req, res): Promise<void> => {

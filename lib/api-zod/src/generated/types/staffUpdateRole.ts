@@ -10,8 +10,8 @@ export type StaffUpdateRole = typeof StaffUpdateRole[keyof typeof StaffUpdateRol
 
 
 export const StaffUpdateRole = {
+  super_admin: 'super_admin',
   admin: 'admin',
   agronomist: 'agronomist',
-  field_officer: 'field_officer',
-  support: 'support',
+  staff: 'staff',
 } as const;

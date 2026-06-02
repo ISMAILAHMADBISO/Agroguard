@@ -1,20 +1,38 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
+export type UserType = "staff" | "farmer";
+
 export interface AuthUser {
   id: number;
   name: string;
   email: string;
+  /** super_admin | admin | agronomist | staff | farmer */
   role: string;
+  userType: UserType;
+  mustChangePassword: boolean;
 }
 
 interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+function normalize(data: Partial<AuthUser> | null): AuthUser | null {
+  if (!data || data.id == null) return null;
+  return {
+    id: data.id,
+    name: data.name ?? "",
+    email: data.email ?? "",
+    role: data.role ?? "staff",
+    userType: (data.userType as UserType) ?? "staff",
+    mustChangePassword: data.mustChangePassword ?? false,
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -23,14 +41,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     fetch("/api/auth/me", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((data: AuthUser | null) => {
-        setUser(data);
+      .then((data: Partial<AuthUser> | null) => {
+        setUser(normalize(data));
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<AuthUser> => {
     const r = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -41,8 +59,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const e = (await r.json()) as { error: string };
       throw new Error(e.error || "Login failed");
     }
-    const data = (await r.json()) as AuthUser;
+    const data = normalize((await r.json()) as Partial<AuthUser>);
+    if (!data) throw new Error("Login failed");
     setUser(data);
+    return data;
   };
 
   const logout = async () => {
@@ -50,8 +70,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    const r = await fetch("/api/auth/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    if (!r.ok) {
+      const e = (await r.json()) as { error: string };
+      throw new Error(e.error || "Could not change password");
+    }
+    setUser((prev) => (prev ? { ...prev, mustChangePassword: false } : prev));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, changePassword }}>
       {children}
     </AuthContext.Provider>
   );
@@ -61,4 +95,9 @@ export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
+}
+
+/** The landing route for a user after login, based on their role. */
+export function homePathForUser(user: AuthUser): string {
+  return user.userType === "farmer" ? "/my-farm" : "/dashboard";
 }

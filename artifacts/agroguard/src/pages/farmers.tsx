@@ -79,15 +79,16 @@ export default function FarmersPage() {
   const { data: staffList } = useListStaff();
   const [search, setSearch] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState<{ name: string; email: string; tempPassword: string } | null>(null);
   const [editingFarmer, setEditingFarmer] = useState<NonNullable<typeof farmers>[number] | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const isAdmin = user?.role === "admin";
-  const canWrite = user?.role === "admin" || user?.role === "agronomist";
+  const isAdmin = user?.role === "super_admin" || user?.role === "admin";
+  const canWrite = isAdmin || user?.role === "agronomist";
 
-  // Field officers for the dropdown (admin only feature)
-  const fieldOfficers = staffList?.filter((s) => s.role === "field_officer" && s.status === "active") ?? [];
+  // Staff members available for field assignment (admin only feature)
+  const fieldOfficers = staffList?.filter((s) => s.role === "staff" && s.status === "active") ?? [];
 
   // Mutations
   const createFarmer = useCreateFarmer();
@@ -104,10 +105,17 @@ export default function FarmersPage() {
     createFarmer.mutate(
       { data },
       {
-        onSuccess: () => {
+        onSuccess: (result) => {
           queryClient.invalidateQueries({ queryKey: getListFarmersQueryKey() });
           setIsCreateOpen(false);
           createForm.reset();
+          if (result?.tempPassword) {
+            setCreatedCredentials({
+              name: result.name,
+              email: result.email,
+              tempPassword: result.tempPassword,
+            });
+          }
           toast({ title: "Farmer created successfully" });
         },
         onError: () => toast({ title: "Failed to create farmer", variant: "destructive" }),
@@ -504,6 +512,46 @@ export default function FarmersPage() {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!createdCredentials} onOpenChange={(open) => !open && setCreatedCredentials(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Farmer Account Created</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Share these credentials with {createdCredentials?.name}. The temporary password is shown
+              only once and must be changed on first sign-in.
+            </p>
+            <div className="rounded-md border bg-muted/40 p-4 space-y-2 text-sm">
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">Email</span>
+                <span className="font-medium break-all">{createdCredentials?.email}</span>
+              </div>
+              <div className="flex justify-between gap-4 border-t pt-2">
+                <span className="text-muted-foreground">Temporary Password</span>
+                <span className="font-mono font-semibold">{createdCredentials?.tempPassword}</span>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (createdCredentials) {
+                    navigator.clipboard?.writeText(
+                      `Email: ${createdCredentials.email}\nTemporary Password: ${createdCredentials.tempPassword}`
+                    );
+                    toast({ title: "Credentials copied to clipboard" });
+                  }
+                }}
+              >
+                Copy
+              </Button>
+              <Button onClick={() => setCreatedCredentials(null)}>Done</Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

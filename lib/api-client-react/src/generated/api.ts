@@ -29,6 +29,7 @@ import type {
   DeviceUpdate,
   FarmOverview,
   Farmer,
+  FarmerCreateResult,
   FarmerInput,
   FarmerUpdate,
   HealthStatus,
@@ -37,6 +38,7 @@ import type {
   SensorReading,
   SensorReadingInput,
   SensorTrendPoint,
+  StaffCreateResult,
   StaffInput,
   StaffMember,
   StaffUpdate
@@ -220,9 +222,9 @@ export const getCreateFarmerUrl = () => {
 /**
  * @summary Create a new farmer account
  */
-export const createFarmer = async (farmerInput: FarmerInput, options?: RequestInit): Promise<Farmer> => {
+export const createFarmer = async (farmerInput: FarmerInput, options?: RequestInit): Promise<FarmerCreateResult> => {
 
-  return customFetch<Farmer>(getCreateFarmerUrl(),
+  return customFetch<FarmerCreateResult>(getCreateFarmerUrl(),
   {
     ...options,
     method: 'POST',
@@ -1696,9 +1698,9 @@ export const getCreateStaffUrl = () => {
 /**
  * @summary Create staff member (admin only)
  */
-export const createStaff = async (staffInput: StaffInput, options?: RequestInit): Promise<StaffMember> => {
+export const createStaff = async (staffInput: StaffInput, options?: RequestInit): Promise<StaffCreateResult> => {
 
-  return customFetch<StaffMember>(getCreateStaffUrl(),
+  return customFetch<StaffCreateResult>(getCreateStaffUrl(),
   {
     ...options,
     method: 'POST',

@@ -3,7 +3,7 @@
  * Represents smallholder farmers registered on the AgroGuard platform.
  * Each farmer can be linked to one or more IoT devices.
  */
-import { pgTable, text, serial, timestamp, real, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, real, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -20,8 +20,14 @@ export const farmersTable = pgTable("farmers", {
   status: text("status").notNull().default("pending"),
   whatsappNumber: text("whatsapp_number"),
   notes: text("notes"),
-  /** FK to staff.id — field officer assigned to this farmer */
+  /** FK to staff.id — field officer/staff assigned to this farmer */
   fieldOfficerId: integer("field_officer_id"),
+  /** Farmer login credentials — farmers can sign in to see only their own data */
+  passwordHash: text("password_hash"),
+  /** Forces a password change on first login (true for admin/staff-created accounts) */
+  mustChangePassword: boolean("must_change_password").notNull().default(true),
+  /** One-time activation token sent via email/WhatsApp for account activation */
+  activationToken: text("activation_token"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

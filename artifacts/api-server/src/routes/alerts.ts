@@ -11,7 +11,7 @@ import {
   ListAlertsResponse,
   ResolveAlertResponse,
 } from "@workspace/api-zod";
-import { getAssignedFarmerIds } from "../lib/rbac";
+import { getAssignedFarmerIds, canWrite, canAccessFarmer } from "../lib/rbac";
 
 const router: IRouter = Router();
 
@@ -32,11 +32,21 @@ router.get("/alerts", async (req, res): Promise<void> => {
   res.json(ListAlertsResponse.parse(alerts));
 });
 
-/** POST /alerts — create a new farm alert */
+/** POST /alerts — create a new farm alert (admin / agronomist) */
 router.post("/alerts", async (req, res): Promise<void> => {
+  if (!canWrite(req)) {
+    res.status(403).json({ error: "Insufficient permissions" });
+    return;
+  }
+
   const parsed = CreateAlertBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  if (!(await canAccessFarmer(req, parsed.data.farmerId))) {
+    res.status(403).json({ error: "Access denied" });
     return;
   }
 
@@ -48,11 +58,31 @@ router.post("/alerts", async (req, res): Promise<void> => {
   res.status(201).json(alert);
 });
 
-/** PATCH /alerts/:id/resolve — mark an alert as resolved */
+/** PATCH /alerts/:id/resolve — mark an alert as resolved (admin / agronomist) */
 router.patch("/alerts/:id/resolve", async (req, res): Promise<void> => {
+  if (!canWrite(req)) {
+    res.status(403).json({ error: "Insufficient permissions" });
+    return;
+  }
+
   const params = ResolveAlertParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [existing] = await db
+    .select({ farmerId: alertsTable.farmerId })
+    .from(alertsTable)
+    .where(eq(alertsTable.id, params.data.id));
+
+  if (!existing) {
+    res.status(404).json({ error: "Alert not found" });
+    return;
+  }
+
+  if (!(await canAccessFarmer(req, existing.farmerId))) {
+    res.status(403).json({ error: "Access denied" });
     return;
   }
 
@@ -61,11 +91,6 @@ router.patch("/alerts/:id/resolve", async (req, res): Promise<void> => {
     .set({ status: "resolved" })
     .where(eq(alertsTable.id, params.data.id))
     .returning();
-
-  if (!alert) {
-    res.status(404).json({ error: "Alert not found" });
-    return;
-  }
 
   res.json(ResolveAlertResponse.parse(alert));
 });

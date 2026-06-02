@@ -444,7 +444,7 @@ export const ListStaffResponseItem = zod.object({
   "name": zod.string(),
   "email": zod.string(),
   "phone": zod.string().nullish(),
-  "role": zod.enum(['admin', 'agronomist', 'field_officer', 'support']),
+  "role": zod.enum(['super_admin', 'admin', 'agronomist', 'staff']),
   "status": zod.enum(['active', 'inactive']),
   "department": zod.string().nullish(),
   "createdAt": zod.coerce.date()
@@ -462,7 +462,7 @@ export const CreateStaffBody = zod.object({
   "name": zod.string().min(1),
   "email": zod.string().email(),
   "phone": zod.string().optional(),
-  "role": zod.enum(['admin', 'agronomist', 'field_officer', 'support']),
+  "role": zod.enum(['super_admin', 'admin', 'agronomist', 'staff']),
   "department": zod.string().optional()
 })
 
@@ -478,7 +478,7 @@ export const UpdateStaffBody = zod.object({
   "name": zod.string().optional(),
   "email": zod.string().optional(),
   "phone": zod.string().optional(),
-  "role": zod.enum(['admin', 'agronomist', 'field_officer', 'support']).optional(),
+  "role": zod.enum(['super_admin', 'admin', 'agronomist', 'staff']).optional(),
   "status": zod.enum(['active', 'inactive']).optional(),
   "department": zod.string().optional()
 })
@@ -488,7 +488,7 @@ export const UpdateStaffResponse = zod.object({
   "name": zod.string(),
   "email": zod.string(),
   "phone": zod.string().nullish(),
-  "role": zod.enum(['admin', 'agronomist', 'field_officer', 'support']),
+  "role": zod.enum(['super_admin', 'admin', 'agronomist', 'staff']),
   "status": zod.enum(['active', 'inactive']),
   "department": zod.string().nullish(),
   "createdAt": zod.coerce.date()

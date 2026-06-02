@@ -44,6 +44,39 @@ export interface Farmer {
   updatedAt?: string;
 }
 
+export type FarmerCreateResultStatus = typeof FarmerCreateResultStatus[keyof typeof FarmerCreateResultStatus];
+
+
+export const FarmerCreateResultStatus = {
+  active: 'active',
+  inactive: 'inactive',
+  pending: 'pending',
+} as const;
+
+export interface FarmerCreateResult {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  /** @nullable */
+  farmName?: string | null;
+  /** @nullable */
+  farmSizeHectares?: number | null;
+  /** @nullable */
+  cropTypes?: string | null;
+  status: FarmerCreateResultStatus;
+  /** @nullable */
+  whatsappNumber?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  fieldOfficerId?: number | null;
+  createdAt: string;
+  /** One-time temporary password shown only at creation; the farmer must change it on first login. */
+  tempPassword: string;
+}
+
 export interface FarmerInput {
   /** @minLength 1 */
   name: string;
@@ -394,10 +427,10 @@ export type StaffMemberRole = typeof StaffMemberRole[keyof typeof StaffMemberRol
 
 
 export const StaffMemberRole = {
+  super_admin: 'super_admin',
   admin: 'admin',
   agronomist: 'agronomist',
-  field_officer: 'field_officer',
-  support: 'support',
+  staff: 'staff',
 } as const;
 
 export type StaffMemberStatus = typeof StaffMemberStatus[keyof typeof StaffMemberStatus];
@@ -421,14 +454,47 @@ export interface StaffMember {
   createdAt: string;
 }
 
+export type StaffCreateResultRole = typeof StaffCreateResultRole[keyof typeof StaffCreateResultRole];
+
+
+export const StaffCreateResultRole = {
+  super_admin: 'super_admin',
+  admin: 'admin',
+  agronomist: 'agronomist',
+  staff: 'staff',
+} as const;
+
+export type StaffCreateResultStatus = typeof StaffCreateResultStatus[keyof typeof StaffCreateResultStatus];
+
+
+export const StaffCreateResultStatus = {
+  active: 'active',
+  inactive: 'inactive',
+} as const;
+
+export interface StaffCreateResult {
+  id: number;
+  name: string;
+  email: string;
+  /** @nullable */
+  phone?: string | null;
+  role: StaffCreateResultRole;
+  status: StaffCreateResultStatus;
+  /** @nullable */
+  department?: string | null;
+  createdAt: string;
+  /** One-time temporary password shown only at creation; the staff member must change it on first login. */
+  tempPassword: string;
+}
+
 export type StaffInputRole = typeof StaffInputRole[keyof typeof StaffInputRole];
 
 
 export const StaffInputRole = {
+  super_admin: 'super_admin',
   admin: 'admin',
   agronomist: 'agronomist',
-  field_officer: 'field_officer',
-  support: 'support',
+  staff: 'staff',
 } as const;
 
 export interface StaffInput {
@@ -444,10 +510,10 @@ export type StaffUpdateRole = typeof StaffUpdateRole[keyof typeof StaffUpdateRol
 
 
 export const StaffUpdateRole = {
+  super_admin: 'super_admin',
   admin: 'admin',
   agronomist: 'agronomist',
-  field_officer: 'field_officer',
-  support: 'support',
+  staff: 'staff',
 } as const;
 
 export type StaffUpdateStatus = typeof StaffUpdateStatus[keyof typeof StaffUpdateStatus];

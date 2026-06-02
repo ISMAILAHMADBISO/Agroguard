@@ -3,3 +3,4 @@
 - [IoT reading ingestion pattern](iot-ingestion.md) — POST /api/readings accepts deviceId as hardware string, server resolves to DB integer ID; device status auto-updated to online on each reading
 - [connect-pg-simple bundling issue](session-store.md) — connect-pg-simple reads table.sql from __dirname at runtime; when esbuild bundles it, __dirname is wrong. Fix: pre-create table manually + remove createTableIfMissing
 - [WebSocket path routing](websocket-routing.md) — WS server must use path /api/ws so the shared Replit proxy routes it to the API server (port 8080); path /ws goes to frontend
+- [AgroGuard RBAC model](agroguard-rbac.md) — 5-role auth; agronomist+ write/see-all, staff read-only scoped, farmers API-blocked from platform surfaces (not just UI); shared temp-password onboarding.
