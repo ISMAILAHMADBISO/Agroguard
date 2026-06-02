@@ -1,0 +1,245 @@
+import { useRef, useState } from "react";
+import {
+  useDetectDisease,
+  useListDiseaseReports,
+  getListDiseaseReportsQueryKey,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Upload, Loader2, Leaf, ScanLine, ShieldAlert, Stethoscope } from "lucide-react";
+
+const MAX_BYTES = 8 * 1024 * 1024;
+
+function severityBadge(severity: string) {
+  switch (severity) {
+    case "high":
+      return <Badge variant="destructive">High severity</Badge>;
+    case "medium":
+      return <Badge className="bg-orange-500 hover:bg-orange-500/90">Medium severity</Badge>;
+    default:
+      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Low severity</Badge>;
+  }
+}
+
+export default function CropDiagnosisPage() {
+  const [preview, setPreview] = useState<string | null>(null);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [cropType, setCropType] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const detect = useDetectDisease();
+  const { data: reports, isLoading } = useListDiseaseReports();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const handleFile = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Please choose an image file", variant: "destructive" });
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      toast({ title: "Image too large", description: "Please use an image under 8MB.", variant: "destructive" });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setPreview(dataUrl);
+      setImageBase64(dataUrl);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAnalyze = () => {
+    if (!imageBase64) return;
+    detect.mutate(
+      { data: { imageBase64, cropType: cropType.trim() || null } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListDiseaseReportsQueryKey() });
+          toast({ title: "Analysis complete" });
+          setPreview(null);
+          setImageBase64(null);
+          setCropType("");
+          if (fileRef.current) fileRef.current.value = "";
+        },
+        onError: () => {
+          toast({
+            title: "Analysis failed",
+            description: "The AI service could not analyse this photo. Please try again.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
+
+  const latest = reports?.[0];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Crop Disease Detection</h2>
+        <p className="text-muted-foreground">
+          Upload a clear photo of a crop leaf or plant and get an instant AI diagnosis with treatment guidance.
+        </p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Upload card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ScanLine className="h-5 w-5 text-primary" /> Analyse a photo
+            </CardTitle>
+            <CardDescription>JPEG, PNG or WebP, up to 8MB.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => fileRef.current?.click()}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && fileRef.current?.click()}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                const file = e.dataTransfer.files?.[0];
+                if (file) handleFile(file);
+              }}
+              className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/30 p-8 text-center cursor-pointer hover:border-primary/40 transition-colors"
+            >
+              {preview ? (
+                <img src={preview} alt="Selected crop" className="max-h-56 rounded-md object-contain" />
+              ) : (
+                <>
+                  <Upload className="h-8 w-8 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    Click to upload or drag and drop a crop photo
+                  </p>
+                </>
+              )}
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFile(file);
+              }}
+            />
+
+            <div className="space-y-1.5">
+              <Label htmlFor="cropType">Crop type (optional)</Label>
+              <Input
+                id="cropType"
+                placeholder="e.g. maize, tomato, cassava"
+                value={cropType}
+                onChange={(e) => setCropType(e.target.value)}
+              />
+            </div>
+
+            <Button className="w-full" onClick={handleAnalyze} disabled={!imageBase64 || detect.isPending}>
+              {detect.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analysing...
+                </>
+              ) : (
+                <>
+                  <Stethoscope className="mr-2 h-4 w-4" /> Diagnose crop
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Latest result card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Leaf className="h-5 w-5 text-primary" /> Latest diagnosis
+            </CardTitle>
+            <CardDescription>The most recent analysis result.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {detect.isPending ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : latest ? (
+              <div className="space-y-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-semibold">{latest.diagnosis}</h3>
+                    {latest.cropType && (
+                      <p className="text-sm text-muted-foreground capitalize">{latest.cropType}</p>
+                    )}
+                  </div>
+                  {severityBadge(latest.severity)}
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">Confidence</span>
+                  <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full bg-primary" style={{ width: `${latest.confidence}%` }} />
+                  </div>
+                  <span className="font-medium">{latest.confidence}%</span>
+                </div>
+                <p className="text-sm text-foreground/80 leading-relaxed">{latest.summary}</p>
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground mb-1">
+                    <ShieldAlert className="h-3.5 w-3.5 text-primary" /> Recommended treatment
+                  </p>
+                  <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{latest.treatment}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground text-sm">
+                No diagnoses yet. Upload a photo to get started.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* History */}
+      <div>
+        <h3 className="text-lg font-semibold mb-3">Diagnosis history</h3>
+        {isLoading ? (
+          <div className="flex justify-center p-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : reports && reports.length > 1 ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {reports.slice(1).map((r) => (
+              <Card key={r.id}>
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <CardTitle className="text-base">{r.diagnosis}</CardTitle>
+                    {severityBadge(r.severity)}
+                  </div>
+                  {r.cropType && (
+                    <CardDescription className="capitalize">{r.cropType}</CardDescription>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-foreground/80 leading-relaxed line-clamp-3">{r.summary}</p>
+                  <p className="mt-2 text-xs text-muted-foreground">Confidence: {r.confidence}%</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground text-sm border rounded-lg bg-card">
+            Past diagnoses will appear here.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

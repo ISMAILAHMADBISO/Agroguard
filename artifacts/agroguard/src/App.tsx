@@ -27,6 +27,8 @@ import AnalyticsPage from "@/pages/analytics";
 import StaffPage from "@/pages/staff";
 import ChangePasswordPage from "@/pages/change-password";
 import MyFarmPage from "@/pages/my-farm";
+import CropDiagnosisPage from "@/pages/crop-diagnosis";
+import AiAssistantPage from "@/pages/ai-assistant";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,7 +43,7 @@ const queryClient = new QueryClient({
  * Wraps a page component with auth guard + AppLayout.
  * If not authenticated, redirects to /login.
  */
-type Access = "staff" | "farmer" | "admin";
+type Access = "staff" | "farmer" | "admin" | "any";
 
 /**
  * Auth guard + AppLayout wrapper.
@@ -113,6 +115,8 @@ function Router() {
       <Route path="/devices/:id" component={() => <ProtectedRoute component={DeviceDetailPage} />} />
       <Route path="/alerts" component={() => <ProtectedRoute component={AlertsPage} />} />
       <Route path="/recommendations" component={() => <ProtectedRoute component={RecommendationsPage} />} />
+      <Route path="/crop-diagnosis" component={() => <ProtectedRoute access="any" component={CropDiagnosisPage} />} />
+      <Route path="/ai-assistant" component={() => <ProtectedRoute access="any" component={AiAssistantPage} />} />
       <Route path="/analytics" component={() => <ProtectedRoute component={AnalyticsPage} />} />
       <Route path="/staff" component={() => <ProtectedRoute access="admin" component={StaffPage} />} />
       <Route component={NotFound} />

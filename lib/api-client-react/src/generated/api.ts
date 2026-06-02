@@ -21,12 +21,18 @@ import type {
 
 import type {
   ActivityEvent,
+  AiConversation,
+  AiConversationSummary,
   Alert,
   AlertInput,
+  ChatInput,
+  ChatResponse,
   DashboardStats,
   Device,
   DeviceInput,
   DeviceUpdate,
+  DiseaseDetectionInput,
+  DiseaseReport,
   FarmOverview,
   Farmer,
   FarmerCreateResult,
@@ -2207,4 +2213,377 @@ export function useGetSensorTrends<TData = Awaited<ReturnType<typeof getSensorTr
 
 
 
+
+export const getDetectDiseaseUrl = () => {
+
+
+
+
+  return `/api/ai/disease-detection`
+}
+
+/**
+ * @summary Analyse a crop photo and return a disease diagnosis
+ */
+export const detectDisease = async (diseaseDetectionInput: DiseaseDetectionInput, options?: RequestInit): Promise<DiseaseReport> => {
+
+  return customFetch<DiseaseReport>(getDetectDiseaseUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      diseaseDetectionInput,)
+  }
+);}
+
+
+
+
+export const getDetectDiseaseMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof detectDisease>>, TError,{data: BodyType<DiseaseDetectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof detectDisease>>, TError,{data: BodyType<DiseaseDetectionInput>}, TContext> => {
+
+const mutationKey = ['detectDisease'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof detectDisease>>, {data: BodyType<DiseaseDetectionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  detectDisease(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DetectDiseaseMutationResult = NonNullable<Awaited<ReturnType<typeof detectDisease>>>
+    export type DetectDiseaseMutationBody = BodyType<DiseaseDetectionInput>
+    export type DetectDiseaseMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Analyse a crop photo and return a disease diagnosis
+ */
+export const useDetectDisease = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof detectDisease>>, TError,{data: BodyType<DiseaseDetectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof detectDisease>>,
+        TError,
+        {data: BodyType<DiseaseDetectionInput>},
+        TContext
+      > => {
+      return useMutation(getDetectDiseaseMutationOptions(options));
+    }
+
+export const getListDiseaseReportsUrl = () => {
+
+
+
+
+  return `/api/ai/disease-reports`
+}
+
+/**
+ * @summary List crop-disease reports (scoped by role)
+ */
+export const listDiseaseReports = async ( options?: RequestInit): Promise<DiseaseReport[]> => {
+
+  return customFetch<DiseaseReport[]>(getListDiseaseReportsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListDiseaseReportsQueryKey = () => {
+    return [
+    `/api/ai/disease-reports`
+    ] as const;
+    }
+
+
+export const getListDiseaseReportsQueryOptions = <TData = Awaited<ReturnType<typeof listDiseaseReports>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDiseaseReports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDiseaseReportsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDiseaseReports>>> = ({ signal }) => listDiseaseReports({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDiseaseReports>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListDiseaseReportsQueryResult = NonNullable<Awaited<ReturnType<typeof listDiseaseReports>>>
+export type ListDiseaseReportsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List crop-disease reports (scoped by role)
+ */
+
+export function useListDiseaseReports<TData = Awaited<ReturnType<typeof listDiseaseReports>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDiseaseReports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListDiseaseReportsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListAiConversationsUrl = () => {
+
+
+
+
+  return `/api/ai/conversations`
+}
+
+/**
+ * @summary List the current user's advisory conversations
+ */
+export const listAiConversations = async ( options?: RequestInit): Promise<AiConversationSummary[]> => {
+
+  return customFetch<AiConversationSummary[]>(getListAiConversationsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAiConversationsQueryKey = () => {
+    return [
+    `/api/ai/conversations`
+    ] as const;
+    }
+
+
+export const getListAiConversationsQueryOptions = <TData = Awaited<ReturnType<typeof listAiConversations>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAiConversations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAiConversationsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAiConversations>>> = ({ signal }) => listAiConversations({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAiConversations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAiConversationsQueryResult = NonNullable<Awaited<ReturnType<typeof listAiConversations>>>
+export type ListAiConversationsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List the current user's advisory conversations
+ */
+
+export function useListAiConversations<TData = Awaited<ReturnType<typeof listAiConversations>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAiConversations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAiConversationsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetAiConversationUrl = (id: number,) => {
+
+
+
+
+  return `/api/ai/conversations/${id}`
+}
+
+/**
+ * @summary Get a single advisory conversation with full message history
+ */
+export const getAiConversation = async (id: number, options?: RequestInit): Promise<AiConversation> => {
+
+  return customFetch<AiConversation>(getGetAiConversationUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAiConversationQueryKey = (id: number,) => {
+    return [
+    `/api/ai/conversations/${id}`
+    ] as const;
+    }
+
+
+export const getGetAiConversationQueryOptions = <TData = Awaited<ReturnType<typeof getAiConversation>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAiConversation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAiConversationQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAiConversation>>> = ({ signal }) => getAiConversation(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAiConversation>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAiConversationQueryResult = NonNullable<Awaited<ReturnType<typeof getAiConversation>>>
+export type GetAiConversationQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get a single advisory conversation with full message history
+ */
+
+export function useGetAiConversation<TData = Awaited<ReturnType<typeof getAiConversation>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAiConversation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAiConversationQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSendChatMessageUrl = () => {
+
+
+
+
+  return `/api/ai/chat`
+}
+
+/**
+ * @summary Send a message to the AI farming advisor
+ */
+export const sendChatMessage = async (chatInput: ChatInput, options?: RequestInit): Promise<ChatResponse> => {
+
+  return customFetch<ChatResponse>(getSendChatMessageUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      chatInput,)
+  }
+);}
+
+
+
+
+export const getSendChatMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendChatMessage>>, TError,{data: BodyType<ChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendChatMessage>>, TError,{data: BodyType<ChatInput>}, TContext> => {
+
+const mutationKey = ['sendChatMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendChatMessage>>, {data: BodyType<ChatInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  sendChatMessage(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendChatMessageMutationResult = NonNullable<Awaited<ReturnType<typeof sendChatMessage>>>
+    export type SendChatMessageMutationBody = BodyType<ChatInput>
+    export type SendChatMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Send a message to the AI farming advisor
+ */
+export const useSendChatMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendChatMessage>>, TError,{data: BodyType<ChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendChatMessage>>,
+        TError,
+        {data: BodyType<ChatInput>},
+        TContext
+      > => {
+      return useMutation(getSendChatMessageMutationOptions(options));
+    }
 

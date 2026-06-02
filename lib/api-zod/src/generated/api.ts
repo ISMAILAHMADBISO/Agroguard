@@ -573,3 +573,80 @@ export const GetSensorTrendsResponseItem = zod.object({
 export const GetSensorTrendsResponse = zod.array(GetSensorTrendsResponseItem)
 
 
+/**
+ * @summary Analyse a crop photo and return a disease diagnosis
+ */
+export const DetectDiseaseBody = zod.object({
+  "imageBase64": zod.string().describe('Data URL or raw base64 of the crop photo (JPEG\/PNG\/WebP).'),
+  "cropType": zod.string().nullish().describe('Optional crop name to focus the analysis, e.g. \"maize\".'),
+  "farmerId": zod.number().nullish().describe('Optional farmer this diagnosis concerns.')
+})
+
+
+/**
+ * @summary List crop-disease reports (scoped by role)
+ */
+export const ListDiseaseReportsResponseItem = zod.object({
+  "id": zod.number(),
+  "farmerId": zod.number().nullish(),
+  "cropType": zod.string().nullish(),
+  "diagnosis": zod.string(),
+  "confidence": zod.number(),
+  "severity": zod.enum(['low', 'medium', 'high']),
+  "treatment": zod.string(),
+  "summary": zod.string(),
+  "createdBy": zod.number(),
+  "createdByType": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListDiseaseReportsResponse = zod.array(ListDiseaseReportsResponseItem)
+
+
+/**
+ * @summary List the current user's advisory conversations
+ */
+export const ListAiConversationsResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListAiConversationsResponse = zod.array(ListAiConversationsResponseItem)
+
+
+/**
+ * @summary Get a single advisory conversation with full message history
+ */
+export const GetAiConversationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetAiConversationResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "messages": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant']),
+  "content": zod.string()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Send a message to the AI farming advisor
+ */
+export const SendChatMessageBody = zod.object({
+  "message": zod.string().describe('The user\'s question for the AI farming advisor.'),
+  "conversationId": zod.number().nullish().describe('Existing conversation to append to; omit to start a new one.')
+})
+
+export const SendChatMessageResponse = zod.object({
+  "conversationId": zod.number(),
+  "reply": zod.string(),
+  "messages": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant']),
+  "content": zod.string()
+}))
+})
+
+

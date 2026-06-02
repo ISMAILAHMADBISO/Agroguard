@@ -563,6 +563,96 @@ paths:
                 items:
                   $ref: "#/components/schemas/SensorTrendPoint"
 
+  # ── AI ───────────────────────────────────────────────────────────────────────
+  /ai/disease-detection:
+    post:
+      operationId: detectDisease
+      tags: [ai]
+      summary: Analyse a crop photo and return a disease diagnosis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiseaseDetectionInput"
+      responses:
+        "201":
+          description: Diagnosis created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiseaseReport"
+
+  /ai/disease-reports:
+    get:
+      operationId: listDiseaseReports
+      tags: [ai]
+      summary: List crop-disease reports (scoped by role)
+      responses:
+        "200":
+          description: List of disease reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DiseaseReport"
+
+  /ai/conversations:
+    get:
+      operationId: listAiConversations
+      tags: [ai]
+      summary: List the current user's advisory conversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AiConversationSummary"
+
+  /ai/conversations/{id}:
+    get:
+      operationId: getAiConversation
+      tags: [ai]
+      summary: Get a single advisory conversation with full message history
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Conversation with messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiConversation"
+        "404":
+          description: Conversation not found
+
+  /ai/chat:
+    post:
+      operationId: sendChatMessage
+      tags: [ai]
+      summary: Send a message to the AI farming advisor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatInput"
+      responses:
+        "200":
+          description: Assistant reply with updated conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -1163,3 +1253,112 @@ components:
           type: number
         heatIndex:
           type: number
+
+    # ── AI ───────────────────────────────────────────────────────────────────────
+    DiseaseDetectionInput:
+      type: object
+      required: [imageBase64]
+      properties:
+        imageBase64:
+          type: string
+          description: Data URL or raw base64 of the crop photo (JPEG/PNG/WebP).
+        cropType:
+          type: ["string", "null"]
+          description: Optional crop name to focus the analysis, e.g. "maize".
+        farmerId:
+          type: ["integer", "null"]
+          description: Optional farmer this diagnosis concerns.
+
+    DiseaseReport:
+      type: object
+      required: [id, diagnosis, confidence, severity, treatment, summary, createdBy, createdByType, createdAt]
+      properties:
+        id:
+          type: integer
+        farmerId:
+          type: ["integer", "null"]
+        cropType:
+          type: ["string", "null"]
+        diagnosis:
+          type: string
+        confidence:
+          type: integer
+        severity:
+          type: string
+          enum: [low, medium, high]
+        treatment:
+          type: string
+        summary:
+          type: string
+        createdBy:
+          type: integer
+        createdByType:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ChatMessage:
+      type: object
+      required: [role, content]
+      properties:
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+
+    AiConversationSummary:
+      type: object
+      required: [id, title, updatedAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+
+    AiConversation:
+      type: object
+      required: [id, title, messages, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatMessage"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ChatInput:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          description: The user's question for the AI farming advisor.
+        conversationId:
+          type: ["integer", "null"]
+          description: Existing conversation to append to; omit to start a new one.
+
+    ChatResponse:
+      type: object
+      required: [conversationId, reply, messages]
+      properties:
+        conversationId:
+          type: integer
+        reply:
+          type: string
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatMessage"

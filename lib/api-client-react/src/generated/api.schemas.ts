@@ -608,3 +608,86 @@ export interface SensorTrendPoint {
   heatIndex: number;
 }
 
+export interface DiseaseDetectionInput {
+  /** Data URL or raw base64 of the crop photo (JPEG/PNG/WebP). */
+  imageBase64: string;
+  /**
+     * Optional crop name to focus the analysis, e.g. "maize".
+     * @nullable
+     */
+  cropType?: string | null;
+  /**
+     * Optional farmer this diagnosis concerns.
+     * @nullable
+     */
+  farmerId?: number | null;
+}
+
+export type DiseaseReportSeverity = typeof DiseaseReportSeverity[keyof typeof DiseaseReportSeverity];
+
+
+export const DiseaseReportSeverity = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface DiseaseReport {
+  id: number;
+  /** @nullable */
+  farmerId?: number | null;
+  /** @nullable */
+  cropType?: string | null;
+  diagnosis: string;
+  confidence: number;
+  severity: DiseaseReportSeverity;
+  treatment: string;
+  summary: string;
+  createdBy: number;
+  createdByType: string;
+  createdAt: string;
+}
+
+export type ChatMessageRole = typeof ChatMessageRole[keyof typeof ChatMessageRole];
+
+
+export const ChatMessageRole = {
+  user: 'user',
+  assistant: 'assistant',
+} as const;
+
+export interface ChatMessage {
+  role: ChatMessageRole;
+  content: string;
+}
+
+export interface AiConversationSummary {
+  id: number;
+  title: string;
+  updatedAt: string;
+}
+
+export interface AiConversation {
+  id: number;
+  title: string;
+  messages: ChatMessage[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatInput {
+  /** The user's question for the AI farming advisor. */
+  message: string;
+  /**
+     * Existing conversation to append to; omit to start a new one.
+     * @nullable
+     */
+  conversationId?: number | null;
+}
+
+export interface ChatResponse {
+  conversationId: number;
+  reply: string;
+  messages: ChatMessage[];
+}
+

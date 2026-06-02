@@ -5,3 +5,4 @@
 - [WebSocket path routing](websocket-routing.md) — WS server must use path /api/ws so the shared Replit proxy routes it to the API server (port 8080); path /ws goes to frontend
 - [AgroGuard RBAC model](agroguard-rbac.md) — 5-role auth; agronomist+ write/see-all, staff read-only scoped, farmers API-blocked from platform surfaces (not just UI); shared temp-password onboarding.
 - [Session cookies in Replit iframe](iframe-session-cookies.md) — cookie-session apps 401 after login in preview; fix = trust proxy + Secure/SameSite=None, then MUST add CORS allowlist + Origin CSRF guard.
+- [AgroGuard AI features](ai-features.md) — disease detection + advisory chat; access="any" route guard for shared staff/farmer pages; route-level input guards; 502+insufficient_quota = billing not bug.

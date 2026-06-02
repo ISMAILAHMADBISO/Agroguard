@@ -48,6 +48,8 @@ import {
   User,
   ShieldCheck,
   KeyRound,
+  ScanLine,
+  Bot,
 } from "lucide-react";
 
 /** Human-readable role labels */
@@ -100,6 +102,20 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={location === "/crop-diagnosis"}>
+                        <Link href="/crop-diagnosis">
+                          <ScanLine className="mr-2 h-4 w-4" /> Crop Diagnosis
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={location === "/ai-assistant"}>
+                        <Link href="/ai-assistant">
+                          <Bot className="mr-2 h-4 w-4" /> AI Assistant
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
@@ -141,6 +157,20 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                         <SidebarMenuButton asChild isActive={location === "/recommendations"}>
                           <Link href="/recommendations">
                             <Lightbulb className="mr-2 h-4 w-4" /> Recommendations
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={location === "/crop-diagnosis"}>
+                          <Link href="/crop-diagnosis">
+                            <ScanLine className="mr-2 h-4 w-4" /> Crop Diagnosis
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={location === "/ai-assistant"}>
+                          <Link href="/ai-assistant">
+                            <Bot className="mr-2 h-4 w-4" /> AI Assistant
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
