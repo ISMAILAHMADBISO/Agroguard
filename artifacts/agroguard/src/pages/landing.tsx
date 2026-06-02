@@ -11,7 +11,7 @@ export default function LandingPage() {
       <header className="fixed top-0 w-full z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src="/agroguard-logo.png" alt="AgroGuard Logo" className="h-8 w-8 rounded-full object-cover ring-2 ring-primary/20" />
+            <img src="/agroguard-logo.png" alt="AgroGuard Logo" className="h-10 w-10 object-contain" />
             <span className="font-bold text-xl text-primary">AgroGuard Limited</span>
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">

@@ -41,7 +41,7 @@ export default function LoginPage() {
             <img
               src="/agroguard-logo.png"
               alt="AgroGuard"
-              className="h-16 w-16 rounded-full object-cover ring-4 ring-primary/20 shadow-lg"
+              className="h-24 w-24 object-contain"
             />
           </div>
           <h1 className="text-2xl font-bold text-primary">AgroGuard Limited</h1>

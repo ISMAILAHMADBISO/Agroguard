@@ -73,11 +73,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <Sidebar className="border-r border-sidebar-border">
           <SidebarHeader className="h-16 flex items-center px-4 border-b border-sidebar-border">
             <Link href="/" className="flex items-center gap-2.5 font-bold text-lg text-sidebar-foreground">
-              {/* Circular logo */}
+              {/* Brand logo */}
               <img
                 src="/agroguard-logo.png"
                 alt="AgroGuard"
-                className="h-8 w-8 rounded-full object-cover ring-2 ring-primary/20"
+                className="h-9 w-9 object-contain"
               />
               <span>AgroGuard</span>
             </Link>

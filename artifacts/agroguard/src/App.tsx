@@ -49,7 +49,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
           <img
             src="/agroguard-logo.png"
             alt="AgroGuard"
-            className="h-16 w-16 mx-auto rounded-full object-cover ring-4 ring-primary/20 animate-pulse"
+            className="h-20 w-20 mx-auto object-contain animate-pulse"
           />
           <p className="text-muted-foreground text-sm">Loading platform...</p>
         </div>

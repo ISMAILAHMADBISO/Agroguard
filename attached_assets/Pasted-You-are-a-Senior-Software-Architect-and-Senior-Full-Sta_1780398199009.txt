@@ -1,0 +1,266 @@
+You are a Senior Software Architect and Senior Full-Stack Engineer.
+
+You are working on an EXISTING AgroGuard codebase that already has:
+- UI design
+- layout system
+- styling
+- frontend structure
+- partial backend logic
+- IoT integration attempts
+
+IMPORTANT:
+DO NOT change the UI design, colors, layout, branding, or frontend structure.
+
+ONLY FIX AND MIGRATE BACKEND + SYSTEM LOGIC.
+
+------------------------------------------------------------
+1. CORE INSTRUCTION (VERY IMPORTANT)
+------------------------------------------------------------
+✔ Keep the entire existing frontend exactly as it is
+✔ Do NOT redesign or restyle the UI
+✔ Do NOT change colors, layout, or UX structure
+✔ Do NOT rebuild from scratch
+
+ONLY DO THE FOLLOWING:
+- Fix all broken features
+- Fix authentication issues
+- Fix RBAC system
+- Fix IoT device system
+- Fix AI integration layer
+- Migrate backend fully to Node.js (Next.js API routes)
+- Remove all Python/FastAPI or external backend dependencies
+- Ensure full system works end-to-end
+
+------------------------------------------------------------
+2. BACKEND MIGRATION REQUIREMENT
+------------------------------------------------------------
+Convert ALL backend logic into:
+
+- Node.js
+- Next.js API routes (App Router preferred)
+- No Python backend allowed
+- No FastAPI allowed
+
+Final architecture must be:
+Frontend (existing UI unchanged)
++
+Next.js Node.js Backend APIs
++
+PostgreSQL database
+
+------------------------------------------------------------
+3. CRITICAL ISSUES TO FIX
+------------------------------------------------------------
+
+A. USER MANAGEMENT BUGS
+Fix:
+- Farmer account creation failing
+- Staff account creation failing
+- Missing user data display
+- Broken credential handling
+
+Ensure:
+- Proper bcrypt password hashing
+- Correct user creation flow
+- Proper retrieval and display of user profiles
+
+------------------------------------------------------------
+
+B. RBAC SYSTEM IS BROKEN
+Fix strict role-based access control.
+
+Roles:
+- Super Admin
+- Admin
+- Agronomist
+- Staff
+- Farmer
+
+RULES:
+- Agronomist must NOT have admin privileges
+- Staff must NOT access system settings
+- Farmer must only see own data
+- Admin manages users and devices
+- Super Admin has full access
+
+Implement middleware-based RBAC enforcement on all API routes.
+
+------------------------------------------------------------
+
+C. AUTHENTICATION FAILURES (401 ERRORS)
+Fix completely.
+
+Implement:
+- JWT authentication (access + refresh tokens)
+- Role validation middleware
+- Protected API routes
+- Secure session handling
+
+Ensure:
+- No unauthorized access errors
+- Tokens refresh correctly
+- Login system works consistently
+
+------------------------------------------------------------
+
+D. FARMER & STAFF REGISTRATION WORKFLOW
+Fix and ensure working:
+
+Farmer:
+- Created by Admin or Staff
+- System generates temporary password + activation token
+- Sent via Email/WhatsApp
+- Farmer must activate account
+- Must change password on first login
+
+Staff:
+- Created by Admin only
+- Temporary password generated
+- Must reset password on first login
+
+Ensure:
+- Passwords are NEVER exposed after creation
+- bcrypt hashing is enforced
+
+------------------------------------------------------------
+
+E. DEVICE (IoT) SYSTEM FIX
+Fix incomplete IoT logic.
+
+Device model must include:
+- deviceId
+- serialNumber
+- name
+- firmwareVersion
+- status (UNASSIGNED | ACTIVE | OFFLINE | MAINTENANCE)
+- lastSeen
+- assignedFarmerId
+- assignedFarmId
+
+Rules:
+- Only Admin assigns devices
+- Farmers only see assigned devices
+- Unassigned devices must NOT appear in dashboards
+
+Ensure ESP32 data ingestion works via API or MQTT.
+
+------------------------------------------------------------
+
+F. AI INTEGRATION (WRAPPER ONLY)
+Do NOT build AI models inside system.
+
+Create API integration layer:
+
+1. Disease Detection API
+POST /api/ai/disease-detection
+Input: image
+Output: disease name, confidence, treatment
+
+2. AI Advisory Chat System
+- Chat interface for farmers
+- Agriculture Q&A assistant
+- Fertilizer, pest, irrigation guidance
+
+3. Recommendation Engine
+Inputs:
+- soil moisture
+- temperature
+- humidity
+- EC, NPK
+
+Outputs:
+- irrigation advice
+- crop recommendations
+- alerts
+
+------------------------------------------------------------
+G. WHATSAPP INTEGRATION FIX
+Use Meta WhatsApp Cloud API.
+
+Features:
+- Send alerts to farmers
+- Respond to "STATUS" command
+- Return:
+  - soil data
+  - device status
+  - AI recommendations
+
+Store all WhatsApp logs in database.
+
+------------------------------------------------------------
+4. DATABASE FIX (POSTGRESQL)
+------------------------------------------------------------
+Fix schema relationships and missing logic.
+
+Tables:
+- users
+- roles
+- permissions
+- farmers
+- staff
+- agronomists
+- farms
+- devices
+- sensor_data
+- recommendations
+- disease_reports
+- ai_conversations
+- notifications
+- whatsapp_logs
+
+Ensure:
+- correct foreign keys
+- correct role mapping
+- correct farmer-device relationships
+
+------------------------------------------------------------
+5. FRONTEND RULE
+------------------------------------------------------------
+DO NOT CHANGE FRONTEND DESIGN.
+
+Only fix:
+- broken API connections
+- missing data rendering
+- authentication flow issues
+- role-based dashboard visibility
+
+Dashboards:
+- Admin
+- Farmer
+- Agronomist
+- Staff
+
+------------------------------------------------------------
+6. ANALYTICS FIX
+------------------------------------------------------------
+Fix or complete:
+- device uptime tracking
+- farm performance analytics
+- sensor trends
+- disease analytics
+
+------------------------------------------------------------
+7. OUTPUT REQUIREMENT
+------------------------------------------------------------
+Return a SINGLE CLEAN PROJECT FOLDER containing:
+
+1. Fully fixed Next.js codebase
+2. Node.js backend APIs (inside Next.js)
+3. Working RBAC system
+4. Fixed authentication system (JWT + refresh tokens)
+5. IoT integration (ESP32 compatible)
+6. AI integration service layer
+7. WhatsApp integration
+8. PostgreSQL schema + migrations
+9. Fixed dashboards (no UI redesign)
+10. Deployment-ready structure
+
+------------------------------------------------------------
+FINAL GOAL
+------------------------------------------------------------
+A fully functional AgroGuard system that:
+- Keeps existing UI exactly unchanged
+- Fixes all broken functionality
+- Migrates backend fully to Node.js (Next.js)
+- Works end-to-end (IoT + AI + WhatsApp + dashboards)
+- Is production-ready for deployment on Vercel or similar platforms
