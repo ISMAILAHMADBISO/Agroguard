@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useGetDashboardStats } from "@workspace/api-client-react";
-import { Leaf, Droplets, Sun, ShieldCheck } from "lucide-react";
+import { Leaf, Droplets, Sun, ShieldCheck, MapPin, Mail, Phone } from "lucide-react";
 
 export default function LandingPage() {
   const { data: stats } = useGetDashboardStats();
@@ -150,7 +150,7 @@ export default function LandingPage() {
 
       <footer className="bg-sidebar py-12 border-t border-sidebar-border">
         <div className="container mx-auto px-4 text-center md:text-left grid md:grid-cols-4 gap-8">
-          <div className="col-span-2">
+          <div>
             <div className="flex items-center gap-2 justify-center md:justify-start mb-4">
               <img src="/agroguard-logo.png" alt="AgroGuard Logo" className="h-8 w-8 object-contain opacity-80" />
               <span className="font-bold text-xl text-sidebar-foreground">AgroGuard Limited</span>
@@ -160,21 +160,41 @@ export default function LandingPage() {
             </p>
           </div>
           <div>
+            <h4 className="font-semibold text-sidebar-foreground mb-4">Get In Touch</h4>
+            <ul className="space-y-3 text-sidebar-foreground/70">
+              <li className="flex items-start gap-2 justify-center md:justify-start">
+                <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+                <span>Jamaa, Zaria, Kaduna State, Nigeria</span>
+              </li>
+              <li className="flex items-center gap-2 justify-center md:justify-start">
+                <Mail className="h-4 w-4 shrink-0 text-primary" />
+                <a href="mailto:info@agroguard.tech" className="hover:text-primary transition-colors">info@agroguard.tech</a>
+              </li>
+              <li className="flex items-center gap-2 justify-center md:justify-start">
+                <Phone className="h-4 w-4 shrink-0 text-primary" />
+                <a href="tel:+2347089459265" className="hover:text-primary transition-colors">+234 708 945 9265</a>
+              </li>
+            </ul>
+          </div>
+          <div>
             <h4 className="font-semibold text-sidebar-foreground mb-4">Platform</h4>
             <ul className="space-y-2 text-sidebar-foreground/70">
               <li><Link href="/login" className="hover:text-primary transition-colors">Platform Login</Link></li>
-              <li><a href="#" className="hover:text-primary transition-colors">IoT Devices</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Analytics</a></li>
+              <li><a href="#features" className="hover:text-primary transition-colors">IoT Devices</a></li>
+              <li><a href="#features" className="hover:text-primary transition-colors">Analytics</a></li>
             </ul>
           </div>
           <div>
             <h4 className="font-semibold text-sidebar-foreground mb-4">Company</h4>
             <ul className="space-y-2 text-sidebar-foreground/70">
               <li><a href="#team" className="hover:text-primary transition-colors">About Us</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Contact</a></li>
+              <li><a href="mailto:info@agroguard.tech" className="hover:text-primary transition-colors">Contact</a></li>
               <li><a href="#" className="hover:text-primary transition-colors">Privacy Policy</a></li>
             </ul>
           </div>
+        </div>
+        <div className="container mx-auto px-4 mt-10 pt-6 border-t border-sidebar-border/60 text-center text-sm text-sidebar-foreground/60">
+          &copy; {new Date().getFullYear()} AgroGuard Limited. All Rights Reserved.
         </div>
       </footer>
     </div>

@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ChangePasswordPage() {
-  const { user, changePassword } = useAuth();
+  const { user, changePassword, logout } = useAuth();
   const [, setLocation] = useLocation();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -113,6 +113,19 @@ export default function ChangePasswordPage() {
 
               <Button type="submit" className="w-full h-11 text-base" disabled={loading}>
                 {loading ? "Saving..." : "Update Password"}
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full h-11 text-base"
+                disabled={loading}
+                onClick={async () => {
+                  await logout();
+                  setLocation("/login");
+                }}
+              >
+                Back to Login
               </Button>
             </form>
           </CardContent>
