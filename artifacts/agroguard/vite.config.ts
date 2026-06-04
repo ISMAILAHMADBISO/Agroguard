@@ -4,13 +4,9 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
-const rawPort = process.env.PORT;
-
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
+// On Replit the workflow injects PORT/BASE_PATH. Locally they are usually unset,
+// so we fall back to sensible defaults for a zero-config `npm run dev`.
+const rawPort = process.env.PORT ?? "5173";
 
 const port = Number(rawPort);
 
@@ -18,13 +14,14 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const basePath = process.env.BASE_PATH;
+const basePath = process.env.BASE_PATH ?? "/";
 
-if (!basePath) {
-  throw new Error(
-    "BASE_PATH environment variable is required but was not provided.",
-  );
-}
+// True only on Replit. Locally we proxy /api to the backend so the frontend and
+// API share an origin (required for cookie-based auth); on Replit the shared
+// reverse proxy already routes /api, so we must NOT add a Vite proxy there.
+const isReplit =
+  process.env.REPL_ID !== undefined ||
+  process.env.REPLIT_DEV_DOMAIN !== undefined;
 
 export default defineConfig({
   base: basePath,
@@ -66,6 +63,19 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    // Local dev only: forward /api to the Express backend so the browser sees a
+    // single origin (cookie auth works). Skipped on Replit (shared proxy handles it).
+    ...(isReplit
+      ? {}
+      : {
+          proxy: {
+            "/api": {
+              target: "http://localhost:8080",
+              changeOrigin: false,
+              ws: true,
+            },
+          },
+        }),
   },
   preview: {
     port,

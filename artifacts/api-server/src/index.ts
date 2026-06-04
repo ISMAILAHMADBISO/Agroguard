@@ -3,13 +3,9 @@ import app from "./app";
 import { initWebSocket } from "./lib/ws";
 import { logger } from "./lib/logger";
 
-const rawPort = process.env["PORT"];
-
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
+// On Replit the workflow injects PORT. Locally it is usually unset, so we
+// fall back to 8080 (the documented local API port) for a zero-config start.
+const rawPort = process.env["PORT"] ?? "8080";
 
 const port = Number(rawPort);
 

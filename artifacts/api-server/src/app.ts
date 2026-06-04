@@ -25,10 +25,25 @@ function getAllowedOrigins(): string[] {
       if (host) origins.add(`https://${host}`);
     }
   }
+  // Local development fallback (no Replit domains present): allow the Vite dev
+  // server and common localhost origins so cookie-based auth works over http.
+  if (origins.size === 0) {
+    origins.add("http://localhost:5173");
+    origins.add("http://127.0.0.1:5173");
+    origins.add("http://localhost:8080");
+  }
   return [...origins];
 }
 
 const allowedOrigins = getAllowedOrigins();
+
+/**
+ * True when running on Replit (dev preview or deployment), where traffic is
+ * served over HTTPS through a cross-site iframe. Used to switch cookie security
+ * on/off so the same code works both on Replit (HTTPS) and a local PC (HTTP).
+ */
+const isReplit =
+  !!process.env["REPLIT_DEV_DOMAIN"] || !!process.env["REPLIT_DOMAINS"];
 
 const app: Express = express();
 
@@ -84,8 +99,10 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      // On Replit (HTTPS, cross-site iframe) cookies must be Secure + SameSite=None.
+      // Locally (HTTP) they must be non-Secure + SameSite=Lax or the browser drops them.
+      secure: isReplit,
+      sameSite: isReplit ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     },
   }),
