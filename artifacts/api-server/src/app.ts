@@ -6,6 +6,7 @@ import connectPg from "connect-pg-simple";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middleware/auth";
+import { SESSION_COOKIE_NAME, SESSION_SECRET } from "./lib/session-token";
 
 const PgStore = connectPg(session);
 
@@ -87,14 +88,41 @@ app.use(
 app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true, limit: "15mb" }));
 
+/**
+ * Bearer-token → session-cookie bridge.
+ *
+ * When the app runs inside a cross-site iframe (Replit workspace / canvas
+ * preview), the browser blocks the third-party session cookie, so the client
+ * falls back to sending the signed session token as `Authorization: Bearer`.
+ * Here we inject that token as the session cookie BEFORE express-session runs,
+ * so the existing PostgreSQL session store resolves it exactly like a real
+ * cookie. We only inject when no genuine session cookie is already present.
+ */
+function bearerToCookie(req: Request, _res: Response, next: NextFunction): void {
+  const auth = req.get("authorization");
+  if (auth && auth.startsWith("Bearer ")) {
+    const token = auth.slice(7).trim();
+    const existing = req.headers.cookie;
+    const hasSessionCookie =
+      !!existing && existing.includes(`${SESSION_COOKIE_NAME}=`);
+    if (token && !hasSessionCookie) {
+      const injected = `${SESSION_COOKIE_NAME}=${encodeURIComponent(token)}`;
+      req.headers.cookie = existing ? `${existing}; ${injected}` : injected;
+    }
+  }
+  next();
+}
+
+app.use(bearerToCookie);
+
 app.use(
   session({
     store: new PgStore({
       conString: process.env["DATABASE_URL"],
       tableName: "user_sessions",
     }),
-    name: "agroguard.sid",
-    secret: process.env["SESSION_SECRET"] || "dev-secret-change-in-production",
+    name: SESSION_COOKIE_NAME,
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {

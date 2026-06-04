@@ -9,6 +9,7 @@ import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db, staffTable, farmersTable } from "@workspace/db";
+import { signSessionId } from "../lib/session-token";
 
 const router: IRouter = Router();
 
@@ -47,14 +48,24 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     req.session.userEmail = staff.email;
     req.session.mustChangePassword = staff.mustChangePassword;
 
-    res.json({
-      id: staff.id,
-      name: staff.name,
-      email: staff.email,
-      role: staff.role,
-      userType: "staff",
-      department: staff.department,
-      mustChangePassword: staff.mustChangePassword,
+    // Persist the session before returning the token so the token always
+    // references a row that already exists in the store (avoids a race where a
+    // fast follow-up request arrives before the implicit end-of-response save).
+    req.session.save((err) => {
+      if (err) {
+        res.status(500).json({ error: "Could not establish session" });
+        return;
+      }
+      res.json({
+        id: staff.id,
+        name: staff.name,
+        email: staff.email,
+        role: staff.role,
+        userType: "staff",
+        department: staff.department,
+        mustChangePassword: staff.mustChangePassword,
+        token: signSessionId(req.sessionID),
+      });
     });
     return;
   }
@@ -84,13 +95,20 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     req.session.userEmail = farmer.email ?? normalizedEmail;
     req.session.mustChangePassword = farmer.mustChangePassword;
 
-    res.json({
-      id: farmer.id,
-      name: farmer.name,
-      email: farmer.email,
-      role: "farmer",
-      userType: "farmer",
-      mustChangePassword: farmer.mustChangePassword,
+    req.session.save((err) => {
+      if (err) {
+        res.status(500).json({ error: "Could not establish session" });
+        return;
+      }
+      res.json({
+        id: farmer.id,
+        name: farmer.name,
+        email: farmer.email,
+        role: "farmer",
+        userType: "farmer",
+        mustChangePassword: farmer.mustChangePassword,
+        token: signSessionId(req.sessionID),
+      });
     });
     return;
   }
@@ -183,13 +201,20 @@ router.post("/auth/signup", async (req, res): Promise<void> => {
   req.session.userEmail = farmer.email ?? normalizedEmail;
   req.session.mustChangePassword = false;
 
-  res.status(201).json({
-    id: farmer.id,
-    name: farmer.name,
-    email: farmer.email,
-    role: "farmer",
-    userType: "farmer",
-    mustChangePassword: false,
+  req.session.save((err) => {
+    if (err) {
+      res.status(500).json({ error: "Could not establish session" });
+      return;
+    }
+    res.status(201).json({
+      id: farmer.id,
+      name: farmer.name,
+      email: farmer.email,
+      role: "farmer",
+      userType: "farmer",
+      mustChangePassword: false,
+      token: signSessionId(req.sessionID),
+    });
   });
 });
 

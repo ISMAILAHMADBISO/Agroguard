@@ -9,9 +9,10 @@
  */
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider, useAuth, homePathForUser } from "@/context/auth";
+import { AuthProvider, useAuth, homePathForUser, getAuthToken } from "@/context/auth";
 import NotFound from "@/pages/not-found";
 import { AppLayout } from "@/components/layout";
 import LandingPage from "@/pages/landing";
@@ -30,6 +31,11 @@ import ChangePasswordPage from "@/pages/change-password";
 import MyFarmPage from "@/pages/my-farm";
 import CropDiagnosisPage from "@/pages/crop-diagnosis";
 import AiAssistantPage from "@/pages/ai-assistant";
+
+// Attach the stored session token as `Authorization: Bearer` to every generated
+// API call. This keeps auth working inside the cross-site Replit iframe where
+// the browser blocks the third-party session cookie.
+setAuthTokenGetter(() => getAuthToken());
 
 const queryClient = new QueryClient({
   defaultOptions: {

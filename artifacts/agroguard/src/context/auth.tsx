@@ -35,6 +35,42 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+/**
+ * Session token storage.
+ *
+ * Inside the Replit workspace / canvas iframe the browser blocks the third-party
+ * session cookie, so we also keep the signed session token the server returns on
+ * login and send it as `Authorization: Bearer`. This keeps auth working whether
+ * or not cookies survive the cross-site context.
+ */
+const TOKEN_KEY = "agroguard.token";
+
+export function getAuthToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function setAuthToken(token: string | null): void {
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    /* ignore storage failures (e.g. private mode) */
+  }
+}
+
+/** Merge the bearer Authorization header (when a token is stored) with extras. */
+function authHeaders(extra?: Record<string, string>): Record<string, string> {
+  const token = getAuthToken();
+  return {
+    ...(extra ?? {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
 function normalize(data: Partial<AuthUser> | null): AuthUser | null {
   if (!data || data.id == null) return null;
   return {
@@ -52,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/auth/me", { credentials: "include" })
+    fetch("/api/auth/me", { credentials: "include", headers: authHeaders() })
       .then((r) => (r.ok ? r.json() : null))
       .then((data: Partial<AuthUser> | null) => {
         setUser(normalize(data));
@@ -72,7 +108,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const e = (await r.json()) as { error: string };
       throw new Error(e.error || "Login failed");
     }
-    const data = normalize((await r.json()) as Partial<AuthUser>);
+    const json = (await r.json()) as Partial<AuthUser> & { token?: string };
+    setAuthToken(json.token ?? null);
+    const data = normalize(json);
     if (!data) throw new Error("Login failed");
     setUser(data);
     return data;
@@ -89,21 +127,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const e = (await r.json()) as { error: string };
       throw new Error(e.error || "Sign up failed");
     }
-    const data = normalize((await r.json()) as Partial<AuthUser>);
+    const json = (await r.json()) as Partial<AuthUser> & { token?: string };
+    setAuthToken(json.token ?? null);
+    const data = normalize(json);
     if (!data) throw new Error("Sign up failed");
     setUser(data);
     return data;
   };
 
   const logout = async () => {
-    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+      headers: authHeaders(),
+    });
+    setAuthToken(null);
     setUser(null);
   };
 
   const changePassword = async (currentPassword: string, newPassword: string) => {
     const r = await fetch("/api/auth/change-password", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders({ "Content-Type": "application/json" }),
       credentials: "include",
       body: JSON.stringify({ currentPassword, newPassword }),
     });
