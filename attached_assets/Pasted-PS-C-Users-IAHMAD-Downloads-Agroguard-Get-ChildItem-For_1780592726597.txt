@@ -1,0 +1,38 @@
+PS C:\Users\IAHMAD\Downloads\Agroguard> Get-ChildItem -Force | Where-Object Name -like ".env*" | Select-Object Name, Length
+
+Name         Length
+----         ------
+.env            457
+.env.example    449
+
+
+PS C:\Users\IAHMAD\Downloads\Agroguard> Get-Content lib\db\src\load-env.ts -TotalCount 1
+Get-Content : Cannot find path 'C:\Users\IAHMAD\Downloads\Agroguard\lib\db\src\load-env.ts' because it does not exist.
+At line:1 char:1
++ Get-Content lib\db\src\load-env.ts -TotalCount 1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Users\IAHMAD...src\load-env.ts:String) [Get-Content], ItemNotFoundException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetContentCommand
+
+PS C:\Users\IAHMAD\Downloads\Agroguard> Select-String -Path lib\db\drizzle.config.ts -Pattern "load-env"
+PS C:\Users\IAHMAD\Downloads\Agroguard> Select-String -Path package.json -Pattern '"dev"'
+PS C:\Users\IAHMAD\Downloads\Agroguard> $env:DATABASE_URL="postgresql://agroguard_user:agroguard_pass@localhost:5432/agroguard"; npm run setup
+
+> workspace@0.0.0 setup
+> npm run push --workspace @workspace/db && npm run setup --workspace @workspace/scripts
+
+
+> @workspace/db@0.0.0 push
+> drizzle-kit push --config ./drizzle.config.ts
+
+Reading config file 'C:\Users\IAHMAD\Downloads\Agroguard\lib\db\drizzle.config.ts'
+ Error  No schema files found for path config ['C:\Users\IAHMAD\Downloads\Agroguard\lib\db\src\schema\index.ts']
+ Error  If path represents a file - please make sure to use .ts or other extension in the path
+npm error Lifecycle script `push` failed with error:
+npm error code 1
+npm error path C:\Users\IAHMAD\Downloads\Agroguard\lib\db
+npm error workspace @workspace/db@0.0.0
+npm error location C:\Users\IAHMAD\Downloads\Agroguard\lib\db
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c drizzle-kit push --config ./drizzle.config.ts
+PS C:\Users\IAHMAD\Downloads\Agroguard>
