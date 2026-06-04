@@ -23,7 +23,7 @@ import {
   GetAiConversationParams,
 } from "@workspace/api-zod";
 import { getAssignedFarmerIds, canAccessFarmer } from "../lib/rbac";
-import { getOpenAI, AI_MODEL, isAIConfigured } from "../lib/openai";
+import { getOpenAI, AI_MODEL, isAIConfigured, describeAIError } from "../lib/openai";
 
 const AI_NOT_CONFIGURED_MESSAGE =
   "AI is not configured. Add an OPENAI_API_KEY to enable disease detection and the advisory chat.";
@@ -154,7 +154,11 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
     };
   } catch (err) {
     req.log.error({ err }, "disease detection failed");
-    res.status(502).json({ error: "AI analysis failed. Please try again." });
+    const { status, message } = describeAIError(
+      err,
+      "AI analysis failed. Please try again.",
+    );
+    res.status(status).json({ error: message });
     return;
   }
 
@@ -314,7 +318,11 @@ router.post("/ai/chat", async (req, res): Promise<void> => {
     reply = completion.choices[0]?.message?.content ?? "";
   } catch (err) {
     req.log.error({ err }, "advisory chat failed");
-    res.status(502).json({ error: "AI assistant is unavailable. Please try again." });
+    const { status, message } = describeAIError(
+      err,
+      "AI assistant is unavailable. Please try again.",
+    );
+    res.status(status).json({ error: message });
     return;
   }
 

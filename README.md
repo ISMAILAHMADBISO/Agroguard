@@ -137,6 +137,13 @@ copy .env.example .env     # Windows cmd
 Fill in at least `DATABASE_URL` and `SESSION_SECRET` (and `OPENAI_API_KEY` for
 the AI features). See [Environment variables](#environment-variables).
 
+> **No manual exports needed.** The project auto-loads this root `.env` for every
+> command — `npm run setup` (schema push + seed), `npm run dev`, and the API
+> server all read it automatically on Windows PowerShell, macOS and Linux. You do
+> **not** need to run `$env:DATABASE_URL=...` (PowerShell) or `export ...` by
+> hand. Variables already set in the real environment (Replit/Vercel) always win,
+> so the same code works in the cloud where no `.env` exists.
+
 ### 4 — Create tables + seed demo data
 
 ```bash
@@ -227,18 +234,23 @@ auth and CSRF protection use the correct origin.
 
 ## Custom domain on Namecheap
 
-1. In Vercel: **Project → Settings → Domains → Add** your domain
-   (e.g. `agroguard.com`). Vercel shows the DNS records to create.
+This project uses the Namecheap domain **`agroguard.tech`**.
+
+1. In Vercel: **Project → Settings → Domains → Add** `agroguard.tech` (and add
+   `www.agroguard.tech` too — Vercel will offer to redirect one to the other).
+   Vercel then shows the exact DNS records to create.
 2. In Namecheap: **Domain List → Manage → Advanced DNS**.
 3. Add the records Vercel asks for. Typically:
-   - **Apex (`agroguard.com`):** an `A` record `@ → 76.76.21.21`
+   - **Apex (`agroguard.tech`):** an `A` record `@ → 76.76.21.21`
      (use the exact IP Vercel shows), **or** an `ALIAS`/`CNAME` to
      `cname.vercel-dns.com` if your DNS supports it at the apex.
    - **www:** a `CNAME` record `www → cname.vercel-dns.com`.
-4. Remove Namecheap's default "parking" records that conflict.
+4. Remove Namecheap's default "parking" records (the `CNAME www → parkingpage`
+   and the URL-redirect record) so they don't conflict.
 5. Wait for DNS to propagate (minutes to a few hours). Vercel issues HTTPS
-   automatically.
-6. Set `APP_URL=https://agroguard.com` in Vercel env vars and redeploy.
+   automatically once the records resolve.
+6. Set `APP_URL=https://agroguard.tech` in Vercel env vars and redeploy so
+   cookies, CORS and CSRF use the real origin.
 
 ---
 
@@ -281,6 +293,8 @@ new readings, so no special firmware changes are needed for "live" updates.
 
 | Symptom | Fix |
 |---------|-----|
+| `npm run setup` says "DATABASE_URL is not set" | Make sure `.env` exists in the **project root** (not in `lib/db`) and contains `DATABASE_URL`. It is auto-loaded — no `$env:`/`export` needed. |
+| drizzle-kit: "please install required packages: drizzle-orm" | You ran `npx drizzle-kit` directly. Use `npm run setup` (or `npm run push --workspace @workspace/db`) so the workspace-pinned drizzle-kit + drizzle-orm are used. |
 | Server won't start: "Missing required environment variable(s): DATABASE_URL" | Set `DATABASE_URL` in `.env` (local) or Vercel env vars. |
 | Server won't start in prod: "SESSION_SECRET must be set" | Add `SESSION_SECRET` in Vercel env vars. |
 | Login works then 401s | Ensure `APP_URL` matches the site's real origin; redeploy. |
@@ -307,7 +321,11 @@ Migration-relevant additions/edits:
 - `artifacts/api-server/src/routes/ai.ts` — 503 vs 502 AI error handling.
 - `artifacts/api-server/src/routes/readings.ts` — WebSocket broadcast removed.
 - `artifacts/api-server/package.json` — `ws` / `@types/ws` removed.
-- `lib/db/src/index.ts` — serverless-friendly pool sizing.
+- `lib/db/src/index.ts` — serverless-friendly pool sizing; auto-loads root `.env`.
+- `lib/db/src/load-env.ts` — **new** cross-platform root-`.env` auto-loader (walks up from cwd).
+- `lib/db/drizzle.config.ts` — ESM-safe schema glob (no `__dirname`); auto-loads `.env`.
+- `lib/db/src/schema/user_sessions.ts` — **new** session table in the Drizzle schema so `npm run setup` creates it on a fresh clone (connect-pg-simple no longer creates it).
+- `artifacts/api-server/src/lib/openai.ts` — `describeAIError()` maps OpenAI quota (429 `insufficient_quota`) to a clear billing message (HTTP 402).
 - `artifacts/agroguard/src/pages/device-detail.tsx` — WebSocket → polling.
 - `artifacts/agroguard/src/pages/crop-diagnosis.tsx` — client-side downscale + real error messages.
 - `artifacts/agroguard/src/pages/ai-assistant.tsx` — real error messages.

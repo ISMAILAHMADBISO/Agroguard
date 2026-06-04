@@ -5,6 +5,7 @@
 - [WebSocket path routing](websocket-routing.md) — WS server must use path /api/ws so the shared Replit proxy routes it to the API server (port 8080); path /ws goes to frontend
 - [AgroGuard RBAC model](agroguard-rbac.md) — 5-role auth; agronomist+ write/see-all, staff read-only scoped, farmers API-blocked from platform surfaces (not just UI); shared temp-password onboarding.
 - [Session cookies in Replit iframe](iframe-session-cookies.md) — cookie-session apps 401 after login in preview; fix = trust proxy + Secure/SameSite=None, then MUST add CORS allowlist + Origin CSRF guard.
+- [Workspace .env loading](workspace-env-loading.md) — workspace scripts run with cwd=pkg dir, so root .env needs find-up loader (no override); ESM configs can't use __dirname.
 - [Orval client cookie credentials](orval-client-credentials.md) — generated React Query client 401s on every hook call unless custom-fetch.ts mutator sets credentials:"include"; login worked because it used raw fetch.
 - [npm/pnpm dual monorepo](npm-pnpm-dual-monorepo.md) — runs on pnpm in Replit + plain npm locally; `*` specs + linkWorkspacePackages:true; pnpm settings go in pnpm-workspace.yaml not .npmrc; cross-env + PORT defaults for Windows.
 - [Demo-account consistency](demo-account-consistency.md) — login-page autofill list, the seed script, and replit.md docs must advertise the exact same demo emails or autofill login fails on fresh setup.

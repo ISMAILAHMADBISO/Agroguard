@@ -1,0 +1,185 @@
+Project: AgroGuard (Vercel migration branch)
+
+Current status:
+
+* Vercel serverless migration was completed.
+* Neon database created.
+* Local setup on Windows 11 is failing.
+* Need repository fixed so a fresh clone can run:
+
+npm install
+npm run setup
+npm run dev
+
+without manual intervention.
+
+Errors encountered:
+
+1. DATABASE_URL not loaded from .env during setup
+
+Command:
+
+npm run setup
+
+Output:
+
+DATABASE_URL, ensure the database is provisioned
+
+The project only works after manually running:
+
+$env:DATABASE_URL="postgresql://..."
+
+Need .env loading to work automatically for:
+
+* drizzle-kit push
+* setup scripts
+* local development
+* Windows PowerShell
+
+2. Drizzle schema path issue
+
+Original error:
+
+No schema files found for path config
+['C:\Users\IAHMAD\Downloads\Agroguard\lib\db\src\schema\index.ts']
+
+Current drizzle.config.ts:
+
+import { defineConfig } from "drizzle-kit";
+
+if (!process.env.DATABASE_URL) {
+throw new Error("DATABASE_URL, ensure the database is provisioned");
+}
+
+export default defineConfig({
+schema: "./src/schema/*.ts",
+dialect: "postgresql",
+dbCredentials: {
+url: process.env.DATABASE_URL,
+},
+});
+
+Please verify this is the correct configuration.
+
+3. Drizzle ORM resolution failure
+
+Current command:
+
+cd lib\db
+npx drizzle-kit push --config drizzle.config.ts
+
+Output:
+
+Error please install required packages: 'drizzle-orm'
+
+However:
+
+npm install completed successfully.
+
+Folder exists:
+
+lib/db/node_modules/drizzle-orm
+
+Need root cause identified and fixed.
+
+Possibilities:
+
+* drizzle-kit version mismatch
+* workspace resolution issue
+* npm workspace configuration issue
+* package exports issue
+
+Please make drizzle-kit push work from a fresh clone on Windows.
+
+4. Verify local setup workflow
+
+After fixes, verify all commands:
+
+npm install
+npm run setup
+npm run dev
+
+5. Verify database creation
+
+Ensure all tables are created automatically:
+
+* farmers
+* staff
+* devices
+* sensor_readings
+* recommendations
+* alerts
+* disease_reports
+* ai_conversations
+* user_sessions
+
+6. Verify seed data
+
+Ensure setup script creates:
+
+* admin account
+* staff accounts
+* farmer accounts
+* devices
+* recommendations
+* sample readings
+
+7. Verify login
+
+Test:
+
+Admin login
+Staff login
+Farmer login
+
+Ensure:
+
+* session persists
+* password change flow works
+* logout works
+
+8. Verify AI functionality
+
+Disease Detection:
+
+* image upload works
+* OpenAI request executes
+
+AI Advisory:
+
+* recommendations load
+* chat works
+
+If OpenAI quota is exhausted, return a clear message explaining quota/billing instead of generic failure.
+
+9. Windows compatibility
+
+This project will be developed on Windows 11.
+
+Verify:
+
+* PowerShell compatibility
+* npm workspaces
+* local development
+* build scripts
+* setup scripts
+
+10. Documentation
+
+Update README with:
+
+* Windows setup
+* Neon setup
+* Local development
+* GitHub push
+* Vercel deployment
+* Namecheap domain connection (agroguard.tech)
+
+Goal:
+A completely fresh clone should work with:
+
+npm install
+npm run setup
+npm run dev
+
+without manually exporting DATABASE_URL or editing configuration files.

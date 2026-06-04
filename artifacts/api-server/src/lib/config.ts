@@ -5,6 +5,7 @@
  * caught immediately (on the first serverless cold start on Vercel, or at boot
  * locally) with a clear message, instead of failing deep inside a request.
  */
+import "@workspace/db/load-env";
 import { logger } from "./logger";
 
 const isProduction = process.env.NODE_ENV === "production";
