@@ -5,4 +5,6 @@
 - [WebSocket path routing](websocket-routing.md) — WS server must use path /api/ws so the shared Replit proxy routes it to the API server (port 8080); path /ws goes to frontend
 - [AgroGuard RBAC model](agroguard-rbac.md) — 5-role auth; agronomist+ write/see-all, staff read-only scoped, farmers API-blocked from platform surfaces (not just UI); shared temp-password onboarding.
 - [Session cookies in Replit iframe](iframe-session-cookies.md) — cookie-session apps 401 after login in preview; fix = trust proxy + Secure/SameSite=None, then MUST add CORS allowlist + Origin CSRF guard.
+- [npm/pnpm dual monorepo](npm-pnpm-dual-monorepo.md) — runs on pnpm in Replit + plain npm locally; `*` specs + linkWorkspacePackages:true; pnpm settings go in pnpm-workspace.yaml not .npmrc; cross-env + PORT defaults for Windows.
+- [Demo-account consistency](demo-account-consistency.md) — login-page autofill list, the seed script, and replit.md docs must advertise the exact same demo emails or autofill login fails on fresh setup.
 - [AgroGuard AI features](ai-features.md) — disease detection + advisory chat; access="any" route guard for shared staff/farmer pages; route-level input guards; 502+insufficient_quota = billing not bug.

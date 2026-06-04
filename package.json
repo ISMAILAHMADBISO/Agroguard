@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "build": "npm run typecheck && npm run build --workspaces --if-present",
+    "setup": "npm run push --workspace @workspace/db && npm run setup --workspace @workspace/scripts",
     "typecheck:libs": "tsc --build",
     "typecheck": "npm run typecheck:libs && npm run typecheck --workspace @workspace/agroguard --workspace @workspace/api-server --workspace @workspace/mockup-sandbox --workspace @workspace/scripts --if-present"
   },

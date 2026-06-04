@@ -2,6 +2,9 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useGetDashboardStats } from "@workspace/api-client-react";
 import { Leaf, Droplets, Sun, ShieldCheck, MapPin, Mail, Phone } from "lucide-react";
+import ceoPhoto from "@assets/ceo_1780575358267.jpeg";
+import ctoPhoto from "@assets/usmanh_1780575358268.jpeg";
+import cooPhoto from "@assets/ladan_1780575358269.jpeg";
 
 export default function LandingPage() {
   const { data: stats } = useGetDashboardStats();
@@ -120,28 +123,28 @@ export default function LandingPage() {
             </div>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
-                <div className="w-32 h-32 mx-auto rounded-full bg-muted flex items-center justify-center mb-4 overflow-hidden">
-                  <div className="text-4xl text-muted-foreground font-semibold">AO</div>
+                <div className="w-32 h-32 mx-auto rounded-full bg-muted mb-4 overflow-hidden">
+                  <img src={ceoPhoto} alt="Ismail Ahmad" className="w-full h-full object-cover" />
                 </div>
-                <h3 className="text-lg font-bold text-foreground">Dr. Amina Okonkwo</h3>
-                <p className="text-primary font-medium mb-2">CEO & Co-Founder</p>
-                <p className="text-sm text-muted-foreground">Agricultural technology strategist with 15 years in Nigerian agri-development.</p>
+                <h3 className="text-lg font-bold text-foreground">Ismail Ahmad</h3>
+                <p className="text-primary font-medium mb-2">Founder & CEO</p>
+                <p className="text-sm text-muted-foreground">Agricultural technology strategist driving AgroGuard's mission to empower Nigerian smallholder farmers.</p>
               </div>
               <div className="text-center">
-                <div className="w-32 h-32 mx-auto rounded-full bg-muted flex items-center justify-center mb-4 overflow-hidden">
-                  <div className="text-4xl text-muted-foreground font-semibold">CA</div>
+                <div className="w-32 h-32 mx-auto rounded-full bg-muted mb-4 overflow-hidden">
+                  <img src={ctoPhoto} alt="Usman Umar Garba" className="w-full h-full object-cover" />
                 </div>
-                <h3 className="text-lg font-bold text-foreground">Chukwuemeka Adeyemi</h3>
-                <p className="text-primary font-medium mb-2">CTO & Co-Founder</p>
-                <p className="text-sm text-muted-foreground">IoT systems engineer specializing in embedded systems and cloud infrastructure.</p>
+                <h3 className="text-lg font-bold text-foreground">Usman Umar Garba</h3>
+                <p className="text-primary font-medium mb-2">CTO</p>
+                <p className="text-sm text-muted-foreground">IoT systems engineer specializing in embedded sensors and cloud infrastructure.</p>
               </div>
               <div className="text-center">
-                <div className="w-32 h-32 mx-auto rounded-full bg-muted flex items-center justify-center mb-4 overflow-hidden">
-                  <div className="text-4xl text-muted-foreground font-semibold">FA</div>
+                <div className="w-32 h-32 mx-auto rounded-full bg-muted mb-4 overflow-hidden">
+                  <img src={cooPhoto} alt="Sadiya Abdullahi Ladan" className="w-full h-full object-cover" />
                 </div>
-                <h3 className="text-lg font-bold text-foreground">Fatima Al-Hassan</h3>
-                <p className="text-primary font-medium mb-2">Head of AI & Data Science</p>
-                <p className="text-sm text-muted-foreground">Machine learning specialist focused on precision agriculture and climate modeling.</p>
+                <h3 className="text-lg font-bold text-foreground">Sadiya Abdullahi Ladan</h3>
+                <p className="text-primary font-medium mb-2">COO</p>
+                <p className="text-sm text-muted-foreground">Operations lead coordinating field deployment, farmer onboarding and partner relations.</p>
               </div>
             </div>
           </div>

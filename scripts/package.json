@@ -5,9 +5,15 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
+    "setup": "tsx ./src/setup-database.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
+  "dependencies": {
+    "@workspace/db": "*",
+    "bcryptjs": "^3.0.3"
+  },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
     "@types/node": "^25.3.3",
     "tsx": "^4.21.0"
   }
