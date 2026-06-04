@@ -12,10 +12,23 @@ export interface AuthUser {
   mustChangePassword: boolean;
 }
 
+export interface FarmerSignupInput {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  location: string;
+  farmName?: string;
+  farmSizeHectares?: number;
+  cropTypes?: string;
+  whatsappNumber?: string;
+}
+
 interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<AuthUser>;
+  signup: (input: FarmerSignupInput) => Promise<AuthUser>;
   logout: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
@@ -65,6 +78,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return data;
   };
 
+  const signup = async (input: FarmerSignupInput): Promise<AuthUser> => {
+    const r = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(input),
+    });
+    if (!r.ok) {
+      const e = (await r.json()) as { error: string };
+      throw new Error(e.error || "Sign up failed");
+    }
+    const data = normalize((await r.json()) as Partial<AuthUser>);
+    if (!data) throw new Error("Sign up failed");
+    setUser(data);
+    return data;
+  };
+
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     setUser(null);
@@ -85,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, changePassword }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, changePassword }}>
       {children}
     </AuthContext.Provider>
   );

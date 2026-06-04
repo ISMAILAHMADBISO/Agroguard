@@ -4,26 +4,35 @@
  * Staff roles (userType = "staff"):
  *   super_admin  — full access, all data, manages all staff
  *   admin        — full access, all data, manages staff
- *   agronomist   — full read, can create recommendations / resolve alerts
- *   staff        — sees only their assigned farmers (fieldOfficerId = userId)
+ *   agronomist   — full read/write, can create recommendations / resolve alerts
+ *   staff        — full read/write of all farmers & devices; may create staff
+ *                  (but not admin/super_admin); no destructive/admin surfaces
  *
  * Farmer role (userType = "farmer"):
  *   farmer       — sees only their own farmer record and related data
  */
 import type { Request } from "express";
-import { eq } from "drizzle-orm";
-import { db, farmersTable } from "@workspace/db";
 
-/** Returns true if the session user can see all data (not filtered by assignment). */
+/**
+ * Returns true if the session user can see all data (not filtered by assignment).
+ * All internal staff roles (super_admin, admin, agronomist, staff) see every
+ * farmer and device so that self-registered farmers appear immediately for
+ * management. Only farmer accounts (userType "farmer") remain scoped to their
+ * own record — see getAssignedFarmerIds.
+ */
 export function canSeeAll(req: Request): boolean {
   const role = req.session.userRole;
-  return role === "super_admin" || role === "admin" || role === "agronomist";
+  return (
+    role === "super_admin" ||
+    role === "admin" ||
+    role === "agronomist" ||
+    role === "staff"
+  );
 }
 
 /**
  * Returns the farmer IDs the current session is scoped to, or null for full access.
- *  - super_admin / admin / agronomist → null (see everything)
- *  - staff → the farmers assigned to them (fieldOfficerId = userId)
+ *  - all internal staff roles (super_admin / admin / agronomist / staff) → null (see everything)
  *  - farmer → only their own farmer record
  */
 export async function getAssignedFarmerIds(
@@ -31,24 +40,22 @@ export async function getAssignedFarmerIds(
 ): Promise<number[] | null> {
   if (canSeeAll(req)) return null;
 
-  // Farmer accounts can only ever see their own record.
+  // Only farmer accounts remain scoped — to their own record.
   if (req.session.userType === "farmer") {
     return [req.session.userId!];
   }
 
-  // Scoped staff: only their assigned farmers.
-  const rows = await db
-    .select({ id: farmersTable.id })
-    .from(farmersTable)
-    .where(eq(farmersTable.fieldOfficerId, req.session.userId!));
-
-  return rows.map((r) => r.id);
+  // Fallback: any other (non-staff, non-farmer) session sees nothing.
+  return [];
 }
 
-/** Returns true if the role can mutate data (create/update/delete). */
+/**
+ * Returns true if the role can mutate data (create/update farmers & devices).
+ * All internal staff roles may manage farmers and devices; farmer accounts may
+ * not. Destructive actions (delete) and admin-only surfaces still use isAdmin.
+ */
 export function canWrite(req: Request): boolean {
-  const role = req.session.userRole;
-  return role === "super_admin" || role === "admin" || role === "agronomist";
+  return req.session.userType === "staff";
 }
 
 /** Admin-level check (super_admin or admin). */
@@ -84,8 +91,7 @@ export function requireStaffType(
 
 /**
  * True when the current session may access (read or write) the given farmer's data.
- *  - canSeeAll roles → always true
- *  - scoped staff → only their assigned farmers
+ *  - canSeeAll roles (all internal staff) → always true
  *  - farmer → only their own record
  */
 export async function canAccessFarmer(

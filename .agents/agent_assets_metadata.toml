@@ -1,0 +1,26 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "SCoQx64uSD7GtPsM4N7hU"
+uri = "file://artifacts/agroguard/public/assets/auth/slide1.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "56MKWAMO5-2UMF9SDKXf7"
+uri = "file://artifacts/agroguard/public/assets/auth/slide2.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "3XiGsc5H6KPVDAlpxlzuJ"
+uri = "file://artifacts/agroguard/public/assets/auth/slide3.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "C_XrwBAzosbHcYCi4WYN-"
+uri = "file://artifacts/agroguard/public/assets/auth/slide4.png"
+type = "image"
+title = "generated_image"

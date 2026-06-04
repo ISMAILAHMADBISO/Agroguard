@@ -32,16 +32,29 @@ router.get("/staff", async (req, res): Promise<void> => {
   res.json(ListStaffResponse.parse(staff));
 });
 
-/** POST /staff — create a staff member (admin only) */
+/**
+ * POST /staff — create a staff member.
+ * Any internal staff account may create staff, but only admin-level users
+ * (super_admin / admin) may grant admin or super_admin roles. This prevents a
+ * lower-privilege staff member from escalating their own access.
+ */
 router.post("/staff", async (req, res): Promise<void> => {
-  if (!isAdmin(req)) {
-    res.status(403).json({ error: "Admin access required" });
+  if (!isStaffType(req)) {
+    res.status(403).json({ error: "Staff access required" });
     return;
   }
 
   const parsed = CreateStaffBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const requestedRole = parsed.data.role;
+  if ((requestedRole === "admin" || requestedRole === "super_admin") && !isAdmin(req)) {
+    res
+      .status(403)
+      .json({ error: "Only an admin can create admin or super admin accounts" });
     return;
   }
 

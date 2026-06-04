@@ -441,7 +441,7 @@ paths:
     post:
       operationId: createStaff
       tags: [staff]
-      summary: Create staff member (admin only)
+      summary: Create staff member (admin and staff; only admins may create admin/super_admin)
       requestBody:
         required: true
         content:

@@ -14,6 +14,7 @@ import * as z from "zod";
 import { Plus, MoreHorizontal, Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/auth";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const formSchema = z.object({
@@ -32,6 +33,12 @@ const ROLE_OPTIONS: { value: string; label: string }[] = [
 ];
 
 export default function StaffPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "super_admin" || user?.role === "admin";
+  // Non-admin staff may only create agronomist / staff accounts (no escalation).
+  const roleOptions = isAdmin
+    ? ROLE_OPTIONS
+    : ROLE_OPTIONS.filter((o) => o.value === "agronomist" || o.value === "staff");
   const { data: staff, isLoading } = useListStaff();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [createdCredentials, setCreatedCredentials] = useState<{ name: string; email: string; tempPassword: string } | null>(null);
@@ -144,7 +151,7 @@ export default function StaffPage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {ROLE_OPTIONS.map((opt) => (
+                            {roleOptions.map((opt) => (
                               <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                             ))}
                           </SelectContent>

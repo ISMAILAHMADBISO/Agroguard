@@ -68,6 +68,26 @@ NODE_ENV=development
 PORT=8080
 ```
 
+#### Where do I put my OpenAI API key?
+
+The AI features (disease detection, advisory chat, recommendations) need an OpenAI
+API key. Where you put it depends on where you run the app:
+
+- **Running locally (your own Windows / macOS / Linux machine):**
+  Put it in the `.env` file in the **project root** as `OPENAI_API_KEY=sk-...`
+  (the same file you created above). Restart the API server after editing `.env`.
+
+- **Running on Replit (cloud):**
+  Do **not** put it in `.env`. Instead add it as a **Secret**: open the **Secrets**
+  tool (lock icon) in the left sidebar, add a secret with the key
+  `OPENAI_API_KEY` and your `sk-...` value, then restart the app. Replit injects
+  secrets as environment variables automatically — this keeps the key out of your
+  code and git history.
+
+> Get a key from https://platform.openai.com/api-keys. The key needs available
+> quota/billing. Without a valid key the AI endpoints return a friendly
+> "AI is not available" message and the rest of the platform keeps working.
+
 ### 4 — Create tables and seed demo data (one command)
 
 ```bash
@@ -77,12 +97,16 @@ npm run setup
 This pushes the Drizzle schema (creates all tables) and seeds demo accounts you can
 log in with immediately. It is safe to re-run — existing accounts are left untouched.
 
-| Role | Email | Password |
-|------|-------|----------|
-| Super Admin | amina.okonkwo@agroguard.ng | AgroGuard2024! |
-| Agronomist | fatima.alhassan@agroguard.ng | AgroGuard2024! |
-| Staff | ibrahim.garba@agroguard.ng | AgroGuard2024! |
-| Farmer | emeka.chukwu@farm.ng | AgroGuard2024! |
+| Role | Name | Email | Password |
+|------|------|-------|----------|
+| Super Admin | Ismail Ahmad | ismail.ahmad@agroguard.ng | AgroGuard2024! |
+| Admin | Usman Umar | usman.umar@agroguard.ng | AgroGuard2024! |
+| Agronomist | Sadiya Ladan | sadiya.ladan@agroguard.ng | AgroGuard2024! |
+| Staff | Ibrahim Garba | ibrahim.garba@agroguard.ng | AgroGuard2024! |
+| Farmer | Emeka Chukwu | emeka.chukwu@farm.ng | AgroGuard2024! |
+
+Farmers can also **self-register** from the public `/signup` page — new accounts
+appear immediately in the Farmers list for admins and staff to manage.
 
 > To only push the schema (no seed) run: `npm run push --workspace @workspace/db`
 
@@ -112,10 +136,31 @@ Then open **http://localhost:5173** (the port defaults to 5173 locally).
 
 ### Connecting an ESP32 sensor node
 
-1. Open `artifacts/agroguard/public/esp32-agroguard.ino` in Arduino IDE.
+Three firmware sketches ship in `artifacts/agroguard/public/`. Pick the one that
+matches your field's connectivity:
+
+**Option A — Direct WiFi node (simplest):** `esp32-agroguard.ino`
+ESP32 + 7-in-1 RS485 soil sensor + DHT22, posts directly over WiFi.
+
+1. Open `esp32-agroguard.ino` in Arduino IDE.
 2. Set `WIFI_SSID`, `WIFI_PASSWORD`, and `API_HOST` (your machine's LAN IP, e.g. `http://192.168.1.100:8080`).
 3. Set `DEVICE_ID` to match the `AGR-XXXX-XXXX` ID shown in the Devices page after you register the device.
 4. Flash to your ESP32. Readings appear in the Device Monitoring page within the first minute.
+
+**Option B — LoRa pair (no WiFi at the field):** for fields out of WiFi range,
+a battery field node sends readings over long-range LoRa to a gateway that has
+WiFi and forwards them to the platform.
+
+- `agroguard-lora-transmitter.ino` — Arduino field node (soil sensor → LoRa).
+- `agroguard-lora-receiver-esp32.ino` — ESP32 gateway (LoRa → WiFi → `/api/readings`).
+
+1. Flash the transmitter to the field-node Arduino and the receiver to the ESP32 gateway.
+2. On the **receiver** set `WIFI_SSID`, `WIFI_PASSWORD`, `API_HOST` and `DEVICE_ID`.
+3. Both sketches **must use the same LoRa frequency** — both default to `868E6`
+   (EU). For the US set both to `915E6`; for the 433 MHz band set both to `433E6`.
+   A frequency mismatch means no packets are ever received.
+4. Power both. The gateway OLED shows live readings and forwards each one to the
+   platform; readings appear in Device Monitoring within a minute.
 
 ---
 
@@ -187,16 +232,18 @@ agroguard/
 
 | Feature | Notes |
 |---------|-------|
-| Landing page | Marketing page — hero, stats, features, leadership team |
+| Landing page | Marketing page — hero, product specs, In the Box, comparison, 3 steps, testimonials, contact, leadership |
+| Farmer self-signup | Public `/signup` — farmers register themselves; instantly visible to admin/staff |
+| Auth carousel | Sliding AgroGuard-branded imagery on the login & signup screens |
 | Admin dashboard | Platform stats, farm health overview, activity feed |
-| Farmer management | CRUD, WhatsApp link, assign field officer |
-| Device registry | Register ESP32 nodes, generate `AGR-XXXX-XXXX` IDs |
+| Farmer management | CRUD, WhatsApp link, assign field officer (admin and staff can create) |
+| Device registry | Register ESP32 nodes, generate `AGR-XXXX-XXXX` IDs (admin and staff can create) |
 | Device monitoring | Live sensor cards, 7-in-1 soil analysis, 24 h trend charts |
 | Alert center | Severity-coded alerts, inline resolve |
 | AI disease detection | Upload a crop photo → disease + confidence + treatment (gpt-4o vision) |
 | AI advisory chat | Conversational agronomy assistant for staff and farmers |
 | AI recommendations | Crop, irrigation, pest, disease, climate, fertilizer advisories |
-| Staff management | super_admin, admin, agronomist, staff roles |
+| Staff management | super_admin, admin, agronomist, staff roles; staff can add team members but cannot create admin/super_admin |
 | Analytics | Cross-platform sensor trend charts |
 
 ---
@@ -208,7 +255,7 @@ agroguard/
 | `super_admin` | Full access — all data, staff CRUD, assign field officers |
 | `admin` | Manage farmers, devices, staff; create recommendations and alerts |
 | `agronomist` | Read/write all farmers and devices, create recommendations and alerts |
-| `staff` | Scoped read/write for assigned farmers |
+| `staff` | Read/write all farmers and devices; can create farmers, devices and staff (but not admin/super_admin) |
 | `farmer` | Logs in to see only their own farm, devices, alerts and recommendations |
 
 ---

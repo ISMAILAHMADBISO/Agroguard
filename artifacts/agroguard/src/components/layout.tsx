@@ -185,8 +185,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   </SidebarGroupContent>
                 </SidebarGroup>
 
-                {/* Administration section — visible to admin-level users only */}
-                {isAdmin && (
+                {/* Team section — all internal staff can manage staff accounts */}
+                {!isFarmer && (
                   <SidebarGroup>
                     <SidebarGroupLabel>Administration</SidebarGroupLabel>
                     <SidebarGroupContent>

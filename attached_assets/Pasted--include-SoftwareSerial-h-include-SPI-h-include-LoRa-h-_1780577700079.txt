@@ -1,0 +1,611 @@
+#include <SoftwareSerial.h>
+#include <SPI.h>
+#include <LoRa.h>
+
+// Soil Sensor Pins
+#define SOIL_RX 2
+#define SOIL_TX 3
+#define RE_DE 4
+
+// LoRa Pins
+#define LORA_SS 10
+#define LORA_RST 9
+#define LORA_DIO0 8
+
+// Status LED
+#define STATUS_LED 7
+
+SoftwareSerial soilSerial(SOIL_RX, SOIL_TX);
+
+// Modbus request for reading 7 registers
+byte request[] = {0x01, 0x03, 0x00, 0x00, 0x00, 0x07, 0x04, 0x08};
+byte response[32];
+
+struct SensorData {
+  float moisture;
+  float temperature;
+  int ec;
+  float ph;
+  int nitrogen;
+  int phosphorus;
+  int potassium;
+  uint16_t packetID;
+};
+
+SensorData sensorData;
+uint16_t packetCounter = 0;
+unsigned long lastReadTime = 0;
+unsigned long lastSendTime = 0;
+const unsigned long interval = 10000; // 10 seconds
+
+// For signal testing
+unsigned long lastRSSICheck = 0;
+
+void setup() {
+  Serial.begin(9600);
+  soilSerial.begin(4800);
+  
+  pinMode(RE_DE, OUTPUT);
+  pinMode(STATUS_LED, OUTPUT);
+  digitalWrite(RE_DE, LOW);
+  digitalWrite(STATUS_LED, LOW);
+  
+  Serial.println(F("\n================================="));
+  Serial.println(F("Soil Sensor LoRa Transmitter"));
+  Serial.println(F("================================="));
+  
+  // Initialize LoRa
+  LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
+  
+  if (!LoRa.begin(433E6)) {  // Use 868MHz for EU, 915E6 for US
+    Serial.println(F("LoRa init failed!"));
+    while (1) {
+      digitalWrite(STATUS_LED, HIGH);
+      delay(200);
+      digitalWrite(STATUS_LED, LOW);
+      delay(200);
+    }
+  }
+  
+  // LoRa Configuration for long range
+  LoRa.setSpreadingFactor(12);
+  LoRa.setSignalBandwidth(125E3);
+  LoRa.setCodingRate4(5);
+  LoRa.setTxPower(17);  // Max power
+  LoRa.enableCrc();
+  
+  Serial.println(F("LoRa initialized successfully!"));
+  Serial.println(F("Frequency: 868MHz, SF12, BW125kHz"));
+  Serial.println(F("Waiting for sensor data...\n"));
+  
+  // Ready indication
+  for (int i = 0; i < 3; i++) {
+    digitalWrite(STATUS_LED, HIGH);
+    delay(100);
+    digitalWrite(STATUS_LED, LOW);
+    delay(100);
+  }
+}
+
+void loop() {
+  if (millis() - lastReadTime >= interval) {
+    readSensor();
+    lastReadTime = millis();
+  }
+  
+  if (millis() - lastSendTime >= interval) {
+    sendData();
+    lastSendTime = millis();
+  }
+  
+  // Optional: Check LoRa status periodically
+  if (millis() - lastRSSICheck >= 60000) { // Every minute
+    checkLoRaStatus();
+    lastRSSICheck = millis();
+  }
+}
+
+void readSensor() {
+  // Clear buffer
+  while (soilSerial.available()) {
+    soilSerial.read();
+  }
+  
+  // Send Modbus request
+  digitalWrite(RE_DE, HIGH);
+  delay(10);
+  soilSerial.write(request, 8);
+  soilSerial.flush();
+  delay(5);
+  digitalWrite(RE_DE, LOW);
+  
+  delay(300);
+  
+  int bytesAvailable = soilSerial.available();
+  
+  if (bytesAvailable >= 19) {
+    for (int i = 0; i < bytesAvailable && i < 32; i++) {
+      response[i] = soilSerial.read();
+    }
+    
+    int startIndex = findModbusFrame(response, bytesAvailable);
+    
+    if (startIndex >= 0 && (bytesAvailable - startIndex) >= 19) {
+      parseModbusFrame(&response[startIndex]);
+      Serial.println(F("Sensor reading successful"));
+      digitalWrite(STATUS_LED, HIGH);
+      delay(50);
+      digitalWrite(STATUS_LED, LOW);
+    } else {
+      Serial.println(F("Invalid Modbus frame"));
+    }
+  } else {
+    Serial.println(F("No sensor response"));
+  }
+}
+
+int findModbusFrame(byte* data, int length) {
+  for (int i = 0; i < length - 1; i++) {
+    if (data[i] == 0x01 && data[i + 1] == 0x03) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+void parseModbusFrame(byte* frame) {
+  // Moisture (expanded by 10)
+  int moistureRaw = (frame[3] << 8) | frame[4];
+  sensorData.moisture = moistureRaw / 10.0;
+  
+  // Temperature (expanded by 10, may be negative)
+  int tempRaw = (frame[5] << 8) | frame[6];
+  if (tempRaw > 32767) {
+    tempRaw = tempRaw - 65536;
+  }
+  sensorData.temperature = tempRaw / 10.0;
+  
+  // EC
+  sensorData.ec = (frame[7] << 8) | frame[8];
+  
+  // pH (expanded by 10)
+  int phRaw = (frame[9] << 8) | frame[10];
+  sensorData.ph = phRaw / 10.0;
+  
+  // NPK
+  sensorData.nitrogen = (frame[11] << 8) | frame[12];
+  sensorData.phosphorus = (frame[13] << 8) | frame[14];
+  sensorData.potassium = (frame[15] << 8) | frame[16];
+  
+  sensorData.packetID = packetCounter++;
+}
+
+void sendData() {
+  uint8_t packet[28];
+  int idx = 0;
+  
+  // Pack all data into 28 bytes
+  floatToBytes(sensorData.moisture, &packet[idx]); idx += 4;
+  floatToBytes(sensorData.temperature, &packet[idx]); idx += 4;
+  intToBytes(sensorData.ec, &packet[idx]); idx += 4;
+  floatToBytes(sensorData.ph, &packet[idx]); idx += 4;
+  intToBytes(sensorData.nitrogen, &packet[idx]); idx += 4;
+  intToBytes(sensorData.phosphorus, &packet[idx]); idx += 4;
+  intToBytes(sensorData.potassium, &packet[idx]); idx += 4;
+  
+  // Send LoRa packet
+  LoRa.beginPacket();
+  LoRa.write(packet, 28);
+  LoRa.endPacket();
+  
+  printData();
+}
+
+void checkLoRaStatus() {
+  Serial.println(F("\n--- LoRa Status ---"));
+  Serial.print(F("Packets sent: "));
+  Serial.println(packetCounter);
+  Serial.println(F("-------------------\n"));
+}
+
+void floatToBytes(float value, uint8_t* buffer) {
+  memcpy(buffer, &value, 4);
+}
+
+void intToBytes(int value, uint8_t* buffer) {
+  buffer[0] = (value >> 24) & 0xFF;
+  buffer[1] = (value >> 16) & 0xFF;
+  buffer[2] = (value >> 8) & 0xFF;
+  buffer[3] = value & 0xFF;
+}
+
+void printData() {
+  Serial.println(F("\n┌────────────────────────────┐"));
+  Serial.print  (F("│ MOISTURE : "));
+  Serial.print(sensorData.moisture, 1);
+  Serial.println(F(" %        │"));
+  
+  Serial.print  (F("│ TEMP     : "));
+  Serial.print(sensorData.temperature, 1);
+  Serial.println(F(" C        │"));
+  
+  Serial.print  (F("│ EC       : "));
+  Serial.print(sensorData.ec);
+  Serial.println(F(" US       │"));
+  
+  Serial.print  (F("│ PH       : "));
+  Serial.print(sensorData.ph, 1);
+  Serial.println(F("          │"));
+  
+  Serial.print  (F("│ N        : "));
+  Serial.print(sensorData.nitrogen);
+  Serial.println(F(" MG/KG    │"));
+  
+  Serial.print  (F("│ P        : "));
+  Serial.print(sensorData.phosphorus);
+  Serial.println(F(" MG/KG    │"));
+  
+  Serial.print  (F("│ K        : "));
+  Serial.print(sensorData.potassium);
+  Serial.println(F(" MG/KG    │"));
+  Serial.println(F("└────────────────────────────┘"));
+  Serial.print(F("PACKET #"));
+  Serial.println(sensorData.packetID);
+}                                                                #include <SPI.h>
+#include <LoRa.h>
+#include <Wire.h>
+#include <U8g2lib.h>
+
+// ================= OLED (SH1106 1.3") =================
+U8G2_SH1106_128X64_NONAME_F_HW_I2C display(U8G2_R0, U8X8_PIN_NONE);
+
+// ================= LoRa Pins (ESP32) =================
+#define LORA_SS   18
+#define LORA_RST  14
+#define LORA_DIO0 26
+
+// SPI pins for ESP32
+#define SPI_SCK   5
+#define SPI_MISO  19
+#define SPI_MOSI  23
+
+// ================= LED =================
+#define LED_PIN    2
+
+// ================= Data Structure =================
+struct SensorData {
+  float moisture;
+  float temperature;
+  int ec;
+  float ph;
+  int nitrogen;
+  int phosphorus;
+  int potassium;
+  bool valid;
+  int rssi;
+  float snr;
+  uint16_t packetID;
+};
+
+SensorData data;
+int packetCount = 0;
+int displayPage = 0;
+unsigned long lastPacketTime = 0;
+unsigned long lastDisplayChange = 0;
+bool loraReady = false;
+
+// Auto-rotate interval (5 seconds)
+const unsigned long DISPLAY_ROTATE_INTERVAL = 5000;
+
+// ================= SETUP =================
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+  
+  Serial.println(F("\n================================="));
+  Serial.println(F("Soil Sensor LoRa Receiver"));
+  Serial.println(F("Auto-Rotating Display (5 sec)"));
+  Serial.println(F("================================="));
+
+  // Initialize pins
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+
+  // I2C for OLED
+  Wire.begin(21, 22);
+  Wire.setClock(400000);
+
+  // OLED Init
+  Serial.print(F("Initializing OLED..."));
+  display.begin();
+  display.setFont(u8g2_font_6x10_tf);
+  display.setContrast(255);
+  
+  display.clearBuffer();
+  display.drawStr(35, 15, "FARM DATA");
+  display.drawStr(0, 30, "INITIALIZING...");
+  display.sendBuffer();
+  Serial.println(F(" OK"));
+
+  delay(1000);
+
+  // LoRa Init with correct SPI pins
+  Serial.print(F("Initializing LoRa..."));
+  
+  // Initialize SPI with correct pins
+  SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI, LORA_SS);
+  
+  // Reset LoRa module
+  pinMode(LORA_RST, OUTPUT);
+  digitalWrite(LORA_RST, LOW);
+  delay(10);
+  digitalWrite(LORA_RST, HIGH);
+  delay(10);
+  
+  LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
+  
+  // Initialize LoRa (match transmitter frequency)
+  if (!LoRa.begin(868E6)) {  // Use 868MHz for EU, 915E6 for US
+    Serial.println(F(" FAILED!"));
+    
+    display.clearBuffer();
+    display.drawStr(35, 15, "FARM DATA");
+    display.drawStr(0, 30, "LORA ERROR!");
+    display.drawStr(0, 45, "CHECK WIRING");
+    display.sendBuffer();
+    
+    while (1) {
+      digitalWrite(LED_PIN, HIGH);
+      delay(200);
+      digitalWrite(LED_PIN, LOW);
+      delay(200);
+    }
+  }
+  
+  Serial.println(F(" OK"));
+  loraReady = true;
+
+  // LoRa Configuration (must match transmitter)
+  LoRa.setSpreadingFactor(12);
+  LoRa.setSignalBandwidth(125E3);
+  LoRa.setCodingRate4(5);
+  LoRa.setTxPower(17);
+  LoRa.enableCrc();
+  
+  Serial.println(F("LoRa configured: SF12, BW125kHz, 868MHz"));
+  Serial.println(F("System Ready! Waiting for data...\n"));
+
+  data.valid = false;
+
+  // Show ready screen
+  display.clearBuffer();
+  display.drawStr(35, 15, "FARM DATA");
+  display.drawStr(0, 30, "READY");
+  display.drawStr(0, 45, "WAITING FOR DATA");
+  display.sendBuffer();
+
+  // Set initial time for auto-rotate
+  lastDisplayChange = millis();
+
+  // Blink LED to show ready
+  for (int i = 0; i < 3; i++) {
+    digitalWrite(LED_PIN, HIGH);
+    delay(200);
+    digitalWrite(LED_PIN, LOW);
+    delay(200);
+  }
+}
+
+// ================= LOOP =================
+void loop() {
+  // Receive LoRa
+  if (loraReady) {
+    int packetSize = LoRa.parsePacket();
+
+    if (packetSize > 0) {
+      if (packetSize == 28) {
+        processPacket();
+        lastPacketTime = millis();
+        
+        // Flash LED
+        digitalWrite(LED_PIN, HIGH);
+        delay(50);
+        digitalWrite(LED_PIN, LOW);
+        
+        // Print to serial with RSSI and SNR
+        Serial.print(F("PACKET #"));
+        Serial.print(data.packetID);
+        Serial.print(F(" | RSSI: "));
+        Serial.print(data.rssi);
+        Serial.print(F(" | SNR: "));
+        Serial.print(data.snr);
+        Serial.print(F(" | MOISTURE: "));
+        Serial.print(data.moisture, 1);
+        Serial.print(F("% | TEMP: "));
+        Serial.print(data.temperature, 1);
+        Serial.print(F("C | PH: "));
+        Serial.print(data.ph, 1);
+        Serial.print(F(" | N:"));
+        Serial.print(data.nitrogen);
+        Serial.print(F(" P:"));
+        Serial.print(data.phosphorus);
+        Serial.print(F(" K:"));
+        Serial.println(data.potassium);
+        
+        // Signal quality warning
+        if (data.rssi > -50) {
+          Serial.println(F("⚠️ SIGNAL TOO STRONG - INCREASE DISTANCE!"));
+        } else if (data.rssi < -100) {
+          Serial.println(F("⚠️ SIGNAL WEAK - CHECK ANTENNAS!"));
+        }
+      } else {
+        // Wrong packet size, flush buffer
+        while (LoRa.available()) {
+          LoRa.read();
+        }
+      }
+    }
+  }
+
+  // Timeout after 30 seconds
+  if (millis() - lastPacketTime > 30000 && lastPacketTime != 0) {
+    if (data.valid) {
+      Serial.println(F("⚠️ TIMEOUT - NO DATA FOR 30 SECONDS"));
+      data.valid = false;
+    }
+  }
+
+  // Auto-rotate display every 5 seconds
+  if (millis() - lastDisplayChange >= DISPLAY_ROTATE_INTERVAL) {
+    displayPage = (displayPage + 1) % 2;  // 2 pages: 0 and 1
+    lastDisplayChange = millis();
+  }
+
+  // Display Update
+  static unsigned long lastDisplay = 0;
+  if (millis() - lastDisplay > 300) {
+    updateDisplay();
+    lastDisplay = millis();
+  }
+}
+
+// ================= PROCESS PACKET =================
+void processPacket() {
+  uint8_t buffer[28];
+  int i = 0;
+
+  // Read all 28 bytes
+  while (LoRa.available() && i < 28) {
+    buffer[i++] = LoRa.read();
+  }
+
+  // Parse data
+  data.moisture    = bytesToFloat(&buffer[0]);
+  data.temperature = bytesToFloat(&buffer[4]);
+  data.ec          = bytesToInt(&buffer[8]);
+  data.ph          = bytesToFloat(&buffer[12]);
+  data.nitrogen    = bytesToInt(&buffer[16]);
+  data.phosphorus  = bytesToInt(&buffer[20]);
+  data.potassium   = bytesToInt(&buffer[24]);
+
+  data.valid = true;
+  data.rssi = LoRa.packetRssi();
+  data.snr  = LoRa.packetSnr();
+  data.packetID = packetCount++;
+}
+
+// ================= DISPLAY =================
+void updateDisplay() {
+  if (!data.valid) {
+    // No data screen
+    display.clearBuffer();
+    display.setFont(u8g2_font_6x10_tf);
+    display.drawStr(35, 15, "FARM DATA");
+    display.drawStr(0, 30, "NO DATA");
+    
+    if (lastPacketTime > 0) {
+      char buffer[32];
+      sprintf(buffer, "LAST: %lu S AGO", (millis() - lastPacketTime) / 1000);
+      display.drawStr(0, 45, buffer);
+    } else {
+      display.drawStr(0, 45, "WAITING...");
+    }
+    
+    display.sendBuffer();
+    return;
+  }
+  
+  // Draw based on selected page (0 or 1)
+  if (displayPage == 0) {
+    drawPage1();
+  } else {
+    drawPage2();
+  }
+}
+
+// ================= PAGE 1 - SOIL PARAMETERS =================
+void drawPage1() {
+  display.clearBuffer();
+  char buf[32];
+  int y = 0;
+
+  display.setFont(u8g2_font_6x10_tf);
+
+  // Header: FARM DATA (centered)
+  display.drawStr(35, y + 10, "FARM DATA");
+  y += 14;
+
+  // Line 1: Moisture
+  sprintf(buf, "MOISTURE : %.1f%%", data.moisture);
+  display.drawStr(0, y + 10, buf);
+  y += 12;
+
+  // Line 2: Temperature
+  sprintf(buf, "TEMP     : %.1f C", data.temperature);
+  display.drawStr(0, y + 10, buf);
+  y += 12;
+
+  // Line 3: pH
+  sprintf(buf, "PH       : %.1f", data.ph);
+  display.drawStr(0, y + 10, buf);
+  y += 12;
+
+  // Line 4: Packet count
+  sprintf(buf, "PKT      : %d", packetCount);
+  display.drawStr(0, y + 10, buf);
+
+  display.sendBuffer();
+}
+
+// ================= PAGE 2 - NPK + STATUS =================
+void drawPage2() {
+  display.clearBuffer();
+  char buf[32];
+  int y = 0;
+
+  display.setFont(u8g2_font_6x10_tf);
+
+  // Header: FARM DATA (centered)
+  display.drawStr(35, y + 10, "FARM DATA");
+  y += 14;
+
+  // Line 1: Nitrogen
+  sprintf(buf, "N : %d MG/KG", data.nitrogen);
+  display.drawStr(0, y + 10, buf);
+  y += 12;
+
+  // Line 2: Phosphorus
+  sprintf(buf, "P : %d MG/KG", data.phosphorus);
+  display.drawStr(0, y + 10, buf);
+  y += 12;
+
+  // Line 3: Potassium
+  sprintf(buf, "K : %d MG/KG", data.potassium);
+  display.drawStr(0, y + 10, buf);
+  y += 12;
+
+  // Line 4: Status (based on moisture)
+  const char* status;
+  if (data.moisture < 30) {
+    status = "DRY";
+  } else if (data.moisture > 70) {
+    status = "WET";
+  } else {
+    status = "OK";
+  }
+  sprintf(buf, "STATUS   : %s", status);
+  display.drawStr(0, y + 10, buf);
+
+  display.sendBuffer();
+}
+
+// ================= HELPER FUNCTIONS =================
+float bytesToFloat(uint8_t* b) {
+  float val;
+  memcpy(&val, b, 4);
+  return val;
+}
+
+int bytesToInt(uint8_t* b) {
+  return (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3];
+}

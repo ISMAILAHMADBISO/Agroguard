@@ -98,6 +98,101 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   res.status(401).json({ error: "Invalid email or password" });
 });
 
+/**
+ * POST /auth/signup — public farmer self-registration.
+ * Creates an active farmer account with the password the farmer chooses, then
+ * logs them straight in. Newly registered farmers appear immediately in the
+ * farmers list for admins and staff to manage.
+ */
+router.post("/auth/signup", async (req, res): Promise<void> => {
+  const {
+    name,
+    email,
+    password,
+    phone,
+    location,
+    farmName,
+    farmSizeHectares,
+    cropTypes,
+    whatsappNumber,
+  } = req.body as {
+    name?: string;
+    email?: string;
+    password?: string;
+    phone?: string;
+    location?: string;
+    farmName?: string;
+    farmSizeHectares?: number;
+    cropTypes?: string;
+    whatsappNumber?: string;
+  };
+
+  if (!name || !email || !password || !phone || !location) {
+    res.status(400).json({
+      error: "Name, email, password, phone and location are required",
+    });
+    return;
+  }
+  if (password.length < 8) {
+    res.status(400).json({ error: "Password must be at least 8 characters" });
+    return;
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // Email must be unique across both staff and farmer accounts.
+  const [existingStaff] = await db
+    .select({ id: staffTable.id })
+    .from(staffTable)
+    .where(eq(staffTable.email, normalizedEmail))
+    .limit(1);
+  const [existingFarmer] = await db
+    .select({ id: farmersTable.id })
+    .from(farmersTable)
+    .where(eq(farmersTable.email, normalizedEmail))
+    .limit(1);
+
+  if (existingStaff || existingFarmer) {
+    res.status(409).json({ error: "An account with this email already exists" });
+    return;
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  const [farmer] = await db
+    .insert(farmersTable)
+    .values({
+      name: name.trim(),
+      email: normalizedEmail,
+      phone: phone.trim(),
+      location: location.trim(),
+      farmName: farmName?.trim() || null,
+      farmSizeHectares: farmSizeHectares ?? null,
+      cropTypes: cropTypes?.trim() || null,
+      whatsappNumber: whatsappNumber?.trim() || null,
+      status: "active",
+      passwordHash,
+      mustChangePassword: false,
+    })
+    .returning();
+
+  req.session.userId = farmer.id;
+  req.session.userRole = "farmer";
+  req.session.userType = "farmer";
+  req.session.userName = farmer.name;
+  req.session.userEmail = farmer.email ?? normalizedEmail;
+  req.session.mustChangePassword = false;
+
+  res.status(201).json({
+    id: farmer.id,
+    name: farmer.name,
+    email: farmer.email,
+    role: "farmer",
+    userType: "farmer",
+    mustChangePassword: false,
+  });
+});
+
 router.post("/auth/logout", (req, res): void => {
   req.session.destroy(() => {
     res.clearCookie("agroguard.sid");

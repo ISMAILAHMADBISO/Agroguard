@@ -18,8 +18,8 @@ async function main(): Promise<void> {
 
   const staff = [
     {
-      name: "Dr. Amina Okonkwo",
-      email: "amina.okonkwo@agroguard.ng",
+      name: "Ismail Ahmad",
+      email: "ismail.ahmad@agroguard.ng",
       phone: "+2348030000001",
       role: "super_admin",
       department: "Executive",
@@ -28,9 +28,19 @@ async function main(): Promise<void> {
       mustChangePassword: false,
     },
     {
-      name: "Fatima Al-Hassan",
-      email: "fatima.alhassan@agroguard.ng",
+      name: "Usman Umar",
+      email: "usman.umar@agroguard.ng",
       phone: "+2348030000002",
+      role: "admin",
+      department: "Technology",
+      status: "active",
+      passwordHash,
+      mustChangePassword: false,
+    },
+    {
+      name: "Sadiya Ladan",
+      email: "sadiya.ladan@agroguard.ng",
+      phone: "+2348030000003",
       role: "agronomist",
       department: "Agronomy",
       status: "active",
@@ -40,7 +50,7 @@ async function main(): Promise<void> {
     {
       name: "Ibrahim Garba",
       email: "ibrahim.garba@agroguard.ng",
-      phone: "+2348030000003",
+      phone: "+2348030000004",
       role: "staff",
       department: "Field Operations",
       status: "active",
@@ -73,8 +83,9 @@ async function main(): Promise<void> {
     .onConflictDoNothing({ target: farmersTable.email });
 
   console.log("Database setup complete. Demo accounts (password: AgroGuard2024!):");
-  console.log("  Super Admin : amina.okonkwo@agroguard.ng");
-  console.log("  Agronomist  : fatima.alhassan@agroguard.ng");
+  console.log("  Super Admin : ismail.ahmad@agroguard.ng");
+  console.log("  Admin       : usman.umar@agroguard.ng");
+  console.log("  Agronomist  : sadiya.ladan@agroguard.ng");
   console.log("  Staff       : ibrahim.garba@agroguard.ng");
   console.log("  Farmer      : emeka.chukwu@farm.ng");
 }

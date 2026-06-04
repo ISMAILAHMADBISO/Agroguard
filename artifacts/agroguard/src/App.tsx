@@ -16,6 +16,7 @@ import NotFound from "@/pages/not-found";
 import { AppLayout } from "@/components/layout";
 import LandingPage from "@/pages/landing";
 import LoginPage from "@/pages/login";
+import SignupPage from "@/pages/signup";
 import Dashboard from "@/pages/dashboard";
 import FarmersPage from "@/pages/farmers";
 import FarmerDetailPage from "@/pages/farmer-detail";
@@ -106,6 +107,7 @@ function Router() {
     <Switch>
       <Route path="/" component={LandingPage} />
       <Route path="/login" component={LoginPage} />
+      <Route path="/signup" component={SignupPage} />
       <Route path="/change-password" component={() => <BareProtectedRoute component={ChangePasswordPage} />} />
       <Route path="/my-farm" component={() => <ProtectedRoute access="farmer" component={MyFarmPage} />} />
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
@@ -118,7 +120,7 @@ function Router() {
       <Route path="/crop-diagnosis" component={() => <ProtectedRoute access="any" component={CropDiagnosisPage} />} />
       <Route path="/ai-assistant" component={() => <ProtectedRoute access="any" component={AiAssistantPage} />} />
       <Route path="/analytics" component={() => <ProtectedRoute component={AnalyticsPage} />} />
-      <Route path="/staff" component={() => <ProtectedRoute access="admin" component={StaffPage} />} />
+      <Route path="/staff" component={() => <ProtectedRoute access="staff" component={StaffPage} />} />
       <Route component={NotFound} />
     </Switch>
   );

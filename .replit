@@ -33,3 +33,8 @@ externalPort = 3000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+sk-proj-f6WfbkCdayNvvSFOH4ml0M1m4c6PxtRqtPcsXy7wysq3FyktG1o98XbtmPbtjn4Vw0YUSX1za2T3BlbkFJs1cE9fdkd9A89gUKSFUauoxd61krAk6vk5rBVd = "open Ai"
