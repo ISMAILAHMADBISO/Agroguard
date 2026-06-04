@@ -1,0 +1,412 @@
+# AgroGuard Full Stabilization, Database Migration, AI Repair, Windows Compatibility, and Documentation Update
+
+You are working on the AgroGuard monorepo.
+
+Your goal is to fully stabilize the application, remove demo-only behavior, make it production-ready for local Windows development, and ensure all modules work correctly.
+
+## Environment
+
+Target platform:
+
+* Windows 11
+* Node.js LTS
+* TypeScript
+* React + Vite frontend
+* Express backend
+* Drizzle ORM
+* PostgreSQL
+
+The project originally ran on Replit/Linux but must now run locally on Windows without modification.
+
+---
+
+# PHASE 1: Audit the Entire Project
+
+Perform a full codebase audit and identify:
+
+* broken routes
+* broken API calls
+* missing database operations
+* missing UI actions
+* authentication bugs
+* authorization bugs
+* AI integration failures
+* Replit-specific dependencies
+* Linux-only scripts
+* placeholder/demo logic
+
+Generate a report and fix every issue found.
+
+---
+
+# PHASE 2: Database Standardization
+
+Replace any remaining mock/demo storage.
+
+Create a proper PostgreSQL-backed system for:
+
+## Staff
+
+Store:
+
+* id
+* name
+* email
+* phone
+* role
+* department
+* password hash
+* status
+* profile image
+* mustChangePassword
+* createdAt
+
+## Farmers
+
+Store:
+
+* id
+* name
+* email
+* phone
+* farm name
+* farm size
+* location
+* crop types
+* profile image
+* password hash
+* status
+* assigned field officer
+* mustChangePassword
+* createdAt
+
+## Devices
+
+Store:
+
+* id
+* farmerId
+* serial number
+* device name
+* status
+* firmware version
+* createdAt
+
+## Sensor Readings
+
+Store:
+
+* moisture
+* temperature
+* humidity
+* timestamp
+* deviceId
+
+## Alerts
+
+Store all generated alerts.
+
+## Recommendations
+
+Store all AI recommendations.
+
+## AI Conversations
+
+Store all chat history.
+
+---
+
+# PHASE 3: Authentication Repair
+
+Current issues:
+
+* default/demo login behavior still appears
+* farmer login sometimes forces password change then returns "Unauthenticated"
+* session handling is inconsistent
+
+Fix completely.
+
+Requirements:
+
+* staff login works
+* admin login works
+* agronomist login works
+* farmer login works
+* password change works
+* session persists correctly
+* logout works
+* no redirect loops
+* no unauthenticated errors after password reset
+
+Verify every role manually.
+
+---
+
+# PHASE 4: Farmer and Staff Creation
+
+Current issue:
+
+Creating staff and farmers frequently fails.
+
+Fix:
+
+## Staff Creation
+
+Admin should be able to:
+
+* create staff
+* edit staff
+* deactivate staff
+* upload profile photo
+
+Generate secure temporary passwords.
+
+Display credentials once.
+
+Store properly in database.
+
+## Farmer Creation
+
+Admin and authorized staff should be able to:
+
+* create farmer
+* edit farmer
+* assign field officer
+* upload profile photo
+
+Generate temporary password.
+
+Display credentials once.
+
+Store properly.
+
+---
+
+# PHASE 5: Device Management Repair
+
+Current issue:
+
+Device creation fails.
+
+Fix:
+
+* create device
+* edit device
+* assign device to farmer
+* delete device
+* activate/deactivate device
+
+All operations must persist in PostgreSQL.
+
+Add validation and error handling.
+
+---
+
+# PHASE 6: AI Disease Detection Repair
+
+Current issue:
+
+Uploading an image returns:
+
+"AI is not available at the moment"
+
+Investigate completely.
+
+Possible causes:
+
+* broken API route
+* missing API key
+* incorrect request body
+* upload failure
+* provider failure
+
+Fix all causes.
+
+Requirements:
+
+* image upload works
+* prediction returns results
+* errors are user friendly
+* loading state shown
+* result saved to database
+
+If provider unavailable:
+
+show meaningful fallback message.
+
+---
+
+# PHASE 7: AI Recommendation Repair
+
+Current issue:
+
+AI recommendations page is blank.
+
+Investigate:
+
+* API route
+* frontend rendering
+* database query
+* permissions
+
+Requirements:
+
+* recommendations display correctly
+* recommendations save to database
+* filtering works
+* role permissions work
+
+---
+
+# PHASE 8: AI Advisory Chat
+
+Current issue:
+
+Chat functionality is missing or incomplete.
+
+Implement:
+
+* chat UI
+* message history
+* database persistence
+* streaming responses if supported
+* role-based access
+
+Both staff and farmers must be able to use the advisory assistant.
+
+Store conversations.
+
+---
+
+# PHASE 9: User Profile Images
+
+I will provide profile images.
+
+Implement:
+
+* image upload
+* image storage
+* image retrieval
+* profile image display
+
+For:
+
+* staff
+* farmers
+
+Create database fields if missing.
+
+---
+
+# PHASE 10: Windows Compatibility
+
+Remove Linux/Replit assumptions.
+
+Fix:
+
+* export NODE_ENV commands
+* path issues
+* environment variable loading
+* shell incompatibilities
+
+Use cross-env where appropriate.
+
+Verify:
+
+npm install
+npm run dev
+npm run build
+npm run start
+
+work correctly on Windows 11.
+
+---
+
+# PHASE 11: Environment Setup
+
+Create:
+
+.env.example
+
+Include:
+
+DATABASE_URL=
+SESSION_SECRET=
+OPENAI_API_KEY=
+AI_PROVIDER_KEY=
+PORT=
+
+Ensure application starts cleanly when configured.
+
+---
+
+# PHASE 12: Database Bootstrap
+
+Create:
+
+scripts/setup-database.ts
+
+Function:
+
+* create tables
+* seed admin account
+* seed demo data
+* verify schema
+
+Add command:
+
+npm run setup
+
+for first-time installation.
+
+---
+
+# PHASE 13: Documentation Update
+
+Rewrite README completely.
+
+Include:
+
+* project overview
+* architecture
+* folder structure
+* installation
+* Windows setup
+* PostgreSQL setup
+* environment variables
+* running frontend
+* running backend
+* database setup
+* AI setup
+* troubleshooting
+* deployment
+
+Make documentation beginner friendly.
+
+---
+
+# PHASE 14: Final Validation
+
+Before finishing:
+
+Verify manually:
+
+✓ Admin login
+✓ Staff login
+✓ Farmer login
+✓ Password change
+✓ Staff creation
+✓ Farmer creation
+✓ Device creation
+✓ Device assignment
+✓ AI disease detection
+✓ AI recommendations
+✓ AI advisory chat
+✓ Image upload
+✓ Database persistence
+✓ Logout
+✓ Windows compatibility
+
+Fix all discovered issues before completion.
+
+Deliver a clean, stable, production-ready codebase.
