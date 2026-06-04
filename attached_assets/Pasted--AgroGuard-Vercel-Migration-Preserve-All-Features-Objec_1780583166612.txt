@@ -1,0 +1,269 @@
+# AgroGuard Vercel Migration (Preserve All Features)
+
+Objective:
+
+I want AgroGuard to be deployable entirely on Vercel.
+
+I understand the current architecture uses:
+
+* React + Vite
+* Express API server
+* WebSockets
+* PostgreSQL
+* Drizzle ORM
+* Session authentication
+
+I am willing to change the backend architecture if necessary.
+
+However:
+
+DO NOT remove features.
+
+DO NOT remove pages.
+
+DO NOT remove functionality.
+
+The application should behave exactly the same for users.
+
+---
+
+## Required Outcome
+
+After refactoring:
+
+The entire project must deploy successfully on Vercel.
+
+I should be able to:
+
+1. Push to GitHub.
+2. Connect repository to Vercel.
+3. Add environment variables.
+4. Click Deploy.
+5. Have the entire application working.
+
+No Railway.
+
+No Render.
+
+No VPS.
+
+No separate backend hosting.
+
+Everything must run on Vercel.
+
+---
+
+## Migration Requirements
+
+### Backend
+
+Replace the current Express server architecture.
+
+Remove:
+
+* server.listen()
+* custom HTTP server
+* standalone Node process
+
+Convert all API routes into Vercel-compatible API handlers.
+
+Preserve all existing endpoints and responses.
+
+---
+
+### Authentication
+
+Current functionality must remain:
+
+* login
+* logout
+* session persistence
+* password change
+* role permissions
+* farmer access
+* staff access
+* admin access
+* agronomist access
+* super_admin access
+
+If express-session is incompatible:
+
+Replace it with a secure Vercel-compatible approach:
+
+* JWT
+* signed cookies
+* server-side session storage
+
+Maintain identical user experience.
+
+---
+
+### Database
+
+Keep PostgreSQL.
+
+Keep Drizzle ORM.
+
+Support:
+
+* Neon
+* Supabase PostgreSQL
+* Vercel Postgres (if suitable)
+
+Generate migrations and setup instructions.
+
+---
+
+### Realtime Features
+
+Current project uses WebSockets.
+
+Analyze every WebSocket usage.
+
+If Vercel cannot support it directly:
+
+Replace with the best Vercel-compatible solution while preserving behavior:
+
+Possible options:
+
+* Server-Sent Events
+* polling
+* Pusher
+* Ably
+* Supabase Realtime
+
+Users should not lose functionality.
+
+---
+
+### AI Features
+
+Preserve:
+
+* Disease Detection
+* Image Upload
+* AI Recommendations
+* Advisory Chat
+
+Ensure they work on Vercel.
+
+Improve error handling.
+
+Add loading states where missing.
+
+---
+
+### File Uploads
+
+Implement Vercel-compatible upload handling.
+
+If needed:
+
+* Vercel Blob
+* Cloudinary
+* UploadThing
+
+Preserve current image upload behavior.
+
+---
+
+### Environment Variables
+
+Create:
+
+.env.example
+
+Include all required variables.
+
+---
+
+### Frontend
+
+Keep:
+
+* React
+* Vite
+* Tailwind
+* Existing UI
+
+Do not redesign pages.
+
+Do not remove features.
+
+Only change code required for deployment.
+
+---
+
+### Windows 11 Support
+
+Ensure:
+
+npm install
+
+npm run dev
+
+npm run build
+
+work correctly on Windows 11.
+
+Remove Linux-only commands.
+
+Use cross-env when necessary.
+
+---
+
+### Documentation
+
+Update README with:
+
+* Architecture
+* Vercel deployment
+* Database setup
+* Environment variables
+* AI setup
+* Troubleshooting
+
+---
+
+## Verification
+
+Before finishing:
+
+Verify:
+
+✓ Login works
+
+✓ Logout works
+
+✓ Password change works
+
+✓ Staff creation works
+
+✓ Farmer creation works
+
+✓ Device creation works
+
+✓ Device assignment works
+
+✓ AI disease detection works
+
+✓ AI recommendations work
+
+✓ Advisory chat works
+
+✓ Image uploads work
+
+✓ Database persistence works
+
+✓ Role permissions work
+
+✓ Deployment works on Vercel
+
+---
+
+Provide:
+
+1. Architecture diagram before and after migration.
+2. List of every file changed.
+3. Migration summary.
+4. Final Vercel deployment steps.
