@@ -123,7 +123,7 @@ paths:
     delete:
       operationId: deleteFarmer
       tags: [farmers]
-      summary: Delete farmer (admin only)
+      summary: Delete farmer (any internal staff role)
       parameters:
         - name: id
           in: path
@@ -156,6 +156,29 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Device"
+
+  /farmers/{id}/reset-password:
+    post:
+      operationId: resetFarmerPassword
+      tags: [farmers]
+      summary: Reset a farmer's password to a new temporary one
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Password reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordResetResult"
+        "403":
+          description: Insufficient permissions
+        "404":
+          description: Farmer not found
 
   # ── DEVICES ──────────────────────────────────────────────────────────────────
   /devices:
@@ -498,6 +521,29 @@ paths:
         "404":
           description: Staff not found
 
+  /staff/{id}/reset-password:
+    post:
+      operationId: resetStaffPassword
+      tags: [staff]
+      summary: Reset a staff member's password to a new temporary one (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Password reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordResetResult"
+        "403":
+          description: Admin access required
+        "404":
+          description: Staff not found
+
   # ── DASHBOARD ────────────────────────────────────────────────────────────────
   /dashboard/stats:
     get:
@@ -736,6 +782,20 @@ components:
         tempPassword:
           type: string
           description: One-time temporary password shown only at creation; the farmer must change it on first login.
+
+    PasswordResetResult:
+      type: object
+      required: [id, name, email, tempPassword]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        tempPassword:
+          type: string
+          description: New one-time temporary password; shown only once. The user must change it on next login.
 
     FarmerInput:
       type: object

@@ -117,6 +117,41 @@ router.patch("/staff/:id", async (req, res): Promise<void> => {
   res.json(UpdateStaffResponse.parse(member));
 });
 
+/** POST /staff/:id/reset-password — reset a staff member's password (admin only) */
+router.post("/staff/:id/reset-password", async (req, res): Promise<void> => {
+  if (!isAdmin(req)) {
+    res.status(403).json({ error: "Admin access required" });
+    return;
+  }
+
+  const params = DeleteStaffParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const tempPassword = generateTempPassword();
+  const passwordHash = await hashPassword(tempPassword);
+
+  const [member] = await db
+    .update(staffTable)
+    .set({ passwordHash, mustChangePassword: true })
+    .where(eq(staffTable.id, params.data.id))
+    .returning();
+
+  if (!member) {
+    res.status(404).json({ error: "Staff member not found" });
+    return;
+  }
+
+  res.json({
+    id: member.id,
+    name: member.name,
+    email: member.email,
+    tempPassword,
+  });
+});
+
 /** DELETE /staff/:id — remove a staff member (admin only) */
 router.delete("/staff/:id", async (req, res): Promise<void> => {
   if (!isAdmin(req)) {

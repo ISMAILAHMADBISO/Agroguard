@@ -1,7 +1,8 @@
 /**
  * Farmer routes — CRUD for AgroGuard farmer accounts.
- * RBAC: field_officers see only their assigned farmers.
- *       admins / agronomists / support see all.
+ * RBAC: all internal staff roles (super_admin / admin / agronomist / staff) may
+ *       create, edit, delete, and reset-password farmers. Farmer logins are
+ *       scoped to their own record only.
  */
 import { Router, type IRouter } from "express";
 import { eq, inArray } from "drizzle-orm";
@@ -18,7 +19,7 @@ import {
   UpdateFarmerResponse,
   GetFarmerDevicesResponse,
 } from "@workspace/api-zod";
-import { getAssignedFarmerIds, canWrite, isAdmin } from "../lib/rbac";
+import { getAssignedFarmerIds, canWrite } from "../lib/rbac";
 import { generateTempPassword, hashPassword } from "../lib/password";
 
 const router: IRouter = Router();
@@ -141,10 +142,45 @@ router.patch("/farmers/:id", async (req, res): Promise<void> => {
   res.json(UpdateFarmerResponse.parse(farmer));
 });
 
-/** DELETE /farmers/:id — delete farmer (admin only) */
+/** POST /farmers/:id/reset-password — reset a farmer's password to a new temp one */
+router.post("/farmers/:id/reset-password", async (req, res): Promise<void> => {
+  if (!canWrite(req)) {
+    res.status(403).json({ error: "Insufficient permissions" });
+    return;
+  }
+
+  const params = GetFarmerParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const tempPassword = generateTempPassword();
+  const passwordHash = await hashPassword(tempPassword);
+
+  const [farmer] = await db
+    .update(farmersTable)
+    .set({ passwordHash, mustChangePassword: true })
+    .where(eq(farmersTable.id, params.data.id))
+    .returning();
+
+  if (!farmer) {
+    res.status(404).json({ error: "Farmer not found" });
+    return;
+  }
+
+  res.json({
+    id: farmer.id,
+    name: farmer.name,
+    email: farmer.email,
+    tempPassword,
+  });
+});
+
+/** DELETE /farmers/:id — delete farmer (admin and staff) */
 router.delete("/farmers/:id", async (req, res): Promise<void> => {
-  if (!isAdmin(req)) {
-    res.status(403).json({ error: "Admin access required" });
+  if (!canWrite(req)) {
+    res.status(403).json({ error: "Insufficient permissions" });
     return;
   }
 

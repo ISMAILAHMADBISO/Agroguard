@@ -5,13 +5,11 @@
  * AgroGuard Limited - Agricultural IoT Platform API
  * OpenAPI spec version: 0.2.0
  */
-import type { StaffInputRole } from './staffInputRole';
 
-export interface StaffInput {
-  /** @minLength 1 */
+export interface PasswordResetResult {
+  id: number;
   name: string;
   email: string;
-  phone?: string;
-  role: StaffInputRole;
-  department?: string;
+  /** New one-time temporary password; shown only once. The user must change it on next login. */
+  tempPassword: string;
 }

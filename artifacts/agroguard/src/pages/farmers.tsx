@@ -15,6 +15,7 @@ import {
   useCreateFarmer,
   useUpdateFarmer,
   useDeleteFarmer,
+  useResetFarmerPassword,
   useListStaff,
   getListFarmersQueryKey,
 } from "@workspace/api-client-react";
@@ -28,7 +29,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Search, Plus, MapPin, Phone, MoreHorizontal, Loader2, UserCheck, Pencil } from "lucide-react";
+import { Search, Plus, MapPin, Phone, MoreHorizontal, Loader2, UserCheck, Pencil, KeyRound } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -80,12 +81,15 @@ export default function FarmersPage() {
   const [search, setSearch] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createdCredentials, setCreatedCredentials] = useState<{ name: string; email: string; tempPassword: string } | null>(null);
+  const [resetCredentials, setResetCredentials] = useState<{ name: string; email: string; tempPassword: string } | null>(null);
   const [editingFarmer, setEditingFarmer] = useState<NonNullable<typeof farmers>[number] | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const isAdmin = user?.role === "super_admin" || user?.role === "admin";
-  const canWrite = isAdmin || user?.role === "agronomist";
+  // All internal staff roles may manage farmers (create / edit / delete / reset password).
+  const canWrite =
+    isAdmin || user?.role === "agronomist" || user?.role === "staff";
 
   // Staff members available for field assignment (admin only feature)
   const fieldOfficers = staffList?.filter((s) => s.role === "staff" && s.status === "active") ?? [];
@@ -94,6 +98,7 @@ export default function FarmersPage() {
   const createFarmer = useCreateFarmer();
   const updateFarmer = useUpdateFarmer();
   const deleteFarmer = useDeleteFarmer();
+  const resetFarmerPassword = useResetFarmerPassword();
 
   // ── Create form ──────────────────────────────────────────────────────────
   const createForm = useForm<CreateValues>({
@@ -160,6 +165,22 @@ export default function FarmersPage() {
           toast({ title: "Farmer updated" });
         },
         onError: () => toast({ title: "Failed to update farmer", variant: "destructive" }),
+      }
+    );
+  };
+
+  // ── Reset password ─────────────────────────────────────────────────────────
+  const handleReset = (farmer: NonNullable<typeof farmers>[number]) => {
+    if (!confirm(`Reset password for ${farmer.name}? Their current password will stop working.`)) return;
+    resetFarmerPassword.mutate(
+      { id: farmer.id },
+      {
+        onSuccess: (result) => {
+          if (result?.tempPassword) {
+            setResetCredentials({ name: result.name, email: result.email, tempPassword: result.tempPassword });
+          }
+        },
+        onError: () => toast({ title: "Failed to reset password", variant: "destructive" }),
       }
     );
   };
@@ -369,7 +390,12 @@ export default function FarmersPage() {
                               <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
                             </DropdownMenuItem>
                           )}
-                          {isAdmin && (
+                          {canWrite && (
+                            <DropdownMenuItem onClick={() => handleReset(farmer)}>
+                              <KeyRound className="mr-2 h-3.5 w-3.5" /> Reset Password
+                            </DropdownMenuItem>
+                          )}
+                          {canWrite && (
                             <DropdownMenuItem
                               onClick={() => handleDelete(farmer.id)}
                               className="text-destructive focus:text-destructive"
@@ -550,6 +576,47 @@ export default function FarmersPage() {
                 Copy
               </Button>
               <Button onClick={() => setCreatedCredentials(null)}>Done</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset password result dialog */}
+      <Dialog open={!!resetCredentials} onOpenChange={(open) => !open && setResetCredentials(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Password Reset</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Share this new password with {resetCredentials?.name}. It is shown only once and must be
+              changed on next sign-in.
+            </p>
+            <div className="rounded-md border bg-muted/40 p-4 space-y-2 text-sm">
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">Email</span>
+                <span className="font-medium break-all">{resetCredentials?.email}</span>
+              </div>
+              <div className="flex justify-between gap-4 border-t pt-2">
+                <span className="text-muted-foreground">New Password</span>
+                <span className="font-mono font-semibold">{resetCredentials?.tempPassword}</span>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (resetCredentials) {
+                    navigator.clipboard?.writeText(
+                      `Email: ${resetCredentials.email}\nNew Password: ${resetCredentials.tempPassword}`
+                    );
+                    toast({ title: "Credentials copied to clipboard" });
+                  }
+                }}
+              >
+                Copy
+              </Button>
+              <Button onClick={() => setResetCredentials(null)}>Done</Button>
             </div>
           </div>
         </DialogContent>

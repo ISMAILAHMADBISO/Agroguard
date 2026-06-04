@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useListStaff, useCreateStaff, useUpdateStaff, useDeleteStaff, getListStaffQueryKey } from "@workspace/api-client-react";
+import { useListStaff, useCreateStaff, useUpdateStaff, useDeleteStaff, useResetStaffPassword, getListStaffQueryKey } from "@workspace/api-client-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, MoreHorizontal, Loader2 } from "lucide-react";
+import { Plus, MoreHorizontal, Loader2, Pencil, KeyRound } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth";
@@ -24,6 +24,15 @@ const formSchema = z.object({
   role: z.enum(["super_admin", "admin", "agronomist", "staff"]),
   department: z.string().optional(),
 });
+
+const editSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  phone: z.string().optional(),
+  role: z.enum(["super_admin", "admin", "agronomist", "staff"]),
+  department: z.string().optional(),
+  status: z.enum(["active", "inactive"]),
+});
+type EditValues = z.infer<typeof editSchema>;
 
 const ROLE_OPTIONS: { value: string; label: string }[] = [
   { value: "super_admin", label: "Super Admin" },
@@ -42,11 +51,60 @@ export default function StaffPage() {
   const { data: staff, isLoading } = useListStaff();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [createdCredentials, setCreatedCredentials] = useState<{ name: string; email: string; tempPassword: string } | null>(null);
+  const [resetCredentials, setResetCredentials] = useState<{ name: string; email: string; tempPassword: string } | null>(null);
+  const [editingMember, setEditingMember] = useState<NonNullable<typeof staff>[number] | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const createStaff = useCreateStaff();
+  const updateStaff = useUpdateStaff();
   const deleteStaff = useDeleteStaff();
+  const resetStaffPassword = useResetStaffPassword();
+
+  const editForm = useForm<EditValues>({
+    resolver: zodResolver(editSchema),
+  });
+
+  const openEdit = (member: NonNullable<typeof staff>[number]) => {
+    setEditingMember(member);
+    editForm.reset({
+      name: member.name,
+      phone: member.phone ?? "",
+      role: member.role as EditValues["role"],
+      department: member.department ?? "",
+      status: (member.status as EditValues["status"]) ?? "active",
+    });
+  };
+
+  const onEditSubmit = (data: EditValues) => {
+    if (!editingMember) return;
+    updateStaff.mutate(
+      { id: editingMember.id, data },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListStaffQueryKey() });
+          setEditingMember(null);
+          toast({ title: "Staff member updated" });
+        },
+        onError: () => toast({ title: "Failed to update staff member", variant: "destructive" }),
+      }
+    );
+  };
+
+  const handleReset = (member: NonNullable<typeof staff>[number]) => {
+    if (!confirm(`Reset password for ${member.name}? Their current password will stop working.`)) return;
+    resetStaffPassword.mutate(
+      { id: member.id },
+      {
+        onSuccess: (result) => {
+          if (result?.tempPassword) {
+            setResetCredentials({ name: result.name, email: result.email, tempPassword: result.tempPassword });
+          }
+        },
+        onError: () => toast({ title: "Failed to reset password", variant: "destructive" }),
+      }
+    );
+  };
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -228,14 +286,24 @@ export default function StaffPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleDelete(member.id)} className="text-destructive">Remove</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {isAdmin ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openEdit(member)}>
+                            <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleReset(member)}>
+                            <KeyRound className="mr-2 h-3.5 w-3.5" /> Reset Password
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDelete(member.id)} className="text-destructive focus:text-destructive">Remove</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -279,6 +347,117 @@ export default function StaffPage() {
                 Copy
               </Button>
               <Button onClick={() => setCreatedCredentials(null)}>Done</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit staff dialog */}
+      <Dialog open={!!editingMember} onOpenChange={(open) => { if (!open) setEditingMember(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Staff Member — {editingMember?.name}</DialogTitle>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              <FormField control={editForm.control} name="name" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl><Input {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={editForm.control} name="phone" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl><Input placeholder="+2348..." {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={editForm.control} name="role" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {ROLE_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={editForm.control} name="status" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+              <FormField control={editForm.control} name="department" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Department</FormLabel>
+                  <FormControl><Input placeholder="Operations" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setEditingMember(null)}>Cancel</Button>
+                <Button type="submit" disabled={updateStaff.isPending}>
+                  {updateStaff.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save Changes
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset password result dialog */}
+      <Dialog open={!!resetCredentials} onOpenChange={(open) => !open && setResetCredentials(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Password Reset</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Share this new password with {resetCredentials?.name}. It is shown only once and must be
+              changed on next sign-in.
+            </p>
+            <div className="rounded-md border bg-muted/40 p-4 space-y-2 text-sm">
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">Email</span>
+                <span className="font-medium break-all">{resetCredentials?.email}</span>
+              </div>
+              <div className="flex justify-between gap-4 border-t pt-2">
+                <span className="text-muted-foreground">New Password</span>
+                <span className="font-mono font-semibold">{resetCredentials?.tempPassword}</span>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (resetCredentials) {
+                    navigator.clipboard?.writeText(
+                      `Email: ${resetCredentials.email}\nNew Password: ${resetCredentials.tempPassword}`
+                    );
+                    toast({ title: "Credentials copied to clipboard" });
+                  }
+                }}
+              >
+                Copy
+              </Button>
+              <Button onClick={() => setResetCredentials(null)}>Done</Button>
             </div>
           </div>
         </DialogContent>

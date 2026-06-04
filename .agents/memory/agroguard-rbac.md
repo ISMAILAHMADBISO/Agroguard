@@ -22,3 +22,7 @@ Roles live on two tables. `staff` rows have role ∈ {super_admin, admin, agrono
 
 ## Onboarding (shared temp-password pattern)
 - Both `POST /staff` and `POST /farmers` generate a one-time temp password via `lib/password.ts` (`generateTempPassword`, `hashPassword`), store the hash with `mustChangePassword=true`, and return `tempPassword` ONCE in the create response (StaffCreateResult / FarmerCreateResult schemas). Frontend shows a credentials dialog. **Why:** farmers created without a password could not log in; this mirrors staff onboarding so every created account gets working credentials.
+
+## Password reset (reset-not-reveal)
+- Passwords are bcrypt-hashed and CANNOT be revealed. "Reset password" = generate a NEW temp password, store hash with `mustChangePassword=true`, return it ONCE (shared `PasswordResetResult` schema). `POST /farmers/{id}/reset-password` (gated `canWrite`) and `POST /staff/{id}/reset-password` (gated `isAdmin`). **Why:** the only secure way to "recover" access to a hashed account is to set a new credential.
+- **Permission split:** admin resets/edits/deletes BOTH staff and farmers; staff-type users manage FARMERS only. `DELETE /farmers/{id}` was broadened from `isAdmin` to `canWrite` so any internal staff can delete farmers. Staff mutations (`PATCH/DELETE/reset-password /staff`) stay `isAdmin`. **Why:** product requirement — staff manage the farmer roster but cannot touch internal team accounts.
