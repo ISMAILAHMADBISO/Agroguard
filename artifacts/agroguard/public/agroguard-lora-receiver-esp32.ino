@@ -55,10 +55,10 @@ const char* DEVICE_ID = "AGR-XXXX-XXXX";
 
 /**
  * AgroGuard platform API base URL.
- * Production:  "https://your-app.replit.app"
- * Development: "http://<your-replit-dev-domain>"
+ * Production:  "https://your-app.vercel.app"  (or your custom domain)
+ * Local dev:   "http://192.168.1.100:8080"   (your PC's LAN IP + API port)
  */
-const char* API_HOST = "https://your-agroguard-domain.replit.app";
+const char* API_HOST = "https://your-app.vercel.app";
 
 // ── LoRa band — MUST match the transmitter ────────────────────────────────────
 #define LORA_FREQUENCY 868E6   // 868 MHz (EU). Use 915E6 (US) or 433E6 — same on both ends.

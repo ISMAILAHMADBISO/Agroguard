@@ -205,7 +205,8 @@ npm run build
 - **Build:** esbuild (ESM bundle with source maps)
 - **Frontend:** React 19, Vite 7, Tailwind CSS v4, shadcn/ui, Recharts, Wouter
 - **AI:** OpenAI gpt-4o (disease detection, advisory chat, recommendations)
-- **Real-time:** WebSocket at `/api/ws` (auto-reconnects every 3 s)
+- **Live data:** REST polling (device page polls readings every 5 s) — no WebSocket
+- **Hosting:** local (Express `server.listen`) or Vercel serverless (`api/[[...path]].ts`) + Neon PostgreSQL
 
 ---
 
@@ -275,8 +276,10 @@ nitrogen, phosphorus and potassium (mg/kg). The firmware at
 - **OpenAPI-first:** all types flow from `lib/api-spec/openapi.yaml` → Orval → Zod + React Query. No hand-written API types.
 - **Device ID resolution:** ESP32 posts its hardware `deviceId` string; the server resolves to an integer DB id.
 - **RBAC middleware:** `lib/rbac.ts` exposes `requireAuth`, `requireAdmin`, `requireCanWrite`.
-- **Auth:** session-based (express-session + connect-pg-simple). Login checks staff, then farmers. Cookie security adapts to Replit (HTTPS) vs local (HTTP).
-- **WebSocket:** `/api/ws` broadcasts every new sensor reading; the frontend auto-reconnects every 3 s.
+- **Auth:** session-based (express-session + connect-pg-simple). Login checks staff, then farmers. Cookie security adapts to production (HTTPS, Secure) vs local (HTTP, non-Secure) via `NODE_ENV`.
+- **Live data:** the device-detail page polls `GET /api/devices/:id/readings` every 5 s (and device/trends every 15 s). No WebSocket — works on serverless (Vercel).
+- **Serverless:** in production the Express app is exported from `api/[[...path]].ts` as a Vercel Function (no `server.listen`); `index.ts` is local-dev only. Allowed origins come from `APP_URL`/`ALLOWED_ORIGINS`/`VERCEL_*` env vars.
+- **Env validation:** `lib/config.ts` (imported by `app.ts`) fails fast on missing `DATABASE_URL`/`SESSION_SECRET`.
 
 ---
 

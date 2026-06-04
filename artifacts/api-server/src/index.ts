@@ -1,21 +1,48 @@
+/**
+ * LOCAL DEVELOPMENT server entry.
+ *
+ * This starts a normal Express listener so the API can run on a developer's
+ * machine (Windows / macOS / Linux) with `npm run dev`.
+ *
+ * In production on Vercel this file is NOT used — the Express app is served as a
+ * serverless function via `api/[[...path]].ts` instead (no `server.listen`).
+ */
 import { createServer } from "http";
+import path from "path";
+import express from "express";
 import app from "./app";
-import { initWebSocket } from "./lib/ws";
 import { logger } from "./lib/logger";
 
-// On Replit the workflow injects PORT. Locally it is usually unset, so we
-// fall back to 8080 (the documented local API port) for a zero-config start.
+// PORT defaults to 8080 (the documented local API port) for a zero-config start.
 const rawPort = process.env["PORT"] ?? "8080";
-
 const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const server = createServer(app);
+/**
+ * Optional: serve the built frontend from this same Express process so the whole
+ * app runs from a single origin locally (mirrors how Vercel serves it). Enable
+ * with SERVE_CLIENT=true after `npm run build`. Never used on Vercel itself.
+ */
+if (process.env["SERVE_CLIENT"] === "true") {
+  const clientDir = path.resolve(
+    process.cwd(),
+    "artifacts/agroguard/dist/public",
+  );
+  app.use(express.static(clientDir));
+  // SPA fallback: anything that is not an /api route returns index.html.
+  app.use((req, res, next) => {
+    if (req.path.startsWith("/api")) {
+      next();
+      return;
+    }
+    res.sendFile(path.join(clientDir, "index.html"));
+  });
+}
 
-initWebSocket(server);
+const server = createServer(app);
 
 server.listen(port, () => {
   logger.info({ port }, "Server listening");

@@ -17,7 +17,6 @@ import {
   CreateReadingBody,
   ListReadingsResponse,
 } from "@workspace/api-zod";
-import { broadcastReading } from "../lib/ws";
 import { isStaffType } from "../lib/rbac";
 
 const router: IRouter = Router();
@@ -46,7 +45,6 @@ router.get("/readings", async (req, res): Promise<void> => {
  *   1. Resolves the hardware deviceId string to the internal DB device ID.
  *   2. Inserts the reading (stores all 7-in-1 fields when present).
  *   3. Updates device.status → "online" and device.lastSeenAt → now.
- *   4. Broadcasts the reading over WebSocket to any subscribed dashboard clients.
  */
 router.post("/readings", async (req, res): Promise<void> => {
   const parsed = CreateReadingBody.safeParse(req.body);
@@ -94,9 +92,8 @@ router.post("/readings", async (req, res): Promise<void> => {
     .set({ status: "online", lastSeenAt: new Date() })
     .where(eq(devicesTable.id, device.id));
 
-  // Push to WebSocket subscribers (device-detail live view)
-  broadcastReading(device.id, reading);
-
+  // The device-detail dashboard polls GET /devices/:id/readings, so the new
+  // reading is picked up automatically within a few seconds — no push needed.
   res.status(201).json(reading);
 });
 

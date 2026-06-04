@@ -11,9 +11,48 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { apiErrorMessage } from "@/lib/api-error";
 import { Upload, Loader2, Leaf, ScanLine, ShieldAlert, Stethoscope } from "lucide-react";
 
-const MAX_BYTES = 8 * 1024 * 1024;
+// Accept large originals; we downscale before upload so the request stays small.
+const MAX_BYTES = 20 * 1024 * 1024;
+// Longest edge after downscaling — keeps the base64 payload well under Vercel's
+// ~4.5MB request-body limit while preserving enough detail for diagnosis.
+const MAX_IMAGE_DIM = 1280;
+const JPEG_QUALITY = 0.82;
+
+/**
+ * Downscale an image file in the browser and return a JPEG data URL.
+ * Large phone photos (often >5MB) would otherwise exceed the serverless body
+ * limit, so we resize the longest edge to MAX_IMAGE_DIM and re-encode as JPEG.
+ */
+function downscaleImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, MAX_IMAGE_DIM / Math.max(img.width, img.height));
+      const width = Math.round(img.width * scale);
+      const height = Math.round(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Could not process image"));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", JPEG_QUALITY));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Could not read image"));
+    };
+    img.src = url;
+  });
+}
 
 function severityBadge(severity: string) {
   switch (severity) {
@@ -37,22 +76,22 @@ export default function CropDiagnosisPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
       toast({ title: "Please choose an image file", variant: "destructive" });
       return;
     }
     if (file.size > MAX_BYTES) {
-      toast({ title: "Image too large", description: "Please use an image under 8MB.", variant: "destructive" });
+      toast({ title: "Image too large", description: "Please use an image under 20MB.", variant: "destructive" });
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
+    try {
+      const dataUrl = await downscaleImage(file);
       setPreview(dataUrl);
       setImageBase64(dataUrl);
-    };
-    reader.readAsDataURL(file);
+    } catch {
+      toast({ title: "Could not process image", description: "Please try a different photo.", variant: "destructive" });
+    }
   };
 
   const handleAnalyze = () => {
@@ -68,10 +107,13 @@ export default function CropDiagnosisPage() {
           setCropType("");
           if (fileRef.current) fileRef.current.value = "";
         },
-        onError: () => {
+        onError: (err) => {
           toast({
             title: "Analysis failed",
-            description: "The AI service could not analyse this photo. Please try again.",
+            description: apiErrorMessage(
+              err,
+              "The AI service could not analyse this photo. Please try again.",
+            ),
             variant: "destructive",
           });
         },

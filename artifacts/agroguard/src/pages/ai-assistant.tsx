@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { apiErrorMessage } from "@/lib/api-error";
 import { Send, Loader2, Bot, User, Plus, MessageSquare, Sprout } from "lucide-react";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
@@ -51,11 +52,14 @@ export default function AiAssistantPage() {
           setMessages(res.messages as ChatMessage[]);
           queryClient.invalidateQueries({ queryKey: getListAiConversationsQueryKey() });
         },
-        onError: () => {
+        onError: (err) => {
           setMessages((prev) => prev.slice(0, -1));
           toast({
             title: "Message failed",
-            description: "The AI assistant is unavailable right now. Please try again.",
+            description: apiErrorMessage(
+              err,
+              "The AI assistant is unavailable right now. Please try again.",
+            ),
             variant: "destructive",
           });
         },

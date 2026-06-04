@@ -1,18 +1,26 @@
 /**
- * Device Detail page — live sensor monitoring with WebSocket real-time updates.
+ * Device Detail page — live sensor monitoring via polling.
  *
  * Sensor cards displayed:
  *   Core: Soil Moisture · Temperature · Humidity · Heat Index
  *   7-in-1 extra: EC · pH · Nitrogen · Phosphorus · Potassium
  *
- * WebSocket behaviour:
- *   - Connects to /api/ws and subscribes to the specific deviceId.
- *   - On new reading: updates the live cards and pushes a point onto the chart.
- *   - Auto-reconnects every 3 seconds on disconnect.
+ * Live updates:
+ *   - Polls GET /devices/:id/readings every 5s (React Query refetchInterval)
+ *     for the latest reading (drives the live cards + 7-in-1 panel).
+ *   - Polls the device + 24h trends every 15s for status and the chart.
+ *   This works on any serverless host (Vercel) — no WebSocket required.
  */
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useParams, Link } from "wouter";
-import { useGetDevice, useGetSensorTrends } from "@workspace/api-client-react";
+import {
+  useGetDevice,
+  useGetSensorTrends,
+  useGetDeviceReadings,
+  getGetDeviceQueryKey,
+  getGetSensorTrendsQueryKey,
+  getGetDeviceReadingsQueryKey,
+} from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,88 +33,13 @@ import {
   Tooltip as RechartsTooltip, Legend,
 } from "recharts";
 import { format } from "date-fns";
-import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-interface SensorReading {
-  id: number;
-  deviceId: number;
-  soilMoisture: number;
-  temperature: number;
-  humidity: number;
-  heatIndex: number;
-  electricalConductivity?: number | null;
-  ph?: number | null;
-  nitrogen?: number | null;
-  phosphorus?: number | null;
-  potassium?: number | null;
-  rainfall?: number | null;
-  lightIntensity?: number | null;
-  recordedAt: string;
-}
-
-// ── WebSocket hook ────────────────────────────────────────────────────────────
-
-/**
- * Subscribes to live sensor readings over WebSocket for a given device.
- * Handles reconnection automatically.
- */
-function useDeviceWebSocket(deviceId: number) {
-  const [liveReading, setLiveReading] = useState<SensorReading | null>(null);
-  const [connected, setConnected] = useState(false);
-  const wsRef = useRef<WebSocket | null>(null);
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (!deviceId) return;
-
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/api/ws`;
-
-    const connect = () => {
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
-
-      ws.onopen = () => {
-        setConnected(true);
-        // Tell the server we want readings for this device
-        ws.send(JSON.stringify({ type: "subscribe", deviceId }));
-      };
-
-      ws.onmessage = (event: MessageEvent) => {
-        try {
-          const msg = JSON.parse(event.data as string) as {
-            type: string;
-            deviceId?: number;
-            data?: SensorReading;
-          };
-          if (msg.type === "reading" && msg.deviceId === deviceId && msg.data) {
-            setLiveReading(msg.data);
-            // Refresh chart and device status card
-            void queryClient.invalidateQueries({ queryKey: ["getSensorTrends", deviceId] });
-            void queryClient.invalidateQueries({ queryKey: ["getDevice", deviceId] });
-          }
-        } catch {
-          // Silently ignore malformed messages
-        }
-      };
-
-      ws.onclose = () => {
-        setConnected(false);
-        setTimeout(connect, 3000); // reconnect after 3 s
-      };
-
-      ws.onerror = () => ws.close();
-    };
-
-    connect();
-    return () => wsRef.current?.close();
-  }, [deviceId, queryClient]);
-
-  return { liveReading, connected };
-}
+// How often we poll for fresh data.
+const READINGS_POLL_MS = 5000;
+const META_POLL_MS = 15000;
+// A reading newer than this is considered "live".
+const LIVE_WINDOW_MS = 2 * 60 * 1000;
 
 // ── Metric card ───────────────────────────────────────────────────────────────
 
@@ -141,9 +74,15 @@ export default function DeviceDetailPage() {
   const id = parseInt(params.id || "0");
   const [copied, setCopied] = useState(false);
 
-  const { data: device, isLoading: deviceLoading } = useGetDevice(id);
-  const { data: trends, isLoading: trendsLoading } = useGetSensorTrends(id);
-  const { liveReading, connected } = useDeviceWebSocket(id);
+  const { data: device, isLoading: deviceLoading } = useGetDevice(id, {
+    query: { queryKey: getGetDeviceQueryKey(id), refetchInterval: META_POLL_MS },
+  });
+  const { data: trends, isLoading: trendsLoading } = useGetSensorTrends(id, {
+    query: { queryKey: getGetSensorTrendsQueryKey(id), refetchInterval: META_POLL_MS },
+  });
+  const { data: readings } = useGetDeviceReadings(id, {
+    query: { queryKey: getGetDeviceReadingsQueryKey(id), refetchInterval: READINGS_POLL_MS },
+  });
 
   const copyId = () => {
     if (!device) return;
@@ -172,17 +111,23 @@ export default function DeviceDetailPage() {
     );
   }
 
-  // Use live reading if available, otherwise fall back to last chart point
-  const latestReading = liveReading ?? (trends && trends.length > 0 ? trends[trends.length - 1] : null);
+  // Latest reading comes from the polled readings endpoint (most recent first).
+  // It carries the full 7-in-1 payload when the sensor supports it.
+  const latestReading = readings && readings.length > 0 ? readings[0] : null;
 
-  // Merge live reading into chart data (keep max 50 points)
-  const chartData = liveReading ? [...(trends ?? []), liveReading].slice(-50) : trends;
+  const lastReadingAt = latestReading ? new Date(latestReading.recordedAt) : null;
+  const isLive =
+    !!lastReadingAt && Date.now() - lastReadingAt.getTime() < LIVE_WINDOW_MS;
 
-  // 7-in-1 data only arrives via live WebSocket readings (SensorTrendPoint doesn't carry those fields)
-  const has7in1 = liveReading &&
-    (liveReading.electricalConductivity != null ||
-     liveReading.ph != null ||
-     liveReading.nitrogen != null);
+  // The chart uses the 24h trend series.
+  const chartData = trends;
+
+  // 7-in-1 data only shows when the latest reading carries those channels.
+  const has7in1 =
+    !!latestReading &&
+    (latestReading.electricalConductivity != null ||
+      latestReading.ph != null ||
+      latestReading.nitrogen != null);
 
   return (
     <div className="space-y-6">
@@ -210,14 +155,14 @@ export default function DeviceDetailPage() {
 
         {/* Status strip */}
         <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-          {/* WebSocket connection indicator */}
+          {/* Polling / live-data indicator */}
           <div className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${
-            connected
+            isLive
               ? "bg-green-50 text-green-700 border-green-200"
               : "bg-gray-50 text-gray-500 border-gray-200"
           }`}>
-            <Radio className={`h-3 w-3 ${connected ? "text-green-500 animate-pulse" : "text-gray-400"}`} />
-            {connected ? "Live" : "Connecting..."}
+            <Radio className={`h-3 w-3 ${isLive ? "text-green-500 animate-pulse" : "text-gray-400"}`} />
+            {isLive ? "Live" : "Auto-refreshing"}
           </div>
 
           {device.batteryLevel != null && (
@@ -240,10 +185,10 @@ export default function DeviceDetailPage() {
       </div>
 
       {/* Live reading banner */}
-      {liveReading && (
+      {isLive && lastReadingAt && (
         <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
           <Radio className="h-3.5 w-3.5 animate-pulse shrink-0" />
-          Live reading received at {format(new Date(liveReading.recordedAt), "HH:mm:ss")} — dashboard updated in real time.
+          Latest reading at {format(lastReadingAt, "HH:mm:ss")} — dashboard auto-refreshes every few seconds.
         </div>
       )}
 
@@ -281,8 +226,7 @@ export default function DeviceDetailPage() {
       </div>
 
       {/* 7-in-1 soil sensor metrics (shown only when data exists) */}
-      {/* 7-in-1 readings come only from live WebSocket data — shown when present */}
-      {has7in1 && liveReading && (
+      {has7in1 && latestReading && (
         <div>
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             7-in-1 Soil Analysis
@@ -290,46 +234,46 @@ export default function DeviceDetailPage() {
           <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
             <MetricCard
               title="Soil EC"
-              value={liveReading.electricalConductivity != null
-                ? `${liveReading.electricalConductivity.toFixed(1)}`
+              value={latestReading.electricalConductivity != null
+                ? `${latestReading.electricalConductivity.toFixed(1)}`
                 : "—"}
               sub="mS/m — salinity"
               icon={<Zap className="h-4 w-4 text-yellow-600" />}
-              warning={liveReading.electricalConductivity != null && liveReading.electricalConductivity > 400}
+              warning={latestReading.electricalConductivity != null && latestReading.electricalConductivity > 400}
             />
             <MetricCard
               title="Soil pH"
-              value={liveReading.ph != null ? liveReading.ph.toFixed(1) : "—"}
+              value={latestReading.ph != null ? latestReading.ph.toFixed(1) : "—"}
               sub={
-                liveReading.ph != null
-                  ? liveReading.ph < 5.5 ? "Acidic — add lime"
-                  : liveReading.ph > 7.5 ? "Alkaline — add sulfur"
+                latestReading.ph != null
+                  ? latestReading.ph < 5.5 ? "Acidic — add lime"
+                  : latestReading.ph > 7.5 ? "Alkaline — add sulfur"
                   : "Optimal (6.0–7.0)"
                   : "0–14 scale"
               }
               icon={<FlaskConical className="h-4 w-4 text-purple-500" />}
-              warning={liveReading.ph != null && (liveReading.ph < 5.5 || liveReading.ph > 7.5)}
+              warning={latestReading.ph != null && (latestReading.ph < 5.5 || latestReading.ph > 7.5)}
             />
             <MetricCard
               title="Nitrogen (N)"
-              value={liveReading.nitrogen != null ? `${liveReading.nitrogen.toFixed(0)}` : "—"}
+              value={latestReading.nitrogen != null ? `${latestReading.nitrogen.toFixed(0)}` : "—"}
               sub="mg/kg"
               icon={<Leaf className="h-4 w-4 text-green-600" />}
-              warning={liveReading.nitrogen != null && liveReading.nitrogen < 50}
+              warning={latestReading.nitrogen != null && latestReading.nitrogen < 50}
             />
             <MetricCard
               title="Phosphorus (P)"
-              value={liveReading.phosphorus != null ? `${liveReading.phosphorus.toFixed(0)}` : "—"}
+              value={latestReading.phosphorus != null ? `${latestReading.phosphorus.toFixed(0)}` : "—"}
               sub="mg/kg"
               icon={<Leaf className="h-4 w-4 text-emerald-500" />}
-              warning={liveReading.phosphorus != null && liveReading.phosphorus < 20}
+              warning={latestReading.phosphorus != null && latestReading.phosphorus < 20}
             />
             <MetricCard
               title="Potassium (K)"
-              value={liveReading.potassium != null ? `${liveReading.potassium.toFixed(0)}` : "—"}
+              value={latestReading.potassium != null ? `${latestReading.potassium.toFixed(0)}` : "—"}
               sub="mg/kg"
               icon={<Leaf className="h-4 w-4 text-teal-500" />}
-              warning={liveReading.potassium != null && liveReading.potassium < 100}
+              warning={latestReading.potassium != null && latestReading.potassium < 100}
             />
           </div>
         </div>
@@ -340,7 +284,7 @@ export default function DeviceDetailPage() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>24-Hour Sensor Trends</span>
-            {liveReading && (
+            {isLive && (
               <span className="text-xs font-normal text-green-600 flex items-center gap-1">
                 <Radio className="h-3 w-3 animate-pulse" /> Live
               </span>

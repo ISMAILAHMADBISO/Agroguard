@@ -23,7 +23,10 @@ import {
   GetAiConversationParams,
 } from "@workspace/api-zod";
 import { getAssignedFarmerIds, canAccessFarmer } from "../lib/rbac";
-import { getOpenAI, AI_MODEL } from "../lib/openai";
+import { getOpenAI, AI_MODEL, isAIConfigured } from "../lib/openai";
+
+const AI_NOT_CONFIGURED_MESSAGE =
+  "AI is not configured. Add an OPENAI_API_KEY to enable disease detection and the advisory chat.";
 
 const router: IRouter = Router();
 
@@ -71,6 +74,11 @@ function normaliseSeverity(value: unknown): Severity {
 
 /** POST /ai/disease-detection — analyse a crop photo with the vision model. */
 router.post("/ai/disease-detection", async (req, res): Promise<void> => {
+  if (!isAIConfigured()) {
+    res.status(503).json({ error: AI_NOT_CONFIGURED_MESSAGE });
+    return;
+  }
+
   const parsed = DetectDiseaseBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -247,6 +255,11 @@ router.get("/ai/conversations/:id", async (req, res): Promise<void> => {
 
 /** POST /ai/chat — send a message to the advisor, creating/continuing a conversation. */
 router.post("/ai/chat", async (req, res): Promise<void> => {
+  if (!isAIConfigured()) {
+    res.status(503).json({ error: AI_NOT_CONFIGURED_MESSAGE });
+    return;
+  }
+
   const parsed = SendChatMessageBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

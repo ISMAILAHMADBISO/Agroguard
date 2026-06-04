@@ -1,11 +1,16 @@
 /**
  * OpenAI client — uses the user-provided OPENAI_API_KEY secret.
- * Instantiated lazily so a missing key surfaces as a handled 503 in the AI
+ * Instantiated lazily so a missing key surfaces as a handled error in the AI
  * routes rather than crashing the whole server at boot.
  */
 import OpenAI from "openai";
 
 let client: OpenAI | null = null;
+
+/** True when an OpenAI API key is configured. */
+export function isAIConfigured(): boolean {
+  return !!process.env["OPENAI_API_KEY"];
+}
 
 export function getOpenAI(): OpenAI {
   if (client) return client;
