@@ -22,6 +22,7 @@ import {
   Radio,
   LineChart,
 } from "lucide-react";
+import { ProductCarousel } from "@/components/product-carousel";
 import ceoPhoto from "@assets/ceo_1780575358267.jpeg";
 import ctoPhoto from "@assets/usmanh_1780575358268.jpeg";
 import cooPhoto from "@assets/ladan_1780575358269.jpeg";
@@ -40,6 +41,7 @@ export default function LandingPage() {
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
             <a href="#features" className="hover:text-primary transition-colors">Features</a>
             <a href="#product" className="hover:text-primary transition-colors">Product</a>
+            <a href="#pricing" className="hover:text-primary transition-colors">Pricing</a>
             <a href="#how-it-works" className="hover:text-primary transition-colors">How it Works</a>
             <a href="#testimonials" className="hover:text-primary transition-colors">Stories</a>
             <a href="#team" className="hover:text-primary transition-colors">Team</a>
@@ -72,9 +74,9 @@ export default function LandingPage() {
                 <Link href="/login" className="inline-flex h-12 items-center justify-center rounded-md bg-primary px-8 text-base font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
                   Access Platform
                 </Link>
-                <Button variant="outline" size="lg" className="bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white backdrop-blur">
+                <a href="#pricing" className="inline-flex h-12 items-center justify-center rounded-md bg-white/10 px-8 text-base font-medium text-white border border-white/20 shadow backdrop-blur transition-colors hover:bg-white/20">
                   Contact Sales
-                </Button>
+                </a>
               </div>
             </div>
           </div>
@@ -131,7 +133,7 @@ export default function LandingPage() {
                   <Leaf className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">Actionable Insights</h3>
-                <p className="text-muted-foreground">Receive SMS and WhatsApp alerts in local languages with specific recommendations for intervention.</p>
+                <p className="text-muted-foreground">Readings and alerts reach the farmer on their AgroGuard receiver unit and on WhatsApp, in local languages with clear recommendations for action.</p>
               </div>
             </div>
           </div>
@@ -176,9 +178,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="relative">
-                <div className="aspect-square rounded-2xl overflow-hidden border border-border shadow-lg">
-                  <img src="/assets/auth/slide2.png" alt="AgroGuard soil sensor node" className="w-full h-full object-cover" />
-                </div>
+                <ProductCarousel />
                 <div className="absolute -bottom-5 -left-5 hidden sm:flex items-center gap-3 bg-card border border-border rounded-xl shadow-lg px-5 py-3">
                   <Cpu className="h-6 w-6 text-primary" />
                   <div>
@@ -213,6 +213,79 @@ export default function LandingPage() {
                   <p className="text-sm text-muted-foreground">{desc}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing / Pre-Order */}
+        <section id="pricing" className="py-24 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center max-w-2xl mx-auto mb-16">
+              <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary bg-primary/10 rounded-full px-3 py-1 mb-4">
+                Pre-Order Now
+              </span>
+              <h2 className="text-3xl font-bold text-foreground mb-4">Reserve Your AgroGuard Node</h2>
+              <p className="text-muted-foreground">
+                Be among the first farmers to deploy AgroGuard. Pre-order today and lock in
+                early-bird pricing before general availability.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+              {/* Early Bird */}
+              <div className="relative bg-card p-8 rounded-2xl border-2 border-primary shadow-lg flex flex-col">
+                <span className="absolute -top-3 left-8 inline-block text-xs font-semibold uppercase tracking-wider text-primary-foreground bg-primary rounded-full px-3 py-1">
+                  Early Bird
+                </span>
+                <h3 className="text-lg font-bold text-foreground mb-2">Pre-Order Price</h3>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-4xl font-extrabold text-foreground">&#8358;160,000</span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Limited launch allocation. Save against the regular price.
+                </p>
+                <ul className="space-y-3 mb-8 flex-1">
+                  {[
+                    "Complete AgroGuard Node + 7-in-1 soil probe",
+                    "Farmer receiver unit with on-device readout",
+                    "Solar power kit and field mount",
+                    "Priority onboarding and platform access",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-3 text-sm text-foreground">
+                      <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/signup" className="inline-flex h-12 w-full items-center justify-center rounded-md bg-primary px-8 text-base font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
+                  Pre-Order Now
+                </Link>
+              </div>
+              {/* Regular */}
+              <div className="bg-card p-8 rounded-2xl border border-border shadow-sm flex flex-col">
+                <h3 className="text-lg font-bold text-foreground mb-2">Regular Price</h3>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-4xl font-extrabold text-foreground">&#8358;200,000</span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Standard price after the pre-order window closes.
+                </p>
+                <ul className="space-y-3 mb-8 flex-1">
+                  {[
+                    "Complete AgroGuard Node + 7-in-1 soil probe",
+                    "Farmer receiver unit with on-device readout",
+                    "Solar power kit and field mount",
+                    "Standard onboarding and platform access",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-3 text-sm text-foreground">
+                      <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <a href="#contact" className="inline-flex h-12 w-full items-center justify-center rounded-md border border-input bg-background px-8 text-base font-medium text-foreground shadow-sm transition-colors hover:bg-muted">
+                  Ask a Question
+                </a>
+              </div>
             </div>
           </div>
         </section>

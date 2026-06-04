@@ -360,7 +360,12 @@ export async function customFetch<T = unknown>(
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  const response = await fetch(input, { ...init, method, headers });
+  // Send the session cookie on every request so cookie-based auth works in the
+  // browser (including the cross-site Replit preview iframe). Callers can still
+  // override this explicitly via `options.credentials`.
+  const credentials: RequestCredentials = init.credentials ?? "include";
+
+  const response = await fetch(input, { ...init, method, headers, credentials });
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);

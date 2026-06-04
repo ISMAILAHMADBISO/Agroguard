@@ -51,23 +51,23 @@ export function AuthCarousel() {
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-sidebar">
-      {SLIDES.map((slide, i) => (
-        <div
-          key={slide.src}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            i === index ? "opacity-100" : "opacity-0"
-          }`}
-          aria-hidden={i !== index}
-        >
-          <img
-            src={slide.src}
-            alt={slide.title}
-            className="h-full w-full object-cover"
-            loading={i === 0 ? "eager" : "lazy"}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-sidebar/95 via-sidebar/30 to-transparent" />
-        </div>
-      ))}
+      {/* Sliding track — all slides sit side by side and translate horizontally */}
+      <div
+        className="flex h-full w-full transition-transform duration-700 ease-in-out"
+        style={{ transform: `translateX(-${index * 100}%)` }}
+      >
+        {SLIDES.map((slide, i) => (
+          <div key={slide.src} className="relative h-full w-full shrink-0" aria-hidden={i !== index}>
+            <img
+              src={slide.src}
+              alt={slide.title}
+              className="h-full w-full object-cover"
+              loading={i === 0 ? "eager" : "lazy"}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-sidebar/95 via-sidebar/30 to-transparent" />
+          </div>
+        ))}
+      </div>
 
       {/* Brand mark */}
       <div className="absolute top-8 left-8 flex items-center gap-2.5 text-white">
