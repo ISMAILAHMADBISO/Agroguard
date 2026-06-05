@@ -49,7 +49,7 @@ export default function LandingPage() {
           </nav>
           <div className="flex items-center gap-4">
             <Link href="/login" className="hidden md:inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
-              Platform Login
+              Login
             </Link>
           </div>
         </div>
@@ -68,11 +68,11 @@ export default function LandingPage() {
                 Enterprise Agricultural Intelligence for Nigeria
               </h1>
               <p className="text-lg md:text-xl text-gray-200 mb-8 max-w-2xl leading-relaxed">
-                Empowering smallholder farmers with real-time IoT monitoring, AI-driven crop recommendations, and precision farm management.
+                Empowering smallholder farmers with real time IoT monitoring, AI driven crop recommendations, and precision farm management.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                 <Link href="/login" className="inline-flex h-12 items-center justify-center rounded-md bg-primary px-8 text-base font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
-                  Access Platform
+                  Sign In
                 </Link>
                 <a href="#pricing" className="inline-flex h-12 items-center justify-center rounded-md bg-white/10 px-8 text-base font-medium text-white border border-white/20 shadow backdrop-blur transition-colors hover:bg-white/20">
                   Contact Sales
@@ -148,12 +148,12 @@ export default function LandingPage() {
                   The Hardware
                 </span>
                 <h2 className="text-3xl font-bold text-foreground mb-4">
-                  AgroGuard Node — 7-in-1 Smart Soil Sensor
+                  AgroGuard Node 7 in 1 Smart Soil Sensor
                 </h2>
                 <p className="text-muted-foreground mb-8 leading-relaxed">
-                  A rugged, solar-ready field device built for Nigerian farmland. The AgroGuard
+                  A rugged, solar ready field device built for Nigerian farmland. The AgroGuard
                   Node reads seven soil channels and streams them to the cloud over WiFi or
-                  long-range LoRa — giving you a complete picture of what is happening beneath
+                  long range LoRa giving you a complete picture of what is happening beneath
                   your crops.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-x-8 gap-y-5">
@@ -182,8 +182,8 @@ export default function LandingPage() {
                 <div className="absolute -bottom-5 -left-5 hidden sm:flex items-center gap-3 bg-card border border-border rounded-xl shadow-lg px-5 py-3">
                   <Cpu className="h-6 w-6 text-primary" />
                   <div>
-                    <div className="text-sm font-bold text-foreground">ESP32 + RS485 Modbus</div>
-                    <div className="text-xs text-muted-foreground">Industrial-grade sensing</div>
+                    <div className="text-sm font-bold text-foreground">Device + RS485 Modbus</div>
+                    <div className="text-xs text-muted-foreground">Industrial grade sensing</div>
                   </div>
                 </div>
               </div>
@@ -222,12 +222,12 @@ export default function LandingPage() {
           <div className="container mx-auto px-4">
             <div className="text-center max-w-2xl mx-auto mb-16">
               <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary bg-primary/10 rounded-full px-3 py-1 mb-4">
-                Pre-Order Now
+                Pre Order Now
               </span>
-              <h2 className="text-3xl font-bold text-foreground mb-4">Reserve Your AgroGuard Node</h2>
+              <h2 className="text-3xl font-bold text-foreground mb-4">Reserve Your AgroGuard Device</h2>
               <p className="text-muted-foreground">
-                Be among the first farmers to deploy AgroGuard. Pre-order today and lock in
-                early-bird pricing before general availability.
+                Be among the first farmers to deploy AgroGuard. Pre order today and lock in
+                early bird pricing before general availability.
               </p>
             </div>
             <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
@@ -257,7 +257,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <Link href="/signup" className="inline-flex h-12 w-full items-center justify-center rounded-md bg-primary px-8 text-base font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
-                  Pre-Order Now
+                  Pre Order Now
                 </Link>
               </div>
               {/* Regular */}
@@ -309,7 +309,7 @@ export default function LandingPage() {
                 <tbody className="divide-y divide-border">
                   {[
                     "Real-time soil data",
-                    "7-in-1 nutrient analysis",
+                    "7 in 1 nutrient analysis",
                     "AI crop & disease guidance",
                     "Instant WhatsApp alerts",
                     "Remote monitoring anywhere",
@@ -340,7 +340,7 @@ export default function LandingPage() {
             <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
               {[
                 { step: "01", icon: UserPlus, title: "Register", desc: "Create your free farmer account and add your farm details in minutes." },
-                { step: "02", icon: Radio, title: "Deploy", desc: "Plant the AgroGuard Node in your field — it connects automatically and starts streaming." },
+                { step: "02", icon: Radio, title: "Deploy", desc: "Plant the AgroGuard Node in your field  it connects automatically and starts streaming." },
                 { step: "03", icon: LineChart, title: "Grow Smarter", desc: "Watch live readings, receive AI recommendations and act before problems spread." },
               ].map(({ step, icon: Icon, title, desc }) => (
                 <div key={step} className="relative bg-card p-8 rounded-xl border border-border shadow-sm">
@@ -391,7 +391,7 @@ export default function LandingPage() {
         <section id="team" className="py-24 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-2xl mx-auto mb-16">
-              <h2 className="text-3xl font-bold text-foreground mb-4">Leadership Team</h2>
+              <h2 className="text-3xl font-bold text-foreground mb-4">Meet the Founders</h2>
               <p className="text-muted-foreground">Combining agricultural expertise with deep technology experience.</p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
@@ -401,23 +401,22 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-lg font-bold text-foreground">Ismail Ahmad</h3>
                 <p className="text-primary font-medium mb-2">Founder & CEO</p>
-                <p className="text-sm text-muted-foreground">Agricultural technology strategist driving AgroGuard's mission to empower Nigerian smallholder farmers.</p>
               </div>
               <div className="text-center">
                 <div className="w-32 h-32 mx-auto rounded-full bg-muted mb-4 overflow-hidden">
                   <img src={ctoPhoto} alt="Usman Umar Garba" className="w-full h-full object-cover" />
                 </div>
                 <h3 className="text-lg font-bold text-foreground">Usman Umar Garba</h3>
-                <p className="text-primary font-medium mb-2">CTO</p>
-                <p className="text-sm text-muted-foreground">IoT systems engineer specializing in embedded sensors and cloud infrastructure.</p>
+                <p className="text-primary font-medium mb-2">COO</p>
+          
               </div>
               <div className="text-center">
                 <div className="w-32 h-32 mx-auto rounded-full bg-muted mb-4 overflow-hidden">
                   <img src={cooPhoto} alt="Sadiya Abdullahi Ladan" className="w-full h-full object-cover" />
                 </div>
                 <h3 className="text-lg font-bold text-foreground">Sadiya Abdullahi Ladan</h3>
-                <p className="text-primary font-medium mb-2">COO</p>
-                <p className="text-sm text-muted-foreground">Operations lead coordinating field deployment, farmer onboarding and partner relations.</p>
+                <p className="text-primary font-medium mb-2">CTO</p>
+                
               </div>
             </div>
           </div>
@@ -440,10 +439,12 @@ export default function LandingPage() {
                   <li className="flex items-center gap-3">
                     <Mail className="h-5 w-5 shrink-0" />
                     <a href="mailto:info@agroguard.tech" className="hover:underline">info@agroguard.tech</a>
+                     <a href="mailto:iamagroguard@gmail.com" className="hover:underline">iamagroguard@gmail.com</a>
                   </li>
                   <li className="flex items-center gap-3">
                     <Phone className="h-5 w-5 shrink-0" />
                     <a href="tel:+2347089459265" className="hover:underline">+234 708 945 9265</a>
+                    <a href="tel:+2349069384731" className="hover:underline">+234 906 938 4731</a>
                   </li>
                 </ul>
               </div>

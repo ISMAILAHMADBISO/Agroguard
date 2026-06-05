@@ -105,36 +105,7 @@ export default function LoginPage() {
             </Link>
           </p>
 
-          {/* Demo credentials */}
-          <div className="pt-5 border-t border-border">
-            <p className="text-xs text-muted-foreground text-center mb-3 font-semibold uppercase tracking-wider">
-              Demo Credentials
-            </p>
-            <div className="space-y-1.5 text-xs">
-              {[
-                { role: "Super Admin", email: "ismail.ahmad@agroguard.ng" },
-                { role: "Admin", email: "usman.umar@agroguard.ng" },
-                { role: "Agronomist", email: "sadiya.ladan@agroguard.ng" },
-                { role: "Staff", email: "ibrahim.garba@agroguard.ng" },
-                { role: "Farmer", email: "emeka.chukwu@farm.ng" },
-              ].map(({ role, email: e }) => (
-                <button
-                  key={role}
-                  type="button"
-                  onClick={() => { setEmail(e); setPassword("AgroGuard2024!"); }}
-                  className="w-full flex justify-between items-center bg-muted hover:bg-muted/70 rounded px-3 py-1.5 transition-colors cursor-pointer text-left"
-                >
-                  <span className="font-semibold text-foreground">{role}</span>
-                  <span className="text-muted-foreground truncate ml-2">{e}</span>
-                </button>
-              ))}
-              <p className="text-center pt-1 text-muted-foreground">
-                Password: <span className="font-mono font-semibold text-foreground">AgroGuard2024!</span>
-                <span className="ml-1 text-xs">(click any row to fill)</span>
-              </p>
-            </div>
-          </div>
-
+          
           <p className="text-center text-xs text-muted-foreground">
             <a href="/" className="hover:text-primary transition-colors">Back to homepage</a>
           </p>
