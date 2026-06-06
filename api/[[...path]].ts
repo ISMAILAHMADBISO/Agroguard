@@ -4,4 +4,6 @@ export const config = {
   maxDuration: 60,
 };
 
-export default app;
+export default function handler(req: any, res: any) {
+  return (app as any)(req, res);
+}
