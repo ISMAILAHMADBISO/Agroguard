@@ -1,10 +1,7 @@
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run vercel-build",
-  "outputDirectory": "artifacts/agroguard/dist/public",
-  "functions": {
-    "api/[[...path]].ts": {
-      "maxDuration": 60
-    }
-  }
-}
+import app from "../artifacts/api-server/src/app";
+
+export const config = {
+  maxDuration: 60,
+};
+
+export default app;
