@@ -1,7 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run vercel-build",
-  "outputDirectory": "artifacts/agroguard/dist/public",
   "functions": {
     "api/[[...path]].ts": {
       "maxDuration": 60
