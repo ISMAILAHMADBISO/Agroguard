@@ -1,5 +1,4 @@
-import app from "../artifacts/api-server/src/app";
-
+import app from "../../api-server/src/app";
 export const config = {
   maxDuration: 60,
 };
