@@ -1,0 +1,41 @@
+[33m1cb909e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfull-backup[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m Backup AgroGuard - June 10  2026
+[33m0280840[m Fix API app import
+[33m18cb580[m Remove test endpoint
+[33m7116000[m Include Vercel API routes in tsconfig
+[33mc0ba224[m Add API test endpoint
+[33md7976a7[m Remove duplicate root API route
+[33m7d1eb35[m Fix Vercel API routing and deployment
+[33m96940b7[m Fix API handler
+[33m1bce373[m Fix Vercel output directory
+[33meab5496[m Fix API handler
+[33m26239a4[m Fix API handler
+[33mc5b8363[m Fix Vercel root deployment
+[33m9e80c41[m Fix Vercel root deployment
+[33ma4bb99d[m Fix Vercel root deployment
+[33mb37addf[m Fix Vercel Express API adapter
+[33m9e987a1[m Fix Vercel Express API adapter
+[33m6fa9295[m Fix Vercel output directory
+[33m1c2e51e[m Add vercel-build script
+[33md49c7de[m Initial AgroGuard setup
+[33md415c8e[m[33m ([m[1;31mgitsafe-backup/main[m[33m)[m Update project setup to use the latest version and resolve environment configuration issues
+[33mcae99e7[m Improve local development environment setup and reliability
+[33mb670e55[m Migrate to serverless Vercel deployment and improve AI error handling
+[33maffeea7[m Update platform to deploy entirely on Vercel
+[33m55efee5[m Update user permissions and password reset functionality
+[33m237b505[m Add bearer token authentication fallback for embedded applications
+[33m9f80b26[m Fix authentication errors and improve landing page features
+[33m4cad163[m Enhance user roles and implement farmer self-signup functionality
+[33md781ae6[m Update team photos, database seeding, and local setup instructions
+[33md27c819[m Improve local development and authentication flow
+[33mebd68a5[m Update documentation and add team member images to the project
+[33m743799a[m Update project to use npm instead of pnpm for dependency management
+[33mf7d2e4b[m Add AI-powered crop diagnosis and advisory chat features
+[33mb66d6e6[m Add security enhancements and UI fixes for a better user experience
+[33mebe51f5[m Strengthen user authentication and access control across the platform
+[33mc39b876[m Update website logo and its display across the platform
+[33m5ec99e8[m Add detailed instructions for running the platform locally
+[33m3a55516[m Enhance the platform to support new 7-in-1 soil sensors and field officer assignments
+[33mf97a9a8[m Implement role-based access control for secure data visibility
+[33m2ce36ee[m Implement secure login and real-time sensor updates for farm devices
+[33mfdf6742[m Add extensive backend API endpoints for core platform features
+[33m2246770[m Initial commit
