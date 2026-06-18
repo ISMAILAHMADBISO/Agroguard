@@ -2,6 +2,19 @@
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
   "files": [],
+  "include": [
+    "api/**/*",
+    "artifacts/api-server/src/types/**/*.d.ts"
+  ],
+  "compilerOptions": {
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "paths": {
+      "express-session": ["./artifacts/api-server/node_modules/@types/express-session/index.d.ts"],
+      "express": ["./artifacts/api-server/node_modules/@types/express/index.d.ts"]
+    }
+  },
   "references": [
     {
       "path": "./lib/db"

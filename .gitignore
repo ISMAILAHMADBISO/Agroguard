@@ -7,7 +7,6 @@ node_modules/
 # Build outputs
 dist/
 build/
-/api/
 
 # Local files
 .local/
