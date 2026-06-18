@@ -91,19 +91,18 @@ Every product feature is preserved — only the transport for "live" data change
 
 | Tool | Version | Install |
 |------|---------|---------|
-| Node.js | 20 LTS or newer (npm bundled) | https://nodejs.org |
+| Node.js | 20 LTS or newer | https://nodejs.org |
+| pnpm | 9+ (Recommended for Windows workspaces) | Run `npm install -g pnpm` |
 | PostgreSQL | 15+ (local) or a free Neon database | https://postgresql.org / https://neon.tech |
 
-> The project uses **npm workspaces**. On your own machine you only need Node +
-> npm. A `pnpm-workspace.yaml` is present but is used by the Replit cloud
-> environment only — ignore it locally.
+> This project uses **pnpm workspaces**. On your own machine, install Node + pnpm, then run `pnpm install`.
 
 ### 1 — Install
 
 ```bash
 git clone <your-repo-url>
 cd agroguard
-npm install
+pnpm install
 ```
 
 ### 2 — Database
@@ -194,16 +193,17 @@ npm run start      # serves the built frontend + API from one origin on :8080
 3. In the Neon SQL editor or locally, push the schema and seed once:
    ```bash
    # locally, with DATABASE_URL pointing at Neon:
-   npm run setup
+   pnpm run setup
    ```
 
 ### 2 — Import the repo into Vercel
 
 1. Push this repo to GitHub/GitLab/Bitbucket.
 2. In Vercel, **Add New → Project** and import the repo.
-3. Framework preset: **Other** (the included `vercel.json` configures
-   everything — build command, output directory, the API function and SPA
-   routing). Leave the build settings as detected.
+3. Framework preset: **Other**.
+   * The included `vercel.json` configures all the request routing (`/api/*` mapped to the serverless function and other routes to the SPA).
+   * The `vercel-build` command automatically builds the React SPA and places it in the root `dist` directory.
+   * Vercel will find the output in `dist` automatically. No manual output directory config is needed in the dashboard.
 
 ### 3 — Set environment variables (Vercel → Settings → Environment Variables)
 

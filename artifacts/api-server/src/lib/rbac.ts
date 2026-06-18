@@ -99,7 +99,10 @@ export async function canAccessFarmer(
   farmerId: number | null | undefined,
 ): Promise<boolean> {
   if (canSeeAll(req)) return true;
-  if (farmerId == null) return false;
+  // A null/undefined farmerId means the caller hasn't tied the action to a
+  // specific farmer (e.g. disease detection without specifying a farm).
+  // Allow it — no farmer-level scope is needed to check.
+  if (farmerId == null) return true;
   const assignedIds = await getAssignedFarmerIds(req);
   if (assignedIds === null) return true;
   return assignedIds.includes(farmerId);

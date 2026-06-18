@@ -26,7 +26,9 @@ const router: IRouter = Router();
 
 // All dashboard analytics are platform-wide and restricted to internal staff.
 // Farmer logins use their own scoped endpoints (/farmers/:id, /farmers/:id/devices).
-router.use(requireStaffType);
+// NOTE: Scoped to /dashboard/* so the middleware does NOT bleed into aiRouter which is
+// mounted after this router in index.ts without a path prefix.
+router.use("/dashboard", requireStaffType);
 
 /** GET /dashboard/stats — platform-wide statistics */
 router.get("/dashboard/stats", async (_req, res): Promise<void> => {

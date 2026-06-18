@@ -1,36 +1,24 @@
 /**
  * AgroGuard LoRa Receiver / Gateway (ESP32)
  * =========================================
- * Receives 7-in-1 soil readings over LoRa from one or more field nodes (see
- * agroguard-lora-transmitter.ino), shows them on an OLED, AND forwards every
- * reading to the AgroGuard platform over WiFi via POST /api/readings. This is
- * the bridge between the no-WiFi field nodes and the cloud platform.
+ * Receives 7-in-1 soil readings over LoRa from the transmitter field node,
+ * shows them on an OLED display, and forwards every reading to the AgroGuard
+ * platform over WiFi via POST /api/readings.
  *
  * Compatible hardware:
  *   - ESP32 Dev Board
- *   - SX1278 / RA-02 LoRa module
- *   - SH1106 1.3" I2C OLED (optional but recommended)
+ *   - SX1278 / RA-02 LoRa module (433MHz)
+ *   - SH1106 1.3" I2C OLED
  *
  * Wiring:
- *   LoRa (SPI):  NSS → 18, RST → 14, DIO0 → 26, SCK → 5, MISO → 19, MOSI → 23
- *   OLED (I2C):  SDA → 21, SCL → 22
+ *   LoRa (SPI):  NSS -> 18, RST -> 14, DIO0 -> 26, SCK -> 5, MISO -> 19, MOSI -> 23
+ *   OLED (I2C):  SDA -> 21, SCL -> 22
  *   Status LED:  GPIO 2
  *
- * Setup:
- *   1. Flash this sketch onto your ESP32 gateway.
- *   2. Set WIFI_SSID / WIFI_PASSWORD below.
- *   3. Set API_HOST to your AgroGuard domain.
- *   4. Set DEVICE_ID to the AGR-XXXX-XXXX code registered in the Devices page.
- *      (One gateway forwards under one device ID. To map several field nodes to
- *      several device IDs, see the note near processPacket().)
- *
- * Dependencies (Arduino Library Manager):
+ * Dependencies (Install via Library Manager):
  *   - LoRa by Sandeep Mistry
  *   - U8g2 by oliver
  *   - ArduinoJson (v6+)
- *
- * IMPORTANT — frequency:
- *   LORA_FREQUENCY here MUST equal the transmitter's. Both default to 868 MHz.
  */
 
 #include <WiFi.h>
@@ -43,25 +31,26 @@
 
 // ── USER CONFIGURATION ────────────────────────────────────────────────────────
 
-/** WiFi credentials for the gateway's internet uplink */
-const char* WIFI_SSID     = "YOUR_WIFI_SSID";
-const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+/** WiFi credentials for the gateway hotspot */
+const char* WIFI_SSID     = "iPhone (2)";
+const char* WIFI_PASSWORD = "mikfahtec";
 
 /**
- * AgroGuard hardware device ID this gateway reports under.
- * Must match a Device ID registered in the platform (Devices page) — e.g. "AGR-K8NP-X3QW".
+ * AgroGuard device ID this gateway reports under.
+ * Replace "AGR-XXXX-XXXX" with the Device ID generated in the platform (Devices page)
+ * when you register a new device as staff.
  */
 const char* DEVICE_ID = "AGR-XXXX-XXXX";
 
-/**
- * AgroGuard platform API base URL.
- * Production:  "https://your-app.vercel.app"  (or your custom domain)
- * Local dev:   "http://192.168.1.100:8080"   (your PC's LAN IP + API port)
- */
-const char* API_HOST = "https://your-app.vercel.app";
+/** AgroGuard platform API base URL */
+const char* API_HOST = "https://agroguard.tech";
 
-// ── LoRa band — MUST match the transmitter ────────────────────────────────────
-#define LORA_FREQUENCY 868E6   // 868 MHz (EU). Use 915E6 (US) or 433E6 — same on both ends.
+// ── LoRa Configuration (MUST match transmitter) ──────────────────────────────
+#define LORA_FREQUENCY 433E6    // 433 MHz
+#define SPREADING_FACTOR 7     // SF7
+#define BANDWIDTH 250E3        // 250 kHz
+#define CODING_RATE 5
+#define TX_POWER 17
 
 // ── OLED (SH1106 1.3") ────────────────────────────────────────────────────────
 U8G2_SH1106_128X64_NONAME_F_HW_I2C display(U8G2_R0, U8X8_PIN_NONE);
@@ -113,7 +102,7 @@ void setup() {
   Serial.println(F("AgroGuard LoRa Receiver / Gateway"));
   Serial.println(F("================================="));
 
-  // Initialize pins
+  // Initialize LED pin
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
@@ -135,12 +124,12 @@ void setup() {
 
   delay(1000);
 
-  // Connect WiFi (uplink to the platform)
+  // Connect to WiFi
   connectWiFi();
 
   // LoRa Init with correct SPI pins
-  Serial.print(F("Initializing LoRa..."));
-
+  Serial.print(F("Initializing LoRa on 433MHz..."));
+  
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI, LORA_SS);
 
   // Reset LoRa module
@@ -152,7 +141,7 @@ void setup() {
 
   LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
 
-  // Initialize LoRa (MUST match transmitter frequency)
+  // Initialize LoRa
   if (!LoRa.begin(LORA_FREQUENCY)) {
     Serial.println(F(" FAILED!"));
 
@@ -174,13 +163,13 @@ void setup() {
   loraReady = true;
 
   // LoRa Configuration (must match transmitter)
-  LoRa.setSpreadingFactor(12);
-  LoRa.setSignalBandwidth(125E3);
-  LoRa.setCodingRate4(5);
-  LoRa.setTxPower(17);
+  LoRa.setSpreadingFactor(SPREADING_FACTOR);
+  LoRa.setSignalBandwidth(BANDWIDTH);
+  LoRa.setCodingRate4(CODING_RATE);
+  LoRa.setTxPower(TX_POWER);
   LoRa.enableCrc();
 
-  Serial.println(F("LoRa configured: SF12, BW125kHz, 868MHz"));
+  Serial.println(F("LoRa configured: SF7, BW250kHz, 433MHz"));
   Serial.println(F("System Ready! Waiting for data...\n"));
 
   data.valid = false;
@@ -194,7 +183,7 @@ void setup() {
 
   lastDisplayChange = millis();
 
-  // Blink LED to show ready
+  // Ready indication blink
   for (int i = 0; i < 3; i++) {
     digitalWrite(LED_PIN, HIGH);
     delay(200);
@@ -205,12 +194,12 @@ void setup() {
 
 // ── LOOP ──────────────────────────────────────────────────────────────────────
 void loop() {
-  // Keep the WiFi uplink alive
+  // Keep the WiFi connection alive
   if (WiFi.status() != WL_CONNECTED) {
     connectWiFi();
   }
 
-  // Receive LoRa
+  // Receive LoRa packet
   if (loraReady) {
     int packetSize = LoRa.parsePacket();
 
@@ -219,7 +208,7 @@ void loop() {
         processPacket();
         lastPacketTime = millis();
 
-        // Flash LED
+        // Flash LED to indicate packet received
         digitalWrite(LED_PIN, HIGH);
         delay(50);
         digitalWrite(LED_PIN, LOW);
@@ -246,13 +235,6 @@ void loop() {
         // Forward the reading to the AgroGuard platform
         bool ok = postReading();
         Serial.println(ok ? F("[OK] Forwarded to platform.") : F("[FAIL] Forward failed."));
-
-        // Signal quality warning
-        if (data.rssi > -50) {
-          Serial.println(F("[WARN] Signal too strong - increase distance"));
-        } else if (data.rssi < -100) {
-          Serial.println(F("[WARN] Signal weak - check antennas"));
-        }
       } else {
         // Wrong packet size, flush buffer
         while (LoRa.available()) {
@@ -262,49 +244,49 @@ void loop() {
     }
   }
 
-  // Timeout after 30 seconds
-  if (millis() - lastPacketTime > 30000 && lastPacketTime != 0) {
+  // Timeout after 10 seconds
+  if (millis() - lastPacketTime > 10000 && lastPacketTime != 0) {
     if (data.valid) {
-      Serial.println(F("[WARN] Timeout - no data for 30 seconds"));
+      Serial.println(F("[WARN] Timeout - no data for 10 seconds"));
       data.valid = false;
     }
   }
 
-  // Auto-rotate display every 5 seconds
+  // Auto-rotate display pages
   if (millis() - lastDisplayChange >= DISPLAY_ROTATE_INTERVAL) {
-    displayPage = (displayPage + 1) % 2;  // 2 pages: 0 and 1
+    displayPage = (displayPage + 1) % 2;
     lastDisplayChange = millis();
   }
 
-  // Display Update
+  // Refresh display
   static unsigned long lastDisplay = 0;
-  if (millis() - lastDisplay > 300) {
+  if (millis() - lastDisplay > 100) {
     updateDisplay();
     lastDisplay = millis();
   }
 }
 
-// ── WIFI ──────────────────────────────────────────────────────────────────────
+// ── WIFI CONNECT ──────────────────────────────────────────────────────────────
 void connectWiFi() {
   if (WiFi.status() == WL_CONNECTED) return;
   Serial.printf("[WIFI] Connecting to %s", WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   unsigned long t = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - t < 20000UL) {
+  while (WiFi.status() != WL_CONNECTED && millis() - t < 15000UL) {
     delay(500);
     Serial.print(".");
   }
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("\n[WIFI] IP: " + WiFi.localIP().toString());
+    Serial.println("\n[WIFI] Connected! IP: " + WiFi.localIP().toString());
   } else {
-    Serial.println("\n[WIFI] Connection failed - will retry");
+    Serial.println("\n[WIFI] Connection failed - will retry later");
   }
 }
 
-// ── HTTP FORWARD ──────────────────────────────────────────────────────────────
+// ── HTTP POST FORWARDING ──────────────────────────────────────────────────────
 bool postReading() {
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println(F("[WIFI] Not connected - skipping POST"));
+    Serial.println(F("[WIFI] Not connected - skipping HTTP POST"));
     return false;
   }
 
@@ -314,8 +296,7 @@ bool postReading() {
   http.addHeader("Content-Type", "application/json");
   http.setTimeout(10000);
 
-  // The LoRa node carries soil-sensor channels only (no ambient DHT22), so we
-  // report the soil temperature as the reading temperature and omit humidity.
+  // Pack the payload in JSON format expected by the API
   StaticJsonDocument<384> doc;
   doc["deviceId"]               = DEVICE_ID;
   doc["soilMoisture"]           = data.moisture;
@@ -333,18 +314,16 @@ bool postReading() {
   Serial.println("[HTTP] " + payload);
 
   int code = http.POST(payload);
-  Serial.printf("[HTTP] Status: %d\n", code);
+  Serial.printf("[HTTP] Status Code: %d\n", code);
+  
   if (code != 201) {
-    Serial.println("[HTTP] Response: " + http.getString());
+    Serial.println("[HTTP] Error Response: " + http.getString());
   }
   http.end();
   return (code == 201);
 }
 
-// ── PROCESS PACKET ────────────────────────────────────────────────────────────
-// NOTE: To support multiple field nodes mapped to different platform device IDs,
-// have each transmitter prepend a 1-byte node ID to its packet, read it here,
-// and select the matching DEVICE_ID string before calling postReading().
+// ── PROCESS LORA DATA ─────────────────────────────────────────────────────────
 void processPacket() {
   uint8_t buffer[28];
   int i = 0;
@@ -367,7 +346,7 @@ void processPacket() {
   data.packetID = packetCount++;
 }
 
-// ── DISPLAY ───────────────────────────────────────────────────────────────────
+// ── OLED RENDERING ────────────────────────────────────────────────────────────
 void updateDisplay() {
   if (!data.valid) {
     display.clearBuffer();
@@ -415,7 +394,7 @@ void drawPage1() {
   display.drawStr(0, y + 10, buf);
   y += 12;
 
-  sprintf(buf, "PKT      : %d", packetCount);
+  sprintf(buf, "RATE     : 1/SEC");
   display.drawStr(0, y + 10, buf);
 
   display.sendBuffer();
@@ -456,7 +435,7 @@ void drawPage2() {
   display.sendBuffer();
 }
 
-// ── HELPERS ───────────────────────────────────────────────────────────────────
+// ── UTILITY HELPERS ───────────────────────────────────────────────────────────
 float bytesToFloat(uint8_t* b) {
   float val;
   memcpy(&val, b, 4);
