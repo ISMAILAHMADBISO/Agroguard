@@ -1,10 +1,13 @@
-import app from "../artifacts/api-server/dist/app.mjs";
+const app = require("../artifacts/api-server/dist/app.cjs");
 
-// Vercel serverless function config
-export const config = {
+const config = {
   maxDuration: 60,
 };
 
-export default function handler(req, res) {
-  return app(req, res);
+function handler(req, res) {
+  const expressApp = app.default || app;
+  return expressApp(req, res);
 }
+
+module.exports = handler;
+module.exports.config = config;
