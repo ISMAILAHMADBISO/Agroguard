@@ -195,4 +195,11 @@ function csrfGuard(req: Request, res: Response, next: NextFunction): void {
 
 app.use("/api", csrfGuard, requireAuth, router);
 
+// Global JSON error handler for Express
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  logger.error("API Server Error:", err);
+  res.status(500).json({ error: err.message || "Internal Server Error" });
+});
+
 export default app;
+
