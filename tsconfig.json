@@ -8,8 +8,8 @@
   ],
   "compilerOptions": {
     "moduleResolution": "bundler",
-    "noEmit": false,
-    "outDir": "dist/tsconfig-build-temp",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "paths": {
       "express-session": ["./artifacts/api-server/node_modules/@types/express-session/index.d.ts"],
       "express": ["./artifacts/api-server/node_modules/@types/express/index.d.ts"]
