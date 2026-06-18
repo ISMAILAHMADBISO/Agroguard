@@ -22,9 +22,7 @@
     "moduleResolution": "bundler",
     "types": ["node", "vite/client"],
     "paths": {
-      "@/*": ["./src/*"],
-      "express-session": ["../api-server/node_modules/@types/express-session/index.d.ts"],
-      "express": ["../api-server/node_modules/@types/express/index.d.ts"]
+      "@/*": ["./src/*"]
     }
   }
 }

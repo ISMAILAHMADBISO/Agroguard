@@ -120,6 +120,12 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.90.21
         version: 5.100.14(react@19.1.0)
+      '@types/express':
+        specifier: ^5.0.6
+        version: 5.0.6
+      '@types/express-session':
+        specifier: ^1.19.0
+        version: 1.19.0
       '@types/node':
         specifier: ^25.3.3
         version: 25.9.1
@@ -150,6 +156,12 @@ importers:
       embla-carousel-react:
         specifier: ^8.6.0
         version: 8.6.0(react@19.1.0)
+      express:
+        specifier: ^5.2.1
+        version: 5.2.1
+      express-session:
+        specifier: ^1.19.0
+        version: 1.19.0
       framer-motion:
         specifier: ^12.23.24
         version: 12.40.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -2891,7 +2903,7 @@ packages:
     engines: {node: '>=18'}
 
   npm-run-path@6.0.0:
-    resolution: {integrity: sha512-9qny7Z9DsQU8Ou39ERsPU4OZQlSTP47ShQzuKZ6PRXpYLtIFgl/DEBYEXKlvcEa+9tHVcK8CF81Y2V72qaZhWA==, tarball: https://registry.npmjs.org/npm-run-path/-/npm-run-path-6.0.0.tgz}
+    resolution: {integrity: sha512-9qny7Z9DsQU8Ou39ERsPU4OZQlSTP47ShQzuKZ6PRXpYLtIFgl/DEBYEXKlvcEa+9tHVcK8CF81Y2V72qaZhWA==}
     engines: {node: '>=18'}
 
   object-assign@4.1.1:
