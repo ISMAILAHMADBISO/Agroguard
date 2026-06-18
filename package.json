@@ -12,7 +12,7 @@
     "dev:api": "pnpm --filter @workspace/api-server dev",
     "dev:web": "pnpm --filter @workspace/agroguard dev",
     "build": "pnpm run typecheck && pnpm -r build --if-present",
-    "vercel-build": "pnpm --filter @workspace/agroguard build && node -e \"const fs=require('fs');const p=require('path');const src=p.join('artifacts','agroguard','dist','public');const dst=p.join('dist','public');fs.rmSync('dist',{recursive:true,force:true});fs.mkdirSync(dst,{recursive:true});fs.cpSync(src,dst,{recursive:true});console.log('Frontend copied to dist/public/');\"",
+    "vercel-build": "pnpm --filter @workspace/agroguard build && node -e \"const fs=require('fs');const p=require('path');const src=p.join('artifacts','agroguard','dist','public');const dst=p.join('dist','public');fs.rmSync('dist',{recursive:true,force:true});fs.mkdirSync(dst,{recursive:true});fs.cpSync(src,dst,{recursive:true});fs.rmSync('api',{recursive:true,force:true});fs.cpSync(p.join('artifacts','agroguard','api'),'api',{recursive:true});console.log('Build output and API copied to root');\"",
     "start": "cross-env NODE_ENV=production SERVE_CLIENT=true pnpm --filter @workspace/api-server start",
     "setup": "pnpm --filter @workspace/db push && pnpm --filter @workspace/scripts run setup",
     "typecheck:libs": "tsc --build",
