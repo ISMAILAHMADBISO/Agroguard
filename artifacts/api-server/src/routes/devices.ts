@@ -18,11 +18,13 @@ import {
   GetDeviceReadingsResponse,
 } from "@workspace/api-zod";
 import { getAssignedFarmerIds, canWrite, isAdmin } from "../lib/rbac";
+import { syncDeviceStatuses } from "../lib/device-status";
 
 const router: IRouter = Router();
 
 /** GET /devices — list devices (scoped by role) */
 router.get("/devices", async (req, res): Promise<void> => {
+  await syncDeviceStatuses(db);
   const assignedIds = await getAssignedFarmerIds(req);
 
   const devices = await db
@@ -61,6 +63,7 @@ router.post("/devices", async (req, res): Promise<void> => {
 
 /** GET /devices/:id — get single device */
 router.get("/devices/:id", async (req, res): Promise<void> => {
+  await syncDeviceStatuses(db);
   const params = GetDeviceParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -152,6 +155,7 @@ router.delete("/devices/:id", async (req, res): Promise<void> => {
 
 /** GET /devices/:id/readings — last 50 sensor readings for a device */
 router.get("/devices/:id/readings", async (req, res): Promise<void> => {
+  await syncDeviceStatuses(db);
   const params = GetDeviceReadingsParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });

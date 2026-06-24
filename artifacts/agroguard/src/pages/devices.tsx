@@ -5,7 +5,7 @@
  *  - List devices (RBAC-scoped: field officers see only their assigned farmers' devices)
  *  - Register new device (auto-generates a unique AGR-XXXX-XXXX hardware ID)
  *  - Copy device ID to clipboard
- *  - Assign device to a farmer
+ *  - Assign / Transfer / Unassign device to a farmer (no firmware re-flash needed)
  *  - Delete device (admin only)
  *  - Connection status (online/offline) with last-seen time
  */
@@ -14,24 +14,34 @@ import { Link } from "wouter";
 import {
   useListDevices,
   useCreateDevice,
+  useUpdateDevice,
   useDeleteDevice,
   useListFarmers,
   getListDevicesQueryKey,
+  getGetDeviceQueryKey,
 } from "@workspace/api-client-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+  DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Search, Plus, Cpu, Wifi, WifiOff, Battery, MoreHorizontal, Loader2, Copy, Check, RefreshCw } from "lucide-react";
+import {
+  Search, Plus, Cpu, Wifi, WifiOff, Battery, MoreHorizontal,
+  Loader2, Copy, Check, RefreshCw, UserCheck, UserX, ArrowRightLeft,
+  ExternalLink,
+} from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/context/auth";
 
@@ -49,9 +59,9 @@ function generateDeviceId(): string {
   return `AGR-${segment()}-${segment()}`;
 }
 
-// ── Form schema ───────────────────────────────────────────────────────────────
+// ── Form schemas ──────────────────────────────────────────────────────────────
 
-const formSchema = z.object({
+const registerFormSchema = z.object({
   deviceId: z.string().min(2, "Device ID is required"),
   name: z.string().min(2, "Name is required"),
   farmerId: z.coerce.number().optional(),
@@ -59,7 +69,12 @@ const formSchema = z.object({
   notes: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+const assignFormSchema = z.object({
+  farmerId: z.string().optional(), // "none" = unassign, otherwise farmer id string
+});
+
+type RegisterFormValues = z.infer<typeof registerFormSchema>;
+type AssignFormValues = z.infer<typeof assignFormSchema>;
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -68,8 +83,10 @@ export default function DevicesPage() {
   const { data: devices, isLoading } = useListDevices();
   const { data: farmers } = useListFarmers();
   const [search, setSearch] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [registeredDevice, setRegisteredDevice] = useState<{ id: number; deviceId: string; name: string } | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [assignTarget, setAssignTarget] = useState<{ id: number; deviceId: string; name: string; farmerId?: number | null } | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -78,11 +95,12 @@ export default function DevicesPage() {
 
   // Mutations
   const createDevice = useCreateDevice();
+  const updateDevice = useUpdateDevice();
   const deleteDevice = useDeleteDevice();
 
-  // ── Form ────────────────────────────────────────────────────────────────
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  // ── Register form ────────────────────────────────────────────────────────
+  const registerForm = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerFormSchema),
     defaultValues: {
       deviceId: generateDeviceId(),
       name: "",
@@ -91,22 +109,55 @@ export default function DevicesPage() {
     },
   });
 
-  const regenerateId = () => form.setValue("deviceId", generateDeviceId());
+  const regenerateId = () => registerForm.setValue("deviceId", generateDeviceId());
 
-  const onSubmit = (data: FormValues) => {
+  const onRegisterSubmit = (data: RegisterFormValues) => {
     createDevice.mutate(
       { data },
       {
-        onSuccess: () => {
+        onSuccess: (created) => {
           queryClient.invalidateQueries({ queryKey: getListDevicesQueryKey() });
-          setIsDialogOpen(false);
-          form.reset({ deviceId: generateDeviceId(), name: "", location: "", notes: "" });
+          setIsRegisterOpen(false);
+          registerForm.reset({ deviceId: generateDeviceId(), name: "", location: "", notes: "" });
+          // Show the "program this ID" confirmation dialog
+          setRegisteredDevice({ id: (created as any).id, deviceId: data.deviceId, name: data.name });
           toast({ title: "Device registered successfully" });
         },
         onError: (err) => {
           const message = err instanceof Error ? err.message : "Failed to register device";
           toast({ title: message, variant: "destructive" });
         },
+      }
+    );
+  };
+
+  // ── Assign / Transfer / Unassign form ────────────────────────────────────
+  const assignForm = useForm<AssignFormValues>({
+    resolver: zodResolver(assignFormSchema),
+    defaultValues: { farmerId: "none" },
+  });
+
+  const openAssignDialog = (device: { id: number; deviceId: string; name: string; farmerId?: number | null }) => {
+    setAssignTarget(device);
+    assignForm.reset({ farmerId: device.farmerId ? device.farmerId.toString() : "none" });
+  };
+
+  const onAssignSubmit = (data: AssignFormValues) => {
+    if (!assignTarget) return;
+    const newFarmerId = !data.farmerId || data.farmerId === "none" ? null : parseInt(data.farmerId, 10);
+    updateDevice.mutate(
+      { id: assignTarget.id, data: { farmerId: newFarmerId } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListDevicesQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getGetDeviceQueryKey(assignTarget.id) });
+          setAssignTarget(null);
+          const msg = newFarmerId === null
+            ? `${assignTarget.name} unassigned successfully`
+            : `${assignTarget.name} assigned successfully`;
+          toast({ title: msg });
+        },
+        onError: () => toast({ title: "Failed to update assignment", variant: "destructive" }),
       }
     );
   };
@@ -120,8 +171,8 @@ export default function DevicesPage() {
   };
 
   // ── Delete ───────────────────────────────────────────────────────────────
-  const handleDelete = (id: number) => {
-    if (!confirm("Remove this device? All associated readings will remain in the database.")) return;
+  const handleDelete = (id: number, name: string) => {
+    if (!confirm(`Remove "${name}"? All associated readings will remain in the database.`)) return;
     deleteDevice.mutate(
       { id },
       {
@@ -153,20 +204,23 @@ export default function DevicesPage() {
         </div>
 
         {canWrite && (
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
             <DialogTrigger asChild>
               <Button><Plus className="mr-2 h-4 w-4" /> Register Device</Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader>
                 <DialogTitle>Register New IoT Device</DialogTitle>
+                <DialogDescription>
+                  Generate a unique hardware ID and assign the device to a farmer immediately, or leave unassigned and transfer later.
+                </DialogDescription>
               </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <Form {...registerForm}>
+                <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
 
                   {/* Device ID — auto-generated, user can regenerate */}
                   <FormField
-                    control={form.control}
+                    control={registerForm.control}
                     name="deviceId"
                     render={({ field }) => (
                       <FormItem>
@@ -206,14 +260,14 @@ export default function DevicesPage() {
                           </Button>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Program this exact ID into your ESP32 sketch as the <code className="font-mono">DEVICE_ID</code> constant.
+                          ⚡ Copy this ID — you will need to program it into your ESP32 sketch as the <code className="font-mono">DEVICE_ID</code> constant.
                         </p>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  <FormField control={form.control} name="name" render={({ field }) => (
+                  <FormField control={registerForm.control} name="name" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Device Name</FormLabel>
                       <FormControl><Input placeholder="Node 1 — North Field" {...field} /></FormControl>
@@ -221,13 +275,13 @@ export default function DevicesPage() {
                     </FormItem>
                   )} />
 
-                  <FormField control={form.control} name="farmerId" render={({ field }) => (
+                  <FormField control={registerForm.control} name="farmerId" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Assign to Farmer</FormLabel>
+                      <FormLabel>Assign to Farmer <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
                       <Select onValueChange={field.onChange} value={field.value?.toString()}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Unassigned (optional)" />
+                            <SelectValue placeholder="Unassigned — assign later" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -238,11 +292,12 @@ export default function DevicesPage() {
                           ))}
                         </SelectContent>
                       </Select>
+                      <FormDescription>You can reassign or transfer the device later without re-flashing firmware.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )} />
 
-                  <FormField control={form.control} name="location" render={({ field }) => (
+                  <FormField control={registerForm.control} name="location" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Installation Location / Zone</FormLabel>
                       <FormControl><Input placeholder="North Field, Zone A" {...field} /></FormControl>
@@ -250,7 +305,7 @@ export default function DevicesPage() {
                     </FormItem>
                   )} />
 
-                  <FormField control={form.control} name="notes" render={({ field }) => (
+                  <FormField control={registerForm.control} name="notes" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Notes</FormLabel>
                       <FormControl><Input placeholder="Any setup notes..." {...field} /></FormControl>
@@ -270,6 +325,126 @@ export default function DevicesPage() {
           </Dialog>
         )}
       </div>
+
+      {/* ── Post-registration Device ID banner ─────────────────────────────── */}
+      {registeredDevice && (
+        <Dialog open={!!registeredDevice} onOpenChange={() => setRegisteredDevice(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Cpu className="h-5 w-5 text-primary" />
+                Device Registered — Program Your ESP32
+              </DialogTitle>
+              <DialogDescription>
+                Copy the hardware ID below and paste it into your receiver firmware before flashing.
+              </DialogDescription>
+            </DialogHeader>
+
+            <Alert className="bg-primary/5 border-primary/20">
+              <AlertDescription>
+                <div className="space-y-3">
+                  <p className="text-sm font-medium">Device: <span className="text-muted-foreground font-normal">{registeredDevice.name}</span></p>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Hardware ID to program into your ESP32:</p>
+                    <div className="flex items-center gap-2 bg-background border rounded-md px-3 py-2">
+                      <code className="font-mono text-lg tracking-widest font-bold text-primary flex-1">
+                        {registeredDevice.deviceId}
+                      </code>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyToClipboard(registeredDevice.deviceId)}
+                      >
+                        {copiedId === registeredDevice.deviceId ? (
+                          <><Check className="h-3.5 w-3.5 text-green-600 mr-1" /> Copied!</>
+                        ) : (
+                          <><Copy className="h-3.5 w-3.5 mr-1" /> Copy</>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="text-xs text-muted-foreground space-y-1 border-t pt-2">
+                    <p>In your <code className="font-mono bg-muted px-1 rounded">Receiver.ino</code> sketch, set:</p>
+                    <code className="block bg-muted px-2 py-1 rounded font-mono text-xs">
+                      const char* deviceId = "{registeredDevice.deviceId}";
+                    </code>
+                  </div>
+                </div>
+              </AlertDescription>
+            </Alert>
+
+            <DialogFooter>
+              <Button variant="outline" asChild>
+                <Link href={`/devices/${registeredDevice.id}`}>
+                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> View Device
+                </Link>
+              </Button>
+              <Button onClick={() => setRegisteredDevice(null)}>Done</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* ── Assign / Transfer / Unassign dialog ─────────────────────────────── */}
+      <Dialog open={!!assignTarget} onOpenChange={(open) => !open && setAssignTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowRightLeft className="h-4 w-4 text-primary" />
+              Assign / Transfer Device
+            </DialogTitle>
+            <DialogDescription>
+              Select a new farmer to assign <strong>{assignTarget?.name}</strong> ({assignTarget?.deviceId}) to, or choose "Unassigned" to remove the current assignment. No firmware re-flash needed.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...assignForm}>
+            <form onSubmit={assignForm.handleSubmit(onAssignSubmit)} className="space-y-4">
+              <FormField control={assignForm.control} name="farmerId" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Assigned Farmer</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select farmer..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">
+                        <span className="flex items-center gap-2 text-muted-foreground">
+                          <UserX className="h-3.5 w-3.5" /> Unassigned
+                        </span>
+                      </SelectItem>
+                      {farmers?.map((f) => (
+                        <SelectItem key={f.id} value={f.id.toString()}>
+                          <span className="flex items-center gap-2">
+                            <UserCheck className="h-3.5 w-3.5 text-primary" />
+                            {f.name} — {f.location}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    The device will immediately appear on the new farmer's dashboard.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setAssignTarget(null)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateDevice.isPending}>
+                  {updateDevice.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save Assignment
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
       {/* Search */}
       <div className="relative max-w-sm">
@@ -379,14 +554,19 @@ export default function DevicesPage() {
                   {/* Assigned farmer */}
                   <TableCell>
                     {device.farmerId ? (
-                      <Link
-                        href={`/farmers/${device.farmerId}`}
-                        className="text-sm text-primary hover:underline"
-                      >
-                        {farmers?.find((f) => f.id === device.farmerId)?.name ?? "Unknown"}
-                      </Link>
+                      <div className="flex items-center gap-1.5">
+                        <UserCheck className="h-3.5 w-3.5 text-primary shrink-0" />
+                        <Link
+                          href={`/farmers/${device.farmerId}`}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          {farmers?.find((f) => f.id === device.farmerId)?.name ?? "Unknown"}
+                        </Link>
+                      </div>
                     ) : (
-                      <span className="text-sm text-muted-foreground">Unassigned</span>
+                      <span className="text-sm text-muted-foreground flex items-center gap-1">
+                        <UserX className="h-3.5 w-3.5" /> Unassigned
+                      </span>
                     )}
                   </TableCell>
 
@@ -407,18 +587,34 @@ export default function DevicesPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
-                          <Link href={`/devices/${device.id}`}>View Details</Link>
+                          <Link href={`/devices/${device.id}`}>
+                            <ExternalLink className="mr-2 h-3.5 w-3.5" /> View Details
+                          </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => copyToClipboard(device.deviceId)}>
                           <Copy className="mr-2 h-3.5 w-3.5" /> Copy Hardware ID
                         </DropdownMenuItem>
+                        {canWrite && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => openAssignDialog(device)}
+                            >
+                              <ArrowRightLeft className="mr-2 h-3.5 w-3.5" />
+                              {device.farmerId ? "Transfer / Unassign" : "Assign to Farmer"}
+                            </DropdownMenuItem>
+                          </>
+                        )}
                         {isAdmin && (
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(device.id)}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            Remove Device
-                          </DropdownMenuItem>
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(device.id, device.name)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              Remove Device
+                            </DropdownMenuItem>
+                          </>
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>

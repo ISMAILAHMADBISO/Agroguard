@@ -4,7 +4,7 @@
  * and 24h sensor trend data for charting.
  */
 import { Router, type IRouter } from "express";
-import { eq, desc, gte, count, avg, and } from "drizzle-orm";
+import { eq, desc, gte, count, avg, and, inArray } from "drizzle-orm";
 import {
   db,
   farmersTable,
@@ -21,6 +21,7 @@ import {
   GetSensorTrendsResponse,
 } from "@workspace/api-zod";
 import { requireStaffType } from "../lib/rbac";
+import { syncDeviceStatuses } from "../lib/device-status";
 
 const router: IRouter = Router();
 
@@ -32,6 +33,7 @@ router.use("/dashboard", requireStaffType);
 
 /** GET /dashboard/stats — platform-wide statistics */
 router.get("/dashboard/stats", async (_req, res): Promise<void> => {
+  await syncDeviceStatuses(db);
   const now = new Date();
   const todayStart = new Date(
     now.getFullYear(),
@@ -115,6 +117,7 @@ router.get("/dashboard/stats", async (_req, res): Promise<void> => {
 
 /** GET /dashboard/farm-overview — per-farm health status for admin map view */
 router.get("/dashboard/farm-overview", async (_req, res): Promise<void> => {
+  await syncDeviceStatuses(db);
   const farmers = await db.select().from(farmersTable);
 
   const overviews = await Promise.all(
@@ -148,7 +151,7 @@ router.get("/dashboard/farm-overview", async (_req, res): Promise<void> => {
         const readings = await db
           .select()
           .from(sensorReadingsTable)
-          .where(eq(sensorReadingsTable.deviceId, deviceIds[0]))
+          .where(inArray(sensorReadingsTable.deviceId, deviceIds))
           .orderBy(desc(sensorReadingsTable.recordedAt))
           .limit(1);
         latestReading = readings[0] ?? null;

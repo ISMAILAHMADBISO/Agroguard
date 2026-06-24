@@ -169,7 +169,15 @@ app.use(
  */
 function csrfGuard(req: Request, res: Response, next: NextFunction): void {
   const method = req.method.toUpperCase();
+  // Allow safe methods without CSRF check
   if (method === "GET" || method === "HEAD" || method === "OPTIONS") {
+    next();
+    return;
+  }
+
+  // Bypass CSRF for authentication endpoints (login, signup, logout, me, change-password)
+  const path = req.path;
+  if (path.startsWith("/auth/")) {
     next();
     return;
   }

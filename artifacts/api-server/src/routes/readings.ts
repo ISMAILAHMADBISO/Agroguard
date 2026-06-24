@@ -12,7 +12,7 @@
  */
 import { Router, type IRouter } from "express";
 import { eq, desc } from "drizzle-orm";
-import { db, sensorReadingsTable, devicesTable } from "@workspace/db";
+import { db, sensorReadingsTable, devicesTable, activitiesTable } from "@workspace/db";
 import {
   CreateReadingBody,
   ListReadingsResponse,
@@ -88,12 +88,22 @@ router.post("/readings", async (req, res): Promise<void> => {
 
   // Mark device online with a fresh timestamp
   await db
-    .update(devicesTable)
+  .update(devicesTable)
+  // Update device status to online and refresh lastSeenAt
+
     .set({ status: "online", lastSeenAt: new Date() })
     .where(eq(devicesTable.id, device.id));
 
   // The device-detail dashboard polls GET /devices/:id/readings, so the new
   // reading is picked up automatically within a few seconds — no push needed.
+  await db
+    .insert(activitiesTable)
+    .values({
+      type: "reading",
+      message: `Device ${device.deviceId} reported reading`,
+      deviceId: device.id,
+      farmerId: device.farmerId ?? null,
+    });
   res.status(201).json(reading);
 });
 

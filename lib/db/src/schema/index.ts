@@ -11,3 +11,4 @@ export * from "./staff";
 export * from "./disease_reports";
 export * from "./ai_conversations";
 export * from "./user_sessions";
+export * from "./activities";

@@ -21,6 +21,7 @@ import {
 } from "@workspace/api-zod";
 import { getAssignedFarmerIds, canWrite } from "../lib/rbac";
 import { generateTempPassword, hashPassword } from "../lib/password";
+import { syncDeviceStatuses } from "../lib/device-status";
 
 const router: IRouter = Router();
 
@@ -205,6 +206,7 @@ router.delete("/farmers/:id", async (req, res): Promise<void> => {
 
 /** GET /farmers/:id/devices — get all devices assigned to a farmer */
 router.get("/farmers/:id/devices", async (req, res): Promise<void> => {
+  await syncDeviceStatuses(db);
   const params = GetFarmerDevicesParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
