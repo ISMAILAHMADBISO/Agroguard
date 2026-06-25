@@ -38,6 +38,8 @@ function getAllowedOrigins(): string[] {
   };
 
   // Explicit, operator-controlled origins (set these in production).
+  const rawPort = process.env["API_PORT"] ?? "8080";
+  const port = Number(rawPort);
   add(process.env["APP_URL"]);
   for (const o of (process.env["ALLOWED_ORIGINS"] ?? "").split(",")) add(o);
 
@@ -175,12 +177,14 @@ function csrfGuard(req: Request, res: Response, next: NextFunction): void {
     return;
   }
 
-  // Bypass CSRF for authentication endpoints (login, signup, logout, me, change-password)
-  const path = req.path;
-  if (path.startsWith("/auth/")) {
+  // Bypass CSRF for authentication and device ingestion endpoints
+  // Bypass CSRF for authentication and device ingestion endpoints
+  const requestPath = req.path;
+  if (requestPath.startsWith("/auth/") || (requestPath === "/readings" && method === "POST")) {
     next();
     return;
   }
+
 
   const origin = req.get("origin");
   const referer = req.get("referer");
