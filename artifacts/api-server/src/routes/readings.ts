@@ -12,7 +12,7 @@
  */
 import { Router, type IRouter } from "express";
 import { eq, desc } from "drizzle-orm";
-import { db, sensorReadingsTable, devicesTable, activitiesTable } from "@workspace/db";
+import { db, sensorReadingsTable, devicesTable, activitiesTable, alertsTable } from "@workspace/db";
 import {
   CreateReadingBody,
   ListReadingsResponse,
@@ -65,26 +65,53 @@ router.post("/readings", async (req, res): Promise<void> => {
   }
 
   // Insert the reading; 7-in-1 fields are optional (null when not provided)
-  const [reading] = await db
-    .insert(sensorReadingsTable)
-    .values({
-      deviceId: device.id,
-      soilMoisture:           parsed.data.soilMoisture,
-      temperature:            parsed.data.temperature,
-      humidity:               parsed.data.humidity,
-      heatIndex:              parsed.data.heatIndex,
-      // 7-in-1 soil sensor channels (null if sensor doesn't support them)
-      electricalConductivity: parsed.data.electricalConductivity ?? null,
-      ph:                     parsed.data.ph ?? null,
-      nitrogen:               parsed.data.nitrogen ?? null,
-      phosphorus:             parsed.data.phosphorus ?? null,
-      potassium:              parsed.data.potassium ?? null,
-      // Optional environmental channels
-      rainfall:               parsed.data.rainfall ?? null,
-      lightIntensity:         parsed.data.lightIntensity ?? null,
-      recordedAt: new Date(),
-    })
-    .returning();
+    // Generate alert if moisture is out of safe range
+    if (parsed.data.soilMoisture < 30) {
+      await db
+        .insert(alertsTable)
+        .values({
+          farmerId: device.farmerId ?? null,
+          deviceId: device.id,
+          type: 'soil_moisture',
+          severity: 'high',
+          message: `Soil moisture low (${parsed.data.soilMoisture}%)`,
+          status: 'active',
+        })
+        .returning();
+    } else if (parsed.data.soilMoisture > 70) {
+      await db
+        .insert(alertsTable)
+        .values({
+          farmerId: device.farmerId ?? null,
+          deviceId: device.id,
+          type: 'soil_moisture',
+          severity: 'high',
+          message: `Soil moisture high (${parsed.data.soilMoisture}%)`,
+          status: 'active',
+        })
+        .returning();
+    }
+
+    const [reading] = await db
+      .insert(sensorReadingsTable)
+      .values({
+        deviceId: device.id,
+        soilMoisture:           parsed.data.soilMoisture,
+        temperature:            parsed.data.temperature,
+        humidity:               parsed.data.humidity,
+        heatIndex:              parsed.data.heatIndex,
+        // 7-in-1 soil sensor channels (null if sensor doesn't support them)
+        electricalConductivity: parsed.data.electricalConductivity ?? null,
+        ph:                     parsed.data.ph ?? null,
+        nitrogen:               parsed.data.nitrogen ?? null,
+        phosphorus:             parsed.data.phosphorus ?? null,
+        potassium:              parsed.data.potassium ?? null,
+        // Optional environmental channels
+        rainfall:               parsed.data.rainfall ?? null,
+        lightIntensity:         parsed.data.lightIntensity ?? null,
+        recordedAt: new Date(),
+      })
+      .returning();
 
   // Mark device online with a fresh timestamp
   await db
