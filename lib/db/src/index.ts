@@ -21,5 +21,6 @@ export const pool = new Pool({
 });
 export const db = drizzle(pool, { schema });
 
-export * from "./schema";
+export * from "./schema"; // keep existing exports
+export { farmThresholdsTable, advisoriesTable } from "./schema";
 // duplicate export removed - activitiesTable is re‑exported via the schema barrel

@@ -66,7 +66,17 @@ router.post("/readings", async (req, res): Promise<void> => {
 
   // Insert the reading; 7-in-1 fields are optional (null when not provided)
     // Generate alert if moisture is out of safe range
-    if (parsed.data.soilMoisture < 30) {
+    const moisture = parsed.data.soilMoisture;
+    let statusLabel = 'OK';
+    let alertMessage = '';
+    if (moisture < 30) {
+      statusLabel = 'DRY';
+      alertMessage = `Soil moisture low (${moisture}%) – Status: ${statusLabel}`;
+    } else if (moisture > 70) {
+      statusLabel = 'WET';
+      alertMessage = `Soil moisture high (${moisture}%) – Status: ${statusLabel}`;
+    }
+    if (alertMessage) {
       await db
         .insert(alertsTable)
         .values({
@@ -74,19 +84,7 @@ router.post("/readings", async (req, res): Promise<void> => {
           deviceId: device.id,
           type: 'soil_moisture',
           severity: 'high',
-          message: `Soil moisture low (${parsed.data.soilMoisture}%)`,
-          status: 'active',
-        })
-        .returning();
-    } else if (parsed.data.soilMoisture > 70) {
-      await db
-        .insert(alertsTable)
-        .values({
-          farmerId: device.farmerId ?? null,
-          deviceId: device.id,
-          type: 'soil_moisture',
-          severity: 'high',
-          message: `Soil moisture high (${parsed.data.soilMoisture}%)`,
+          message: alertMessage,
           status: 'active',
         })
         .returning();

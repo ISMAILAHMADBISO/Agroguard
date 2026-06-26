@@ -10,9 +10,10 @@ import devicesRouter from "./devices";
 import readingsRouter from "./readings";
 import alertsRouter from "./alerts";
 import recommendationsRouter from "./recommendations";
-import staffRouter from "./staff";
+import thresholdsRouter from "./thresholds";
 import dashboardRouter from "./dashboard";
 import aiRouter from "./ai";
+import staffRouter from "./staff";
 
 const router: IRouter = Router();
 

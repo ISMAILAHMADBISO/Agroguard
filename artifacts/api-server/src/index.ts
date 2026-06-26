@@ -14,7 +14,8 @@ import app from "./app";
 import { logger } from "./lib/logger";
 
 // PORT defaults to 8080 (the documented local API port) for a zero-config start.
-const rawPort = process.env["PORT"] ?? "8080";
+// Use API_PORT env if defined, otherwise fall back to PORT or 8080.
+const rawPort = process.env["API_PORT"] ?? process.env["PORT"] ?? "8080";
 const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {

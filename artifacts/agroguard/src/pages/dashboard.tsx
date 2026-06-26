@@ -82,24 +82,33 @@ export default function Dashboard() {
             <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            {activitiesLoading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {activities?.slice(0, 5).map((activity) => (
-                  <div key={activity.id} className="flex items-center gap-4">
-                    <div className="w-2 h-2 rounded-full bg-primary" />
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-medium leading-none">{activity.message}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(activity.timestamp).toLocaleString()}</p>
-                    </div>
+          {activitiesLoading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : (
+            <div className="max-h-96 overflow-y-auto space-y-4">
+              {activities?.slice(0, 25).map((activity) => (
+                <div key={activity.id} className="flex items-start gap-4">
+                  <div className="w-2 h-2 rounded-full bg-primary mt-1" />
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {activity.message}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(activity.timestamp).toLocaleString()}
+                    </p>
+                    {activity.type === "reading" && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Moisture: {activity.soilMoisture?.toFixed(1)}%, Temp: {activity.temperature?.toFixed(1)}°C, pH: {activity.ph?.toFixed(2)}, N: {activity.nitrogen}, P: {activity.phosphorus}, K: {activity.potassium}
+                      </p>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
+          )}
           </CardContent>
         </Card>
       </div>
