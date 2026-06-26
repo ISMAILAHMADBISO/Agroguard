@@ -12,7 +12,7 @@
  */
 import { Router, type IRouter } from "express";
 import { eq, desc } from "drizzle-orm";
-import { db, sensorReadingsTable, devicesTable, activitiesTable, alertsTable } from "@workspace/db";
+import { db, sensorReadingsTable, devicesTable, activitiesTable, alertsTable, farmThresholdsTable } from "@workspace/db";
 import {
   CreateReadingBody,
   ListReadingsResponse,
@@ -64,15 +64,24 @@ router.post("/readings", async (req, res): Promise<void> => {
     return;
   }
 
-  // Insert the reading; 7-in-1 fields are optional (null when not provided)
-    // Generate alert if moisture is out of safe range
+  // Insert the reading; 7‑in‑1 fields are optional (null when not provided)
+    // -----------------------------------------------------------------
+    // 1️⃣ Resolve farmer‑specific moisture thresholds (fallback to defaults)
+    const thresholds = await db
+      .select()
+      .from(farmThresholdsTable)
+      .where(eq(farmThresholdsTable.farmerId, device.farmerId ?? -1));
+    const lowThresh = thresholds[0]?.moistureLow ? Number(thresholds[0].moistureLow) : 30;
+    const highThresh = thresholds[0]?.moistureHigh ? Number(thresholds[0].moistureHigh) : 70;
+
+    // 2️⃣ Generate alert if moisture is out of the farmer‑specific range
     const moisture = parsed.data.soilMoisture;
     let statusLabel = 'OK';
     let alertMessage = '';
-    if (moisture < 30) {
+    if (moisture < lowThresh) {
       statusLabel = 'DRY';
       alertMessage = `Soil moisture low (${moisture}%) – Status: ${statusLabel}`;
-    } else if (moisture > 70) {
+    } else if (moisture > highThresh) {
       statusLabel = 'WET';
       alertMessage = `Soil moisture high (${moisture}%) – Status: ${statusLabel}`;
     }

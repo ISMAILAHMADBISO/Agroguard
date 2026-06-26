@@ -19,6 +19,10 @@ const router: IRouter = Router();
 router.get("/alerts", async (req, res): Promise<void> => {
   const assignedIds = await getAssignedFarmerIds(req);
 
+  // Pagination params – default to 20 results, offset 0
+  const limit = Math.max(1, Math.min(100, Number(req.query.limit) || 20));
+  const offset = Math.max(0, Number(req.query.offset) || 0);
+
   const alerts = await db
     .select()
     .from(alertsTable)
@@ -27,7 +31,9 @@ router.get("/alerts", async (req, res): Promise<void> => {
         ? inArray(alertsTable.farmerId, assignedIds.length ? assignedIds : [-1])
         : undefined,
     )
-    .orderBy(alertsTable.createdAt);
+    .orderBy(alertsTable.createdAt)
+    .limit(limit)
+    .offset(offset);
 
   res.json(ListAlertsResponse.parse(alerts));
 });
