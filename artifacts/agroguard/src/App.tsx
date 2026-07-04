@@ -31,6 +31,7 @@ import ChangePasswordPage from "@/pages/change-password";
 import MyFarmPage from "@/pages/my-farm";
 import CropDiagnosisPage from "@/pages/crop-diagnosis";
 import AiAssistantPage from "@/pages/ai-assistant";
+import AchievementDetailPage from "@/pages/achievement-detail";
 
 // Attach the stored session token as `Authorization: Bearer` to every generated
 // API call. This keeps auth working inside the cross-site Replit iframe where
@@ -112,6 +113,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={LandingPage} />
+      <Route path="/achievements/:slug" component={AchievementDetailPage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/signup" component={SignupPage} />
       <Route path="/change-password" component={() => <BareProtectedRoute component={ChangePasswordPage} />} />

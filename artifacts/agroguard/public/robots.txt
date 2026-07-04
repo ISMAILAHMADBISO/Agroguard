@@ -1,2 +1,11 @@
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /farmers
+Disallow: /devices
+Disallow: /alerts
+Disallow: /staff
+Disallow: /analytics
+Disallow: /recommendations
+
+Sitemap: https://agroguard.tech/sitemap.xml
