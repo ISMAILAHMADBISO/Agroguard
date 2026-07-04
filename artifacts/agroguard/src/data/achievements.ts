@@ -1,5 +1,5 @@
-import youngAfricanBootcamp from "@assets/young_african_bootcamp.jpg";
-import piocUnilag from "@assets/pioc_unilag.jpg";
+import youngAfricanBootcamp from "@assets/young_african_bootcamp.jpeg";
+import piocUnilag from "@assets/pioc_unilag.jpeg";
 import nigcomsat2026 from "@assets/nigcomsat_2026.jpeg";
 
 export interface Achievement {
