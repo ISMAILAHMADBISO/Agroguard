@@ -30,7 +30,6 @@ import { ProductCarousel } from "@/components/product-carousel";
 import AchievementsSection from "@/components/AchievementsSection";
 import AboutSection from "@/components/AboutSection";
 import TrustSection from "@/components/TrustSection";
-import CredibilitySection from "@/components/CredibilitySection";
 import AnimatedCounter from "@/components/AnimatedCounter";
 import SocialIcons from "@/components/SocialIcons";
 import { impactCounters, customerJourneySteps, socialLinks, businessHours } from "@/data/site-config";
@@ -448,8 +447,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ─── Credibility / Recognition ──────────────────────────────────── */}
-        <CredibilitySection />
 
         {/* ─── Team ──────────────────────────────────────────────────────── */}
         <section id="team" className="py-24 bg-muted/30">
