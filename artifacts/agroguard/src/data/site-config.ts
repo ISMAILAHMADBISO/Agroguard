@@ -111,7 +111,7 @@ export const customerJourneySteps = [
   {
     step: "05",
     icon: "Bell" as const,
-    title: "Farmer Receives Alerts",
+    title: "Farmers Receive Alerts",
     description: "Get instant dashboard alerts and receiver unit notifications when action is needed.",
   },
   {
