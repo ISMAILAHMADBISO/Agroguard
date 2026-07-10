@@ -21,7 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Cpu, Wifi, WifiOff, ThermometerSun, Droplets, Sun, Activity,
   Battery, Radio, Zap, FlaskConical, Leaf, ArrowLeft, Copy, Check, ExternalLink,
-  ArrowRightLeft, UserCheck, UserX,
+  ArrowRightLeft, UserCheck, UserX, Loader2
 } from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -53,9 +53,9 @@ type AssignValues = z.infer<typeof assignSchema>;
 export default function DeviceDetail() {
   const { id } = useParams();
   const deviceId = Number(id);
-  const { data: device, isLoading: deviceLoading } = useGetDevice({ id: deviceId });
-  const { data: trends, isLoading: trendsLoading } = useGetSensorTrends({ id: deviceId });
-  const { data: latestReading, isLoading: readingLoading } = useGetDeviceReadings({ id: deviceId, limit: 1 });
+  const { data: device, isLoading: deviceLoading } = useGetDevice(deviceId);
+  const { data: trends, isLoading: trendsLoading } = useGetSensorTrends(deviceId);
+  const { data: latestReading, isLoading: readingLoading } = useGetDeviceReadings(deviceId);
 
   const { data: farmers } = useListFarmers();
   const updateDevice = useUpdateDevice();
@@ -193,7 +193,7 @@ export default function DeviceDetail() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={updateDevice.isPending}>
-                  {updateDevice.isPending && <Spinner className="mr-2 h-4 w-4 animate-spin" />}
+                  {updateDevice.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Save Assignment
                 </Button>
               </DialogFooter>

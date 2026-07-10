@@ -101,7 +101,7 @@ export default function Dashboard() {
                     </p>
                     {activity.type === "reading" && (
                       <p className="text-xs text-muted-foreground mt-1">
-                        Moisture: {activity.soilMoisture?.toFixed(1)}%, Temp: {activity.temperature?.toFixed(1)}°C, pH: {activity.ph?.toFixed(2)}, N: {activity.nitrogen}, P: {activity.phosphorus}, K: {activity.potassium}
+                        Moisture: {(activity as any).soilMoisture?.toFixed(1)}%, Temp: {(activity as any).temperature?.toFixed(1)}°C, pH: {(activity as any).ph?.toFixed(2)}, N: {(activity as any).nitrogen}, P: {(activity as any).phosphorus}, K: {(activity as any).potassium}
                       </p>
                     )}
                   </div>
