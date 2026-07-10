@@ -130,6 +130,7 @@ function Router() {
       <Route path="/ai-assistant" component={() => <ProtectedRoute access="any" component={AiAssistantPage} />} />
       <Route path="/analytics" component={() => <ProtectedRoute component={AnalyticsPage} />} />
       <Route path="/staff" component={() => <ProtectedRoute access="staff" component={StaffPage} />} />
+      <Route path="/achievements" component={() => <ProtectedRoute access="staff" component={AchievementsPage} />} />
       <Route component={NotFound} />
     </Switch>
   );

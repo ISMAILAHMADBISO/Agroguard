@@ -115,8 +115,7 @@ async function incrementAILimit(userId: number, userType: string) {
 /** POST /ai/disease-detection — analyse a crop photo with the vision model. */
 router.post("/ai/disease-detection", async (req, res): Promise<void> => {
   if (!isAIConfigured()) {
-    res.status(503).json({ error: AI_NOT_CONFIGURED_MESSAGE });
-    return;
+    req.log.warn("AI is not configured. Falling back to mock response for pitch.");
   }
 
   const parsed = DetectDiseaseBody.safeParse(req.body);
@@ -203,12 +202,15 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
       res.status(503).json({ error: "AI services are temporarily unavailable. Please upgrade to AgroGuard Premium or try again later." });
       return;
     }
-    const { status, message } = describeAIError(
-      err,
-      "AI analysis failed. Please try again.",
-    );
-    res.status(status).json({ error: message });
-    return;
+    // FALLBACK FOR PITCH (if API key is invalid or rejected)
+    req.log.warn("OpenAI API failed. Falling back to mock response for pitch.");
+    result = {
+      diagnosis: "Demo: Nutrient Deficiency",
+      confidence: 88,
+      severity: "medium",
+      treatment: "This is a simulated demo response. Apply nitrogen-rich fertilizer and ensure consistent watering.",
+      summary: "Simulated AI analysis: The crop shows typical signs of nitrogen deficiency. (Note: Real AI response unavailable)"
+    };
   }
 
   await incrementAILimit(req.session.userId!, req.session.userType!);
@@ -311,8 +313,7 @@ router.get("/ai/conversations/:id", async (req, res): Promise<void> => {
 /** POST /ai/chat — send a message to the advisor, creating/continuing a conversation. */
 router.post("/ai/chat", async (req, res): Promise<void> => {
   if (!isAIConfigured()) {
-    res.status(503).json({ error: AI_NOT_CONFIGURED_MESSAGE });
-    return;
+    req.log.warn("AI is not configured. Falling back to mock response for pitch.");
   }
 
   const parsed = SendChatMessageBody.safeParse(req.body);
@@ -379,12 +380,9 @@ router.post("/ai/chat", async (req, res): Promise<void> => {
       res.status(503).json({ error: "AI services are temporarily unavailable. Please upgrade to AgroGuard Premium or try again later." });
       return;
     }
-    const { status, message } = describeAIError(
-      err,
-      "AI assistant is unavailable. Please try again.",
-    );
-    res.status(status).json({ error: message });
-    return;
+    // FALLBACK FOR PITCH
+    req.log.warn("OpenAI API failed. Falling back to mock response for pitch.");
+    reply = "This is a simulated AI response for your pitch. The OpenAI API key configured is currently invalid or missing. In a live environment, this would provide personalized farming advice based on your input.";
   }
   
   await incrementAILimit(req.session.userId!, req.session.userType!);
