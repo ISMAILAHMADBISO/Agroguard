@@ -14,6 +14,7 @@ import thresholdsRouter from "./thresholds";
 import dashboardRouter from "./dashboard";
 import aiRouter from "./ai";
 import staffRouter from "./staff";
+import achievementsRouter from "./achievements";
 
 const router: IRouter = Router();
 
@@ -27,5 +28,6 @@ router.use(recommendationsRouter);
 router.use(staffRouter);
 router.use(dashboardRouter);
 router.use(aiRouter);
+router.use(achievementsRouter);
 
 export default router;

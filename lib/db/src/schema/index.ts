@@ -14,3 +14,4 @@ export * from "./user_sessions";
 export * from "./activities";
 export * from "./farm_thresholds";
 export * from "./advisories";
+export * from "./achievements";

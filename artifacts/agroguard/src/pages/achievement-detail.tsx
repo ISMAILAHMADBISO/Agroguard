@@ -1,5 +1,5 @@
 import { useParams, Link } from "wouter";
-import { achievements } from "@/data/achievements";
+import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft,
@@ -15,6 +15,7 @@ import {
   Phone,
   ChevronLeft,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -26,7 +27,24 @@ export default function AchievementDetailPage() {
     window.scrollTo(0, 0);
   }, [slug]);
 
-  const currentAchievement = achievements.find((a) => a.slug === slug);
+  const { data: achievements, isLoading } = useQuery({
+    queryKey: ["achievements"],
+    queryFn: async () => {
+      const res = await fetch("/api/achievements");
+      if (!res.ok) throw new Error("Failed to fetch achievements");
+      return res.json();
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const currentAchievement = achievements?.find((a: any) => a.slug === slug);
 
   if (!currentAchievement) {
     return (
@@ -40,7 +58,7 @@ export default function AchievementDetailPage() {
     );
   }
 
-  const currentIndex = achievements.findIndex((a) => a.slug === slug);
+  const currentIndex = achievements?.findIndex((a: any) => a.slug === slug);
   const prevAchievement = currentIndex > 0 ? achievements[currentIndex - 1] : null;
   const nextAchievement = currentIndex < achievements.length - 1 ? achievements[currentIndex + 1] : null;
 
@@ -103,7 +121,7 @@ export default function AchievementDetailPage() {
           {/* Hero Banner */}
           <div className="relative rounded-2xl overflow-hidden shadow-md mb-8 aspect-video md:aspect-[21/9] bg-muted">
             <img
-              src={currentAchievement.image}
+              src={currentAchievement.imageUrl}
               alt={currentAchievement.title}
               className="w-full h-full object-cover"
             />
@@ -130,7 +148,7 @@ export default function AchievementDetailPage() {
             {/* Main Article Body */}
             <div className="lg:col-span-2 space-y-6">
               <article className="prose prose-emerald max-w-none text-foreground leading-relaxed">
-                {currentAchievement.content.map((paragraph, index) => (
+                {currentAchievement.content.split("\n\n").map((paragraph: string, index: number) => (
                   <p key={index} className="text-base md:text-lg text-muted-foreground mb-6">
                     {paragraph}
                   </p>

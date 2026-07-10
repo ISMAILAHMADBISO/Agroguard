@@ -32,6 +32,7 @@ import MyFarmPage from "@/pages/my-farm";
 import CropDiagnosisPage from "@/pages/crop-diagnosis";
 import AiAssistantPage from "@/pages/ai-assistant";
 import AchievementDetailPage from "@/pages/achievement-detail";
+import AchievementsPage from "@/pages/achievements";
 
 // Attach the stored session token as `Authorization: Bearer` to every generated
 // API call. This keeps auth working inside the cross-site Replit iframe where

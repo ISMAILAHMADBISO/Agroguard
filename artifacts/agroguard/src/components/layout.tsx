@@ -26,6 +26,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -61,6 +62,19 @@ const ROLE_LABELS: Record<string, string> = {
   farmer: "Farmer",
 };
 
+function NavLink({ href, icon: Icon, children, isActive }: { href: string; icon: any; children: React.ReactNode; isActive: boolean }) {
+  const { setOpenMobile, isMobile } = useSidebar();
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={isActive} onClick={() => isMobile && setOpenMobile(false)}>
+        <Link href={href}>
+          <Icon className="mr-2 h-4 w-4" /> {children}
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
+
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
@@ -95,27 +109,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <SidebarGroupLabel>My Farm</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild isActive={location === "/my-farm"}>
-                        <Link href="/my-farm">
-                          <LayoutDashboard className="mr-2 h-4 w-4" /> Overview
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild isActive={location === "/crop-diagnosis"}>
-                        <Link href="/crop-diagnosis">
-                          <ScanLine className="mr-2 h-4 w-4" /> Crop Diagnosis
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild isActive={location === "/ai-assistant"}>
-                        <Link href="/ai-assistant">
-                          <Bot className="mr-2 h-4 w-4" /> AI Assistant
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    <NavLink href="/my-farm" icon={LayoutDashboard} isActive={location === "/my-farm"}>
+                      Overview
+                    </NavLink>
+                    <NavLink href="/crop-diagnosis" icon={ScanLine} isActive={location === "/crop-diagnosis"}>
+                      Crop Diagnosis
+                    </NavLink>
+                    <NavLink href="/ai-assistant" icon={Bot} isActive={location === "/ai-assistant"}>
+                      AI Assistant
+                    </NavLink>
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
@@ -125,62 +127,30 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <SidebarGroupLabel>Platform</SidebarGroupLabel>
                   <SidebarGroupContent>
                     <SidebarMenu>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild isActive={location === "/dashboard"}>
-                          <Link href="/dashboard">
-                            <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild isActive={location.startsWith("/farmers")}>
-                          <Link href="/farmers">
-                            <Users className="mr-2 h-4 w-4" /> Farmers
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild isActive={location.startsWith("/devices")}>
-                          <Link href="/devices">
-                            <Cpu className="mr-2 h-4 w-4" /> Devices
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild isActive={location === "/alerts"}>
-                          <Link href="/alerts">
-                            <Bell className="mr-2 h-4 w-4" /> Alerts
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild isActive={location === "/recommendations"}>
-                          <Link href="/recommendations">
-                            <Lightbulb className="mr-2 h-4 w-4" /> Recommendations
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild isActive={location === "/crop-diagnosis"}>
-                          <Link href="/crop-diagnosis">
-                            <ScanLine className="mr-2 h-4 w-4" /> Crop Diagnosis
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild isActive={location === "/ai-assistant"}>
-                          <Link href="/ai-assistant">
-                            <Bot className="mr-2 h-4 w-4" /> AI Assistant
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild isActive={location === "/analytics"}>
-                          <Link href="/analytics">
-                            <LineChart className="mr-2 h-4 w-4" /> Analytics
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
+                      <NavLink href="/dashboard" icon={LayoutDashboard} isActive={location === "/dashboard"}>
+                        Dashboard
+                      </NavLink>
+                      <NavLink href="/farmers" icon={Users} isActive={location.startsWith("/farmers")}>
+                        Farmers
+                      </NavLink>
+                      <NavLink href="/devices" icon={Cpu} isActive={location.startsWith("/devices")}>
+                        Devices
+                      </NavLink>
+                      <NavLink href="/alerts" icon={Bell} isActive={location === "/alerts"}>
+                        Alerts
+                      </NavLink>
+                      <NavLink href="/recommendations" icon={Lightbulb} isActive={location === "/recommendations"}>
+                        Recommendations
+                      </NavLink>
+                      <NavLink href="/crop-diagnosis" icon={ScanLine} isActive={location === "/crop-diagnosis"}>
+                        Crop Diagnosis
+                      </NavLink>
+                      <NavLink href="/ai-assistant" icon={Bot} isActive={location === "/ai-assistant"}>
+                        AI Assistant
+                      </NavLink>
+                      <NavLink href="/analytics" icon={LineChart} isActive={location === "/analytics"}>
+                        Analytics
+                      </NavLink>
                     </SidebarMenu>
                   </SidebarGroupContent>
                 </SidebarGroup>
@@ -191,13 +161,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     <SidebarGroupLabel>Administration</SidebarGroupLabel>
                     <SidebarGroupContent>
                       <SidebarMenu>
-                        <SidebarMenuItem>
-                          <SidebarMenuButton asChild isActive={location === "/staff"}>
-                            <Link href="/staff">
-                              <UsersRound className="mr-2 h-4 w-4" /> Staff
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
+                        <NavLink href="/staff" icon={UsersRound} isActive={location === "/staff"}>
+                          Staff
+                        </NavLink>
+                        {isAdmin && (
+                          <NavLink href="/achievements" icon={Lightbulb} isActive={location === "/achievements"}>
+                            Achievements
+                          </NavLink>
+                        )}
                       </SidebarMenu>
                     </SidebarGroupContent>
                   </SidebarGroup>

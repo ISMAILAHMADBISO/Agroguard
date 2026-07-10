@@ -15,6 +15,7 @@ import {
   db,
   diseaseReportsTable,
   aiConversationsTable,
+  farmersTable,
   type ChatMessage,
 } from "@workspace/db";
 import {
@@ -72,6 +73,45 @@ function normaliseSeverity(value: unknown): Severity {
   return value === "high" || value === "medium" ? value : "low";
 }
 
+async function checkAILimit(userId: number, userType: string): Promise<string | null> {
+  if (userType !== "farmer") return null;
+  const [farmer] = await db.select().from(farmersTable).where(eq(farmersTable.id, userId));
+  if (!farmer) return "User not found";
+  
+  if (farmer.isPremium) return null;
+  
+  const today = new Date();
+  const usageDate = farmer.aiUsageDate ? new Date(farmer.aiUsageDate) : null;
+  
+  let currentCount = farmer.aiUsageCount;
+  if (!usageDate || usageDate.toDateString() !== today.toDateString()) {
+    currentCount = 0;
+  }
+  
+  if (currentCount >= 5) {
+    return "AI services are temporarily unavailable. Please upgrade to AgroGuard Premium or try again later.";
+  }
+  return null;
+}
+
+async function incrementAILimit(userId: number, userType: string) {
+  if (userType !== "farmer") return;
+  const [farmer] = await db.select().from(farmersTable).where(eq(farmersTable.id, userId));
+  if (!farmer || farmer.isPremium) return;
+  
+  const today = new Date();
+  const usageDate = farmer.aiUsageDate ? new Date(farmer.aiUsageDate) : null;
+  
+  let newCount = farmer.aiUsageCount;
+  if (!usageDate || usageDate.toDateString() !== today.toDateString()) {
+    newCount = 0;
+  }
+  
+  await db.update(farmersTable)
+    .set({ aiUsageCount: newCount + 1, aiUsageDate: today })
+    .where(eq(farmersTable.id, userId));
+}
+
 /** POST /ai/disease-detection — analyse a crop photo with the vision model. */
 router.post("/ai/disease-detection", async (req, res): Promise<void> => {
   if (!isAIConfigured()) {
@@ -109,10 +149,15 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
     return;
   }
 
-  // Accept either a full data URL or raw base64; normalise to a data URL.
   const imageUrl = imageBase64.startsWith("data:")
     ? imageBase64
     : `data:image/jpeg;base64,${imageBase64}`;
+
+  const limitError = await checkAILimit(req.session.userId!, req.session.userType!);
+  if (limitError) {
+    res.status(403).json({ error: limitError });
+    return;
+  }
 
   let result: {
     diagnosis: string;
@@ -152,8 +197,12 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
       treatment: String(json["treatment"] ?? "No specific treatment suggested."),
       summary: String(json["summary"] ?? ""),
     };
-  } catch (err) {
+  } catch (err: any) {
     req.log.error({ err }, "disease detection failed");
+    if (err && err.status === 429) {
+      res.status(503).json({ error: "AI services are temporarily unavailable. Please upgrade to AgroGuard Premium or try again later." });
+      return;
+    }
     const { status, message } = describeAIError(
       err,
       "AI analysis failed. Please try again.",
@@ -161,6 +210,8 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
     res.status(status).json({ error: message });
     return;
   }
+
+  await incrementAILimit(req.session.userId!, req.session.userType!);
 
   const [report] = await db
     .insert(diseaseReportsTable)
@@ -281,6 +332,12 @@ router.post("/ai/chat", async (req, res): Promise<void> => {
     return;
   }
 
+  const limitError = await checkAILimit(req.session.userId!, req.session.userType!);
+  if (limitError) {
+    res.status(403).json({ error: limitError });
+    return;
+  }
+
   // Load (and authorise) an existing conversation, or start a fresh one.
   let history: ChatMessage[] = [];
   let convId: number | null = conversationId ?? null;
@@ -316,8 +373,12 @@ router.post("/ai/chat", async (req, res): Promise<void> => {
       ],
     });
     reply = completion.choices[0]?.message?.content ?? "";
-  } catch (err) {
+  } catch (err: any) {
     req.log.error({ err }, "advisory chat failed");
+    if (err && err.status === 429) {
+      res.status(503).json({ error: "AI services are temporarily unavailable. Please upgrade to AgroGuard Premium or try again later." });
+      return;
+    }
     const { status, message } = describeAIError(
       err,
       "AI assistant is unavailable. Please try again.",
@@ -325,6 +386,8 @@ router.post("/ai/chat", async (req, res): Promise<void> => {
     res.status(status).json({ error: message });
     return;
   }
+  
+  await incrementAILimit(req.session.userId!, req.session.userType!);
 
   const assistantMessage: ChatMessage = { role: "assistant", content: reply };
   const updatedMessages = [...conversationForModel, assistantMessage];
