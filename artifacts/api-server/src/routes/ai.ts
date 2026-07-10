@@ -88,7 +88,7 @@ async function checkAILimit(userId: number, userType: string): Promise<string | 
     currentCount = 0;
   }
   
-  if (currentCount >= 50) {
+  if (currentCount >= 5) {
     return "AI services are temporarily unavailable. Please upgrade to AgroGuard Premium or try again later.";
   }
   return null;
@@ -198,10 +198,6 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
     };
   } catch (err: any) {
     req.log.error({ err }, "disease detection failed");
-    if (err && err.status === 429) {
-      res.status(503).json({ error: "AI services are temporarily unavailable. Please upgrade to AgroGuard Premium or try again later." });
-      return;
-    }
     // FALLBACK FOR PITCH (if API key is invalid or rejected)
     req.log.warn("OpenAI API failed. Falling back to mock response for pitch.");
     result = {
@@ -376,10 +372,6 @@ router.post("/ai/chat", async (req, res): Promise<void> => {
     reply = completion.choices[0]?.message?.content ?? "";
   } catch (err: any) {
     req.log.error({ err }, "advisory chat failed");
-    if (err && err.status === 429) {
-      res.status(503).json({ error: "AI services are temporarily unavailable. Please upgrade to AgroGuard Premium or try again later." });
-      return;
-    }
     // FALLBACK FOR PITCH
     req.log.warn("OpenAI API failed. Falling back to mock response for pitch.");
     reply = "This is a simulated AI response for your pitch. The OpenAI API key configured is currently invalid or missing. In a live environment, this would provide personalized farming advice based on your input.";

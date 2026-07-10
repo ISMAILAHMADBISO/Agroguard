@@ -5,6 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Phone, Mail, Activity, Leaf, Wifi, WifiOff } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/context/auth";
+import { useUpdateFarmer, getGetFarmerQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { Star } from "lucide-react";
 
 export default function FarmerDetailPage() {
   const params = useParams();
@@ -12,6 +19,22 @@ export default function FarmerDetailPage() {
 
   const { data: farmer, isLoading: farmerLoading } = useGetFarmer(id);
   const { data: devices, isLoading: devicesLoading } = useGetFarmerDevices(id);
+
+  const { user } = useAuth();
+  const isAdmin = user?.role === "super_admin" || user?.role === "admin";
+  const updateFarmer = useUpdateFarmer();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const handleTogglePremium = (checked: boolean) => {
+    updateFarmer.mutate({ id, data: { isPremium: checked } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetFarmerQueryKey(id) });
+        toast({ title: checked ? "Upgraded to Premium" : "Removed Premium Access" });
+      },
+      onError: () => toast({ title: "Failed to update status", variant: "destructive" })
+    });
+  };
 
   if (farmerLoading) {
     return <div className="space-y-6"><Skeleton className="h-48 w-full" /><Skeleton className="h-64 w-full" /></div>;
@@ -28,9 +51,16 @@ export default function FarmerDetailPage() {
           <h2 className="text-2xl font-bold tracking-tight">{farmer.name}</h2>
           <p className="text-muted-foreground">Farmer Profile & Dashboard</p>
         </div>
-        <Badge variant={farmer.status === 'active' ? 'default' : 'secondary'} className={farmer.status === 'active' ? 'bg-primary' : ''}>
-          {farmer.status}
-        </Badge>
+        <div className="flex items-center gap-2">
+          {farmer.isPremium && (
+            <Badge variant="default" className="bg-amber-500 hover:bg-amber-600">
+              <Star className="h-3 w-3 mr-1" /> Premium
+            </Badge>
+          )}
+          <Badge variant={farmer.status === 'active' ? 'default' : 'secondary'} className={farmer.status === 'active' ? 'bg-primary' : ''}>
+            {farmer.status}
+          </Badge>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
@@ -92,6 +122,25 @@ export default function FarmerDetailPage() {
               <div className="mt-6 pt-4 border-t">
                 <div className="text-sm font-medium text-muted-foreground mb-2">Notes</div>
                 <p className="text-sm">{farmer.notes}</p>
+              </div>
+            )}
+            {isAdmin && (
+              <div className="mt-6 pt-4 border-t flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="premium-toggle" className="text-base font-semibold flex items-center gap-2">
+                    <Star className="h-4 w-4 text-amber-500" />
+                    Premium AI Access
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Grant this farmer unlimited AI usage.
+                  </p>
+                </div>
+                <Switch 
+                  id="premium-toggle" 
+                  checked={!!farmer.isPremium} 
+                  onCheckedChange={handleTogglePremium} 
+                  disabled={updateFarmer.isPending}
+                />
               </div>
             )}
           </CardContent>

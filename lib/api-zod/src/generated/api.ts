@@ -79,6 +79,7 @@ export const GetFarmerResponse = zod.object({
   "whatsappNumber": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "fieldOfficerId": zod.number().nullish().describe('ID of the field officer assigned to manage this farmer'),
+  "isPremium": zod.boolean().optional(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date().optional()
 })
@@ -99,10 +100,11 @@ export const UpdateFarmerBody = zod.object({
   "farmName": zod.string().optional(),
   "farmSizeHectares": zod.number().optional(),
   "cropTypes": zod.string().optional(),
-  "status": zod.enum(['active', 'inactive', 'pending']).optional(),
-  "whatsappNumber": zod.string().optional(),
-  "notes": zod.string().optional(),
-  "fieldOfficerId": zod.number().nullish().describe('Assign or unassign a field officer (null to unassign)')
+  status: zod.enum(['active', 'inactive', 'pending']).optional(),
+  whatsappNumber: zod.string().optional(),
+  notes: zod.string().optional(),
+  fieldOfficerId: zod.number().nullish().describe('Assign or unassign a field officer (null to unassign)'),
+  isPremium: zod.boolean().optional()
 })
 
 export const UpdateFarmerResponse = zod.object({
