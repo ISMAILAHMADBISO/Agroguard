@@ -63,7 +63,7 @@ export const trustPoints = [
   {
     icon: "Bell" as const,
     title: "Early Warning Alerts",
-    description: "Instant WhatsApp and in-app alerts when conditions reach critical thresholds, so you can act before damage occurs.",
+    description: "Instant in-app alerts and receiver unit notifications when conditions reach critical thresholds, so you can act before damage occurs.",
   },
   {
     icon: "LayoutDashboard" as const,
@@ -112,7 +112,7 @@ export const customerJourneySteps = [
     step: "05",
     icon: "Bell" as const,
     title: "Farmer Receives Alerts",
-    description: "Get instant WhatsApp alerts, SMS notifications, and in-app recommendations when action is needed.",
+    description: "Get instant dashboard alerts and receiver unit notifications when action is needed.",
   },
   {
     step: "06",

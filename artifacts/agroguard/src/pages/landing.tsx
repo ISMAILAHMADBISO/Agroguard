@@ -162,7 +162,7 @@ export default function LandingPage() {
                   <Leaf className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">Actionable Insights</h3>
-                <p className="text-muted-foreground">Readings and alerts reach the farmer on their AgroGuard receiver unit and on WhatsApp, in local languages with clear recommendations for action.</p>
+                <p className="text-muted-foreground">Readings and alerts reach the farmer on their AgroGuard receiver unit and the dashboard, with clear recommendations for action.</p>
               </div>
             </div>
             <div className="text-center mt-10">
@@ -244,7 +244,7 @@ export default function LandingPage() {
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
-                { icon: Cpu, title: "AgroGuard Node", desc: "ESP32 gateway with OLED status display." },
+                { icon: Cpu, title: "AgroGuard Node", desc: "Farmer Receiver gateway with OLED status display." },
                 { icon: FlaskConical, title: "7-in-1 Soil Probe", desc: "RS485 stainless-steel sensor and cabling." },
                 { icon: Battery, title: "Solar Power Kit", desc: "Panel, rechargeable battery and controller." },
                 { icon: Package, title: "Field Mount & Guide", desc: "Weatherproof enclosure and quick-start guide." },
@@ -355,7 +355,7 @@ export default function LandingPage() {
                     { cap: "Real-time soil data", trad: "Manual inspection", agro: "Real-time monitoring" },
                     { cap: "7 in 1 nutrient analysis", trad: "Guesswork", agro: "AI-powered recommendations" },
                     { cap: "AI crop & disease guidance", trad: "Delayed decisions", agro: "Smart alerts" },
-                    { cap: "Instant WhatsApp alerts", trad: "High crop losses", agro: "Early disease detection" },
+                    { cap: "Instant dashboard alerts", trad: "High crop losses", agro: "Early disease detection" },
                     { cap: "Irrigation management", trad: "Water wastage", agro: "Better irrigation decisions" },
                     { cap: "Remote monitoring anywhere", trad: "Reactive management", agro: "Improved productivity" },
                   ].map(({ cap, trad, agro }) => (
@@ -382,14 +382,14 @@ export default function LandingPage() {
         </section>
 
         {/* ─── How AgroGuard Works (Customer Journey) ─────────────────────── */}
-        <section id="how-it-works" className="py-24 bg-muted/30">
+        <section id="how it works" className="py-24 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-2xl mx-auto mb-16">
               <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary bg-primary/10 rounded-full px-3 py-1 mb-4">
                 Customer Journey
               </span>
               <h2 className="text-3xl font-bold text-foreground mb-4">How AgroGuard Works</h2>
-              <p className="text-muted-foreground">From installation to actionable insight — a simple, powerful process.</p>
+              <p className="text-muted-foreground">From installation to actionable insight a simple, powerful process.</p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
               {customerJourneySteps.map(({ step, icon, title, description }) => {
@@ -431,7 +431,7 @@ export default function LandingPage() {
             <div className="grid md:grid-cols-3 gap-8">
               {[
                 { quote: "My maize yield went up by a third in one season. I now water only when the soil truly needs it.", name: "Aliyu Bello", role: "Maize Farmer, Kaduna" },
-                { quote: "The WhatsApp alerts caught a nutrient problem early. AgroGuard saved my tomato harvest.", name: "Hauwa Suleiman", role: "Tomato Grower, Kano" },
+                { quote: "The dashboard alerts caught a nutrient problem early. AgroGuard saved my tomato harvest.", name: "Hauwa Suleiman", role: "Tomato Grower, Kano" },
                 { quote: "As a field officer I monitor dozens of farms from my phone. It has transformed how we work.", name: "Chinedu Okafor", role: "Field Officer, Niger State" },
               ].map(({ quote, name, role }) => (
                 <div key={name} className="bg-card p-8 rounded-xl border border-border shadow-sm flex flex-col">
