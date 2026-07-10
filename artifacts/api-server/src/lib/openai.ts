@@ -18,12 +18,13 @@ export function getOpenAI(): OpenAI {
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not configured");
   }
-  client = new OpenAI({ apiKey });
+  const baseURL = process.env["OPENAI_BASE_URL"];
+  client = new OpenAI({ apiKey, baseURL });
   return client;
 }
 
 /** Model used for both vision (disease detection) and advisory chat. */
-export const AI_MODEL = "gpt-4o";
+export const AI_MODEL = process.env["AI_MODEL"] || "gpt-4o";
 
 export interface AIErrorResult {
   status: number;
