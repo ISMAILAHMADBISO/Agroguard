@@ -88,7 +88,7 @@ async function checkAILimit(userId: number, userType: string): Promise<string | 
     currentCount = 0;
   }
   
-  if (currentCount >= 5) {
+  if (currentCount >= 50) {
     return "AI services are temporarily unavailable. Please upgrade to AgroGuard Premium or try again later.";
   }
   return null;
