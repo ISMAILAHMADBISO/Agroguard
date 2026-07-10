@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, achievementsTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 const router: IRouter = Router();
 
@@ -38,7 +38,8 @@ router.get("/achievements/:slug", async (req, res) => {
       .where(eq(achievementsTable.slug, req.params.slug));
       
     if (!achievement) {
-      return res.status(404).json({ error: "Achievement not found" });
+      res.status(404).json({ error: "Achievement not found" });
+      return;
     }
     res.json(achievement);
   } catch (err) {
@@ -50,12 +51,14 @@ router.get("/achievements/:slug", async (req, res) => {
 // Create achievement (admin only ideally, assuming protected by global middleware or we should check role)
 router.post("/achievements", async (req, res) => {
   if (req.session.userType !== "staff") {
-    return res.status(403).json({ error: "Access denied" });
+    res.status(403).json({ error: "Access denied" });
+    return;
   }
   
   const parsed = AchievementBody.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: parsed.error.message });
+    return;
   }
 
   try {
@@ -73,12 +76,14 @@ router.post("/achievements", async (req, res) => {
 // Update achievement
 router.put("/achievements/:id", async (req, res) => {
   if (req.session.userType !== "staff") {
-    return res.status(403).json({ error: "Access denied" });
+    res.status(403).json({ error: "Access denied" });
+    return;
   }
 
   const parsed = AchievementBody.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: parsed.error.message });
+    return;
   }
 
   try {
@@ -89,7 +94,8 @@ router.put("/achievements/:id", async (req, res) => {
       .returning();
       
     if (!updated) {
-      return res.status(404).json({ error: "Achievement not found" });
+      res.status(404).json({ error: "Achievement not found" });
+      return;
     }
     res.json(updated);
   } catch (err) {
@@ -101,7 +107,8 @@ router.put("/achievements/:id", async (req, res) => {
 // Delete achievement
 router.delete("/achievements/:id", async (req, res) => {
   if (req.session.userType !== "staff") {
-    return res.status(403).json({ error: "Access denied" });
+    res.status(403).json({ error: "Access denied" });
+    return;
   }
 
   try {
@@ -111,7 +118,8 @@ router.delete("/achievements/:id", async (req, res) => {
       .returning();
       
     if (!deleted) {
-      return res.status(404).json({ error: "Achievement not found" });
+      res.status(404).json({ error: "Achievement not found" });
+      return;
     }
     res.json({ message: "Deleted successfully" });
   } catch (err) {
