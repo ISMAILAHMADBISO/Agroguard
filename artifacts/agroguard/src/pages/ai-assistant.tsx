@@ -10,8 +10,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { apiErrorMessage } from "@/lib/api-error";
-import { Send, Loader2, Bot, User, Plus, MessageSquare, Sprout } from "lucide-react";
+import { Send, Loader2, Bot, User, Plus, MessageSquare, Sprout, Star } from "lucide-react";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -54,13 +55,30 @@ export default function AiAssistantPage() {
         },
         onError: (err) => {
           setMessages((prev) => prev.slice(0, -1));
+          const msg = apiErrorMessage(err, "The AI assistant is unavailable right now. Please try again.");
+          const isLimitHit = msg.includes("upgrade to AgroGuard Premium");
+          
           toast({
             title: "Message failed",
-            description: apiErrorMessage(
-              err,
-              "The AI assistant is unavailable right now. Please try again.",
-            ),
+            description: msg,
             variant: "destructive",
+            action: isLimitHit ? (
+              <ToastAction 
+                altText="Upgrade to Premium" 
+                onClick={async () => {
+                  try {
+                    const res = await fetch("/api/farmers/me/upgrade", { method: "POST" });
+                    if (!res.ok) throw new Error();
+                    toast({ title: "Welcome to Premium!", description: "You now have unlimited AI access. Try your message again!" });
+                  } catch {
+                    toast({ title: "Upgrade failed", variant: "destructive" });
+                  }
+                }}
+                className="bg-amber-500 hover:bg-amber-600 text-white border-none mt-2 sm:mt-0"
+              >
+                <Star className="h-4 w-4 mr-2" /> Upgrade
+              </ToastAction>
+            ) : undefined
           });
         },
       },

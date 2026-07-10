@@ -12,7 +12,12 @@ import {
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Cpu, Bell, Lightbulb, MapPin, Leaf } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Cpu, Bell, Lightbulb, MapPin, Leaf, Star, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { getGetFarmerQueryKey } from "@workspace/api-client-react";
+import { useToast } from "@/hooks/use-toast";
 
 const SEVERITY_STYLES: Record<string, string> = {
   critical: "bg-red-50 text-red-700 border-red-200",
@@ -34,13 +39,49 @@ export default function MyFarmPage() {
   const activeRecs = (recommendations ?? []).filter((r) => r.status !== "applied");
   const onlineDevices = (devices ?? []).filter((d) => d.status === "online").length;
 
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  const upgradeToPremium = async () => {
+    setIsUpgrading(true);
+    try {
+      const res = await fetch("/api/farmers/me/upgrade", { method: "POST" });
+      if (!res.ok) throw new Error("Upgrade failed");
+      queryClient.invalidateQueries({ queryKey: getGetFarmerQueryKey(farmerId) });
+      toast({ title: "Welcome to AgroGuard Premium!", description: "You now have unlimited AI access." });
+    } catch {
+      toast({ title: "Failed to upgrade", variant: "destructive" });
+    } finally {
+      setIsUpgrading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">
-          Welcome{user?.name ? `, ${user.name.split(" ")[0]}` : ""}
-        </h2>
-        <p className="text-muted-foreground">Your farm at a glance.</p>
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">
+            Welcome{user?.name ? `, ${user.name.split(" ")[0]}` : ""}
+          </h2>
+          <p className="text-muted-foreground">Your farm at a glance.</p>
+        </div>
+        {farmer && !farmer.isPremium && (
+          <div className="bg-gradient-to-r from-amber-500/10 to-amber-500/20 border border-amber-200 rounded-lg p-4 flex flex-col sm:flex-row items-center gap-4 shadow-sm w-full md:w-auto">
+            <div className="flex items-center gap-3 text-amber-700">
+              <Star className="h-6 w-6 fill-amber-500 text-amber-500" />
+              <div className="text-sm font-medium">Unlock Unlimited AI Access</div>
+            </div>
+            <Button 
+              size="sm" 
+              className="bg-amber-500 hover:bg-amber-600 text-white w-full sm:w-auto"
+              onClick={upgradeToPremium}
+              disabled={isUpgrading}
+            >
+              {isUpgrading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Upgrade to Premium"}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Summary cards */}

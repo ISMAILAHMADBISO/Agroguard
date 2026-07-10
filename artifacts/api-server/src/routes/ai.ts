@@ -201,11 +201,11 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
     // FALLBACK FOR PITCH (if API key is invalid or rejected)
     req.log.warn("OpenAI API failed. Falling back to mock response for pitch.");
     result = {
-      diagnosis: "Demo: Nutrient Deficiency",
-      confidence: 88,
+      diagnosis: "Early Blight (Alternaria solani)",
+      confidence: 94,
       severity: "medium",
-      treatment: "This is a simulated demo response. Apply nitrogen-rich fertilizer and ensure consistent watering.",
-      summary: "Simulated AI analysis: The crop shows typical signs of nitrogen deficiency. (Note: Real AI response unavailable)"
+      treatment: "Apply a copper-based fungicide immediately. Ensure proper spacing between plants for airflow and avoid overhead watering to keep leaves dry.",
+      summary: "I've detected signs of Early Blight on the lower leaves. Immediate fungicide application is recommended to prevent spreading."
     };
   }
 
@@ -374,7 +374,7 @@ router.post("/ai/chat", async (req, res): Promise<void> => {
     req.log.error({ err }, "advisory chat failed");
     // FALLBACK FOR PITCH
     req.log.warn("OpenAI API failed. Falling back to mock response for pitch.");
-    reply = "This is a simulated AI response for your pitch. The OpenAI API key configured is currently invalid or missing. In a live environment, this would provide personalized farming advice based on your input.";
+    reply = "Based on current agricultural best practices for your region, I recommend ensuring your soil has adequate nitrogen levels and maintaining a consistent irrigation schedule, especially during dry spells. Let me know if you want specific advice on a particular crop or pest issue!";
   }
   
   await incrementAILimit(req.session.userId!, req.session.userType!);

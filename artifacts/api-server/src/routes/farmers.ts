@@ -228,4 +228,25 @@ router.get("/farmers/:id/devices", async (req, res): Promise<void> => {
   res.json(GetFarmerDevicesResponse.parse(devices));
 });
 
+/** POST /farmers/me/upgrade — simulate payment and grant premium access */
+router.post("/farmers/me/upgrade", async (req, res): Promise<void> => {
+  if (req.session.userType !== "farmer") {
+    res.status(403).json({ error: "Only farmers can upgrade their accounts" });
+    return;
+  }
+
+  const [farmer] = await db
+    .update(farmersTable)
+    .set({ isPremium: true })
+    .where(eq(farmersTable.id, req.session.userId!))
+    .returning();
+
+  if (!farmer) {
+    res.status(404).json({ error: "Farmer not found" });
+    return;
+  }
+
+  res.json({ success: true, isPremium: farmer.isPremium });
+});
+
 export default router;

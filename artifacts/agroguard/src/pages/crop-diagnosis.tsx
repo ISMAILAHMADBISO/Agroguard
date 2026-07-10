@@ -11,8 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { apiErrorMessage } from "@/lib/api-error";
-import { Upload, Loader2, Leaf, ScanLine, ShieldAlert, Stethoscope } from "lucide-react";
+import { Upload, Loader2, Leaf, ScanLine, ShieldAlert, Stethoscope, Star } from "lucide-react";
 
 // Accept large originals; we downscale before upload so the request stays small.
 const MAX_BYTES = 20 * 1024 * 1024;
@@ -108,13 +109,29 @@ export default function CropDiagnosisPage() {
           if (fileRef.current) fileRef.current.value = "";
         },
         onError: (err) => {
+          const msg = apiErrorMessage(err, "Diagnosis failed. Please try again.");
+          const isLimitHit = msg.includes("upgrade to AgroGuard Premium");
           toast({
-            title: "Analysis failed",
-            description: apiErrorMessage(
-              err,
-              "The AI service could not analyse this photo. Please try again.",
-            ),
+            title: "Analysis Failed",
+            description: msg,
             variant: "destructive",
+            action: isLimitHit ? (
+              <ToastAction 
+                altText="Upgrade to Premium" 
+                onClick={async () => {
+                  try {
+                    const res = await fetch("/api/farmers/me/upgrade", { method: "POST" });
+                    if (!res.ok) throw new Error();
+                    toast({ title: "Welcome to Premium!", description: "You now have unlimited AI access. Try your diagnosis again!" });
+                  } catch {
+                    toast({ title: "Upgrade failed", variant: "destructive" });
+                  }
+                }}
+                className="bg-amber-500 hover:bg-amber-600 text-white border-none mt-2 sm:mt-0"
+              >
+                <Star className="h-4 w-4 mr-2" /> Upgrade
+              </ToastAction>
+            ) : undefined
           });
         },
       },
