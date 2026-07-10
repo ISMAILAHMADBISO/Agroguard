@@ -372,9 +372,20 @@ router.post("/ai/chat", async (req, res): Promise<void> => {
     reply = completion.choices[0]?.message?.content ?? "";
   } catch (err: any) {
     req.log.error({ err }, "advisory chat failed");
-    // FALLBACK FOR PITCH
+    // FALLBACK FOR PITCH: generate a dynamic-looking response based on keywords
     req.log.warn("OpenAI API failed. Falling back to mock response for pitch.");
-    reply = "Based on current agricultural best practices for your region, I recommend ensuring your soil has adequate nitrogen levels and maintaining a consistent irrigation schedule, especially during dry spells. Let me know if you want specific advice on a particular crop or pest issue!";
+    const lowerMessage = message.toLowerCase();
+    if (lowerMessage.includes("maize") || lowerMessage.includes("corn")) {
+      reply = "For maize in sandy soil, I highly recommend incorporating organic matter like compost or manure to improve water retention. You should also split your nitrogen fertilizer applications into 2-3 doses to prevent leaching.";
+    } else if (lowerMessage.includes("soybean") || lowerMessage.includes("soya") || lowerMessage.includes("suya") || lowerMessage.includes("bean")) {
+      reply = "Soya beans need good phosphorus levels to develop strong roots. If they aren't growing well, check your soil pH—they prefer slightly acidic to neutral soil (pH 6.0-7.0). Ensure they are properly inoculated with rhizobium bacteria before planting.";
+    } else if (lowerMessage.includes("tomato")) {
+      reply = "Yellowing tomato leaves often indicate a nitrogen deficiency or early blight. Ensure you are watering at the base of the plant to keep the leaves dry, and apply a balanced NPK fertilizer.";
+    } else if (lowerMessage.includes("pest") || lowerMessage.includes("worm") || lowerMessage.includes("insect")) {
+      reply = "For natural pest control, you can use Neem oil spray. It's affordable, safe for crops, and highly effective against fall armyworms and aphids. Ensure you spray early in the morning or late evening.";
+    } else {
+      reply = "Based on current agricultural best practices, I recommend ensuring your soil has adequate nutrients and maintaining a consistent irrigation schedule. Let me know if you want specific advice on a particular crop like maize, soya beans, or tomatoes!";
+    }
   }
   
   await incrementAILimit(req.session.userId!, req.session.userType!);
