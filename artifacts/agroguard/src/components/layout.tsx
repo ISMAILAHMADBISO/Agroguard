@@ -106,13 +106,22 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </SidebarHeader>
 
           <SidebarContent>
-            {isFarmer ? (
+            {isFarmer && (
               <SidebarGroup>
                 <SidebarGroupLabel>My Farm</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <NavLink href="/my-farm" icon={LayoutDashboard} isActive={location === "/my-farm"}>
                       Overview
+                    </NavLink>
+                    <NavLink href="/devices" icon={Cpu} isActive={location.startsWith("/devices")}>
+                      My Devices
+                    </NavLink>
+                    <NavLink href="/shop" icon={ScanLine} isActive={location.startsWith("/shop")}>
+                      Buy Hardware
+                    </NavLink>
+                    <NavLink href="/orders" icon={User} isActive={location === "/orders"}>
+                      My Orders
                     </NavLink>
                     <NavLink href="/crop-diagnosis" icon={ScanLine} isActive={location === "/crop-diagnosis"}>
                       Crop Diagnosis
@@ -123,32 +132,50 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
-            ) : (
+            )}
+
+            {!isFarmer && !isAdmin && (
+              <SidebarGroup>
+                <SidebarGroupLabel>Field Officer</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <NavLink href="/officer/dashboard" icon={LayoutDashboard} isActive={location === "/officer/dashboard"}>
+                      My Tasks
+                    </NavLink>
+                    <NavLink href="/farmers" icon={Users} isActive={location.startsWith("/farmers")}>
+                      Farmers Directory
+                    </NavLink>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
+
+            {isAdmin && (
               <>
                 <SidebarGroup>
                   <SidebarGroupLabel>Platform</SidebarGroupLabel>
                   <SidebarGroupContent>
                     <SidebarMenu>
-                      <NavLink href="/dashboard" icon={LayoutDashboard} isActive={location === "/dashboard"}>
+                      <NavLink href="/admin/dashboard" icon={LayoutDashboard} isActive={location === "/admin/dashboard" || location === "/dashboard"}>
                         Dashboard
                       </NavLink>
                       <NavLink href="/farmers" icon={Users} isActive={location.startsWith("/farmers")}>
                         Farmers
                       </NavLink>
-                      <NavLink href="/devices" icon={Cpu} isActive={location.startsWith("/devices")}>
-                        Devices
+                      <NavLink href="/admin/deployments" icon={Cpu} isActive={location === "/admin/deployments"}>
+                        Deployments
+                      </NavLink>
+                      <NavLink href="/admin/devices" icon={Cpu} isActive={location === "/admin/devices"}>
+                        All Devices
+                      </NavLink>
+                      <NavLink href="/admin/inventory" icon={ScanLine} isActive={location === "/admin/inventory"}>
+                        Hardware Inventory
+                      </NavLink>
+                      <NavLink href="/admin/maintenance" icon={ShieldCheck} isActive={location === "/admin/maintenance"}>
+                        Maintenance Logs
                       </NavLink>
                       <NavLink href="/alerts" icon={Bell} isActive={location === "/alerts"}>
                         Alerts
-                      </NavLink>
-                      <NavLink href="/recommendations" icon={Lightbulb} isActive={location === "/recommendations"}>
-                        Recommendations
-                      </NavLink>
-                      <NavLink href="/crop-diagnosis" icon={ScanLine} isActive={location === "/crop-diagnosis"}>
-                        Crop Diagnosis
-                      </NavLink>
-                      <NavLink href="/ai-assistant" icon={Bot} isActive={location === "/ai-assistant"}>
-                        AI Assistant
                       </NavLink>
                       <NavLink href="/analytics" icon={LineChart} isActive={location === "/analytics"}>
                         Analytics
@@ -157,24 +184,22 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   </SidebarGroupContent>
                 </SidebarGroup>
 
-                {/* Team section — all internal staff can manage staff accounts */}
-                {!isFarmer && (
-                  <SidebarGroup>
-                    <SidebarGroupLabel>Administration</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                      <SidebarMenu>
-                        <NavLink href="/staff" icon={UsersRound} isActive={location === "/staff"}>
-                          Staff
-                        </NavLink>
-                        {isAdmin && (
-                          <NavLink href="/achievements" icon={Lightbulb} isActive={location === "/achievements"}>
-                            Achievements
-                          </NavLink>
-                        )}
-                      </SidebarMenu>
-                    </SidebarGroupContent>
-                  </SidebarGroup>
-                )}
+                <SidebarGroup>
+                  <SidebarGroupLabel>Administration</SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      <NavLink href="/staff" icon={UsersRound} isActive={location === "/staff"}>
+                        Staff
+                      </NavLink>
+                      <NavLink href="/achievements" icon={Lightbulb} isActive={location === "/achievements"}>
+                        Achievements
+                      </NavLink>
+                      <NavLink href="/admin/logs" icon={KeyRound} isActive={location === "/admin/logs"}>
+                        System Audit Logs
+                      </NavLink>
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
               </>
             )}
           </SidebarContent>
