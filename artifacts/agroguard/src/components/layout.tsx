@@ -51,7 +51,9 @@ import {
   KeyRound,
   ScanLine,
   Bot,
+  Star,
 } from "lucide-react";
+import { openPricingModal } from "@/components/pricing-modal";
 
 /** Human-readable role labels */
 const ROLE_LABELS: Record<string, string> = {
@@ -176,6 +178,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </>
             )}
           </SidebarContent>
+
+          {isFarmer && (
+            <div className="p-4 mt-auto border-t border-sidebar-border">
+              <button 
+                onClick={openPricingModal}
+                className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg px-4 py-2 text-sm font-semibold transition-colors shadow-sm"
+              >
+                <Star className="h-4 w-4 fill-white" /> Upgrade Plan
+              </button>
+            </div>
+          )}
         </Sidebar>
 
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
