@@ -24,6 +24,10 @@ tags:
     description: Dashboard analytics
   - name: staff
     description: Staff management
+  - name: weather
+    description: Weather Intelligence
+  - name: analytics
+    description: Executive Analytics
 
 paths:
   /healthz:
@@ -880,6 +884,45 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/SystemLog"
+
+  /weather:
+    get:
+      operationId: getWeather
+      tags: [weather]
+      summary: Get weather intelligence for a farmer's default farm
+      responses:
+        "200":
+          description: Weather data retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeatherResponse"
+
+  /analytics/executive:
+    get:
+      operationId: getExecutiveAnalytics
+      tags: [analytics]
+      summary: Get executive dashboard analytics
+      responses:
+        "200":
+          description: Analytics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExecutiveAnalytics"
+
+  /ai/summary:
+    get:
+      operationId: getAiSummary
+      tags: [recommendations]
+      summary: Get a natural language farm condition summary
+      responses:
+        "200":
+          description: Summary generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiSummaryResponse"
 
 components:
   schemas:
@@ -1899,3 +1942,42 @@ components:
         createdAt:
           type: string
           format: date-time
+
+    WeatherResponse:
+      type: object
+      required: [temperature, condition, precipitationProb, recommendation]
+      properties:
+        temperature:
+          type: number
+        condition:
+          type: string
+        precipitationProb:
+          type: number
+        recommendation:
+          type: string
+
+    ExecutiveAnalytics:
+      type: object
+      required: [totalFarmers, activeDevices, criticalDevices, hardwareSales, monthlyGrowth]
+      properties:
+        totalFarmers:
+          type: integer
+        activeDevices:
+          type: integer
+        criticalDevices:
+          type: integer
+        hardwareSales:
+          type: number
+        monthlyGrowth:
+          type: number
+
+    AiSummaryResponse:
+      type: object
+      required: [summary, farmHealthScore, tasksDueToday]
+      properties:
+        summary:
+          type: string
+        farmHealthScore:
+          type: number
+        tasksDueToday:
+          type: integer

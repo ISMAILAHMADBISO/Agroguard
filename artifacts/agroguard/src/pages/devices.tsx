@@ -446,45 +446,59 @@ export default function DevicesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by name or device ID..."
-          className="pl-8"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+      {/* Empty state for Farmers */}
+      {user?.userType === "farmer" && devices?.length === 0 ? (
+        <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-xl bg-muted/20">
+          <Cpu className="h-16 w-16 text-muted-foreground mb-4" />
+          <h3 className="text-xl font-bold mb-2">You don't have any active devices yet</h3>
+          <p className="text-muted-foreground max-w-md mb-6">
+            Unlock the full potential of your farm by installing AgroGuard smart sensors. Monitor soil moisture, temperature, and receive AI-driven alerts in real-time.
+          </p>
+          <Button asChild size="lg">
+            <Link href="/shop">Buy Hardware</Link>
+          </Button>
+        </div>
+      ) : (
+        <>
+          {/* Search */}
+          <div className="relative max-w-sm mb-4">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or device ID..."
+              className="pl-8"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
 
-      {/* Table */}
-      <div className="border rounded-lg bg-card overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead>Device</TableHead>
-              <TableHead>Hardware ID</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Battery</TableHead>
-              <TableHead>Assigned Farmer</TableHead>
-              <TableHead>Last Seen</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
-                  Loading devices...
-                </TableCell>
-              </TableRow>
-            ) : filteredDevices?.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
-                  No devices found. Register your first ESP32 sensor.
-                </TableCell>
-              </TableRow>
-            ) : (
+          {/* Table */}
+          <div className="border rounded-lg bg-card overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead>Device</TableHead>
+                  <TableHead>Hardware ID</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Battery</TableHead>
+                  <TableHead>Assigned Farmer</TableHead>
+                  <TableHead>Last Seen</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                      Loading devices...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredDevices?.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                      No devices found matching your search.
+                    </TableCell>
+                  </TableRow>
+                ) : (
               filteredDevices?.map((device) => (
                 <TableRow key={device.id} className="hover:bg-muted/30 transition-colors">
                   {/* Device name */}
@@ -625,6 +639,8 @@ export default function DevicesPage() {
           </TableBody>
         </Table>
       </div>
+      </>
+      )}
     </div>
   );
 }

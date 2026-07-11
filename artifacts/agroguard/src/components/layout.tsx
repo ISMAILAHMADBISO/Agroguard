@@ -52,6 +52,7 @@ import {
   ScanLine,
   Bot,
   Star,
+  BookOpen,
 } from "lucide-react";
 import { openPricingModal } from "@/components/pricing-modal";
 
@@ -129,6 +130,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     <NavLink href="/ai-assistant" icon={Bot} isActive={location === "/ai-assistant"}>
                       AI Assistant
                     </NavLink>
+                    <NavLink href="/command-center" icon={LayoutDashboard} isActive={location === "/command-center"}>
+                      Command Center
+                    </NavLink>
+                    <NavLink href="/knowledge" icon={BookOpen} isActive={location === "/knowledge"}>
+                      Knowledge Centre
+                    </NavLink>
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
@@ -144,6 +151,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     </NavLink>
                     <NavLink href="/farmers" icon={Users} isActive={location.startsWith("/farmers")}>
                       Farmers Directory
+                    </NavLink>
+                    <NavLink href="/knowledge" icon={BookOpen} isActive={location === "/knowledge"}>
+                      Knowledge Centre
                     </NavLink>
                   </SidebarMenu>
                 </SidebarGroupContent>
@@ -179,6 +189,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                       </NavLink>
                       <NavLink href="/analytics" icon={LineChart} isActive={location === "/analytics"}>
                         Analytics
+                      </NavLink>
+                      <NavLink href="/knowledge" icon={BookOpen} isActive={location === "/knowledge"}>
+                        Knowledge Centre
                       </NavLink>
                     </SidebarMenu>
                   </SidebarGroupContent>

@@ -20,6 +20,8 @@ import ordersRouter from "./orders";
 import deploymentsRouter from "./deployments";
 import inventoryRouter from "./inventory";
 import maintenanceRouter from "./maintenance";
+import { weatherRouter } from "./weather";
+import { analyticsRouter } from "./analytics";
 
 const router: IRouter = Router();
 
@@ -39,5 +41,7 @@ router.use(ordersRouter);
 router.use(deploymentsRouter);
 router.use(inventoryRouter);
 router.use(maintenanceRouter);
+router.use("/weather", weatherRouter);
+router.use("/analytics", analyticsRouter);
 
 export default router;

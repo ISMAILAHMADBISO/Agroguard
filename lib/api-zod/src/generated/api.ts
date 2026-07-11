@@ -915,3 +915,36 @@ export const ListSystemLogsResponseItem = zod.object({
 export const ListSystemLogsResponse = zod.array(ListSystemLogsResponseItem)
 
 
+/**
+ * @summary Get weather intelligence for a farmer's default farm
+ */
+export const GetWeatherResponse = zod.object({
+  "temperature": zod.number(),
+  "condition": zod.string(),
+  "precipitationProb": zod.number(),
+  "recommendation": zod.string()
+})
+
+
+/**
+ * @summary Get executive dashboard analytics
+ */
+export const GetExecutiveAnalyticsResponse = zod.object({
+  "totalFarmers": zod.number(),
+  "activeDevices": zod.number(),
+  "criticalDevices": zod.number(),
+  "hardwareSales": zod.number(),
+  "monthlyGrowth": zod.number()
+})
+
+
+/**
+ * @summary Get a natural language farm condition summary
+ */
+export const GetAiSummaryResponse = zod.object({
+  "summary": zod.string(),
+  "farmHealthScore": zod.number(),
+  "tasksDueToday": zod.number()
+})
+
+

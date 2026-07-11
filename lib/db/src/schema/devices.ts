@@ -6,6 +6,7 @@
 import { pgTable, text, serial, timestamp, real, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { farmsTable } from "./farms";
 
 export const devicesTable = pgTable("devices", {
   id: serial("id").primaryKey(),
@@ -14,6 +15,8 @@ export const devicesTable = pgTable("devices", {
   name: text("name").notNull(),
   /** FK to farmers.id — null means unassigned */
   farmerId: integer("farmer_id"),
+  /** FK to farms.id — which specific farm this device is in */
+  farmId: integer("farm_id").references(() => farmsTable.id),
   location: text("location"),
   /** online | offline | maintenance */
   status: text("status").notNull().default("offline"),

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useListDevices, useListFarmers } from "@workspace/api-client-react";
+import { useListDevices, useListFarmers, useGetExecutiveAnalytics } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, Activity, Cpu, Users, BellRing, MapPin } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
@@ -44,8 +44,9 @@ const grayIcon = new L.Icon({
 export default function AdminDashboardPage() {
   const { data: devices, isLoading: isDevicesLoading } = useListDevices();
   const { data: farmers, isLoading: isFarmersLoading } = useListFarmers();
+  const { data: analytics, isLoading: isAnalyticsLoading } = useGetExecutiveAnalytics();
 
-  const isLoading = isDevicesLoading || isFarmersLoading;
+  const isLoading = isDevicesLoading || isFarmersLoading || isAnalyticsLoading;
 
   if (isLoading) {
     return <div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -106,6 +107,21 @@ export default function AdminDashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent><div className="text-3xl font-bold text-red-600">{criticalCount}</div></CardContent>
+        </Card>
+
+        {/* New Analytics Cards */}
+        <Card className="border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-purple-500/5 md:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center justify-between">
+              Hardware Sales Revenue
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-purple-600">
+              ₦{(analytics?.hardwareSales || 0).toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">+{analytics?.monthlyGrowth || 0}% from last month</p>
+          </CardContent>
         </Card>
       </div>
 

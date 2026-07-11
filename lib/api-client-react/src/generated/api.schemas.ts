@@ -1001,3 +1001,24 @@ export interface SystemLog {
   createdAt: string;
 }
 
+export interface WeatherResponse {
+  temperature: number;
+  condition: string;
+  precipitationProb: number;
+  recommendation: string;
+}
+
+export interface ExecutiveAnalytics {
+  totalFarmers: number;
+  activeDevices: number;
+  criticalDevices: number;
+  hardwareSales: number;
+  monthlyGrowth: number;
+}
+
+export interface AiSummaryResponse {
+  summary: string;
+  farmHealthScore: number;
+  tasksDueToday: number;
+}
+

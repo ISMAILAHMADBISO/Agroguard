@@ -25,6 +25,7 @@ import type {
   AddInventoryInput,
   AiConversation,
   AiConversationSummary,
+  AiSummaryResponse,
   Alert,
   AlertInput,
   ChatInput,
@@ -38,6 +39,7 @@ import type {
   DeviceUpdate,
   DiseaseDetectionInput,
   DiseaseReport,
+  ExecutiveAnalytics,
   FarmOverview,
   Farmer,
   FarmerCreateResult,
@@ -60,7 +62,8 @@ import type {
   StaffUpdate,
   SystemLog,
   UpdateDeploymentStatusInput,
-  VerifyPaymentInput
+  VerifyPaymentInput,
+  WeatherResponse
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -3453,6 +3456,237 @@ export function useListSystemLogs<TData = Awaited<ReturnType<typeof listSystemLo
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListSystemLogsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetWeatherUrl = () => {
+
+
+
+
+  return `/api/weather`
+}
+
+/**
+ * @summary Get weather intelligence for a farmer's default farm
+ */
+export const getWeather = async ( options?: RequestInit): Promise<WeatherResponse> => {
+
+  return customFetch<WeatherResponse>(getGetWeatherUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWeatherQueryKey = () => {
+    return [
+    `/api/weather`
+    ] as const;
+    }
+
+
+export const getGetWeatherQueryOptions = <TData = Awaited<ReturnType<typeof getWeather>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWeather>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWeatherQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWeather>>> = ({ signal }) => getWeather({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWeather>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetWeatherQueryResult = NonNullable<Awaited<ReturnType<typeof getWeather>>>
+export type GetWeatherQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get weather intelligence for a farmer's default farm
+ */
+
+export function useGetWeather<TData = Awaited<ReturnType<typeof getWeather>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWeather>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetWeatherQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetExecutiveAnalyticsUrl = () => {
+
+
+
+
+  return `/api/analytics/executive`
+}
+
+/**
+ * @summary Get executive dashboard analytics
+ */
+export const getExecutiveAnalytics = async ( options?: RequestInit): Promise<ExecutiveAnalytics> => {
+
+  return customFetch<ExecutiveAnalytics>(getGetExecutiveAnalyticsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetExecutiveAnalyticsQueryKey = () => {
+    return [
+    `/api/analytics/executive`
+    ] as const;
+    }
+
+
+export const getGetExecutiveAnalyticsQueryOptions = <TData = Awaited<ReturnType<typeof getExecutiveAnalytics>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getExecutiveAnalytics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetExecutiveAnalyticsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getExecutiveAnalytics>>> = ({ signal }) => getExecutiveAnalytics({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getExecutiveAnalytics>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetExecutiveAnalyticsQueryResult = NonNullable<Awaited<ReturnType<typeof getExecutiveAnalytics>>>
+export type GetExecutiveAnalyticsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get executive dashboard analytics
+ */
+
+export function useGetExecutiveAnalytics<TData = Awaited<ReturnType<typeof getExecutiveAnalytics>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getExecutiveAnalytics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetExecutiveAnalyticsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetAiSummaryUrl = () => {
+
+
+
+
+  return `/api/ai/summary`
+}
+
+/**
+ * @summary Get a natural language farm condition summary
+ */
+export const getAiSummary = async ( options?: RequestInit): Promise<AiSummaryResponse> => {
+
+  return customFetch<AiSummaryResponse>(getGetAiSummaryUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAiSummaryQueryKey = () => {
+    return [
+    `/api/ai/summary`
+    ] as const;
+    }
+
+
+export const getGetAiSummaryQueryOptions = <TData = Awaited<ReturnType<typeof getAiSummary>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAiSummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAiSummaryQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAiSummary>>> = ({ signal }) => getAiSummary({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAiSummary>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAiSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof getAiSummary>>>
+export type GetAiSummaryQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get a natural language farm condition summary
+ */
+
+export function useGetAiSummary<TData = Awaited<ReturnType<typeof getAiSummary>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAiSummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAiSummaryQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
