@@ -11,7 +11,7 @@
  *                   (used by the analytics dashboard; requires session auth).
  */
 import { Router, type IRouter } from "express";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { db, sensorReadingsTable, devicesTable, activitiesTable, alertsTable, farmThresholdsTable } from "@workspace/db";
 import {
   CreateReadingBody,
@@ -86,17 +86,31 @@ router.post("/readings", async (req, res): Promise<void> => {
       alertMessage = `Soil moisture high (${moisture}%) – Status: ${statusLabel}`;
     }
     if (alertMessage) {
-      await db
-        .insert(alertsTable)
-        .values({
-          farmerId: device.farmerId ?? null,
-          deviceId: device.id,
-          type: 'soil_moisture',
-          severity: 'high',
-          message: alertMessage,
-          status: 'active',
-        })
-        .returning();
+      // Prevent duplicate active alerts
+      const existing = await db
+        .select()
+        .from(alertsTable)
+        .where(
+          and(
+            eq(alertsTable.deviceId, device.id),
+            eq(alertsTable.type, 'soil_moisture'),
+            eq(alertsTable.status, 'active')
+          )
+        );
+
+      if (existing.length === 0) {
+        await db
+          .insert(alertsTable)
+          .values({
+            farmerId: device.farmerId ?? null,
+            deviceId: device.id,
+            type: 'soil_moisture',
+            severity: 'high',
+            message: alertMessage,
+            status: 'active',
+          })
+          .returning();
+      }
     }
 
     const [reading] = await db

@@ -109,11 +109,6 @@ export default function Dashboard() {
                     <p className="text-xs text-muted-foreground">
                       {new Date(activity.timestamp).toLocaleString()}
                     </p>
-                    {activity.type === "reading" && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Moisture: {(activity as any).soilMoisture?.toFixed(1)}%, Temp: {(activity as any).temperature?.toFixed(1)}°C, pH: {(activity as any).ph?.toFixed(2)}, N: {(activity as any).nitrogen}, P: {(activity as any).phosphorus}, K: {(activity as any).potassium}
-                      </p>
-                    )}
                   </div>
                 </div>
               ))}

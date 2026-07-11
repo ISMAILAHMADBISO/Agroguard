@@ -33,7 +33,12 @@ export default function MyFarmPage() {
   const { data: alerts } = useListAlerts();
   const { data: recommendations } = useListRecommendations();
 
-  const openAlerts = (alerts ?? []).filter((a) => a.status !== "resolved");
+  const openAlerts = (alerts ?? []).filter((a) => a.status !== "resolved").sort((a, b) => {
+    const severityWeight = { critical: 3, high: 2, medium: 1, low: 0 };
+    const weightA = severityWeight[a.severity as keyof typeof severityWeight] ?? 0;
+    const weightB = severityWeight[b.severity as keyof typeof severityWeight] ?? 0;
+    return weightB - weightA;
+  });
   const activeRecs = (recommendations ?? []).filter((r) => r.status !== "applied");
   const onlineDevices = (devices ?? []).filter((d) => d.status === "online").length;
 
