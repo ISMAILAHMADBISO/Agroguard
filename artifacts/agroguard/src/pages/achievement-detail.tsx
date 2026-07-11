@@ -18,6 +18,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useEffect } from "react";
+import { achievements as staticAchievements } from "@/data/achievements";
 
 export default function AchievementDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -44,7 +45,16 @@ export default function AchievementDetailPage() {
     );
   }
 
-  const currentAchievement = achievements?.find((a: any) => a.slug === slug);
+  const allAchievements = [
+    ...staticAchievements.map(a => ({
+      ...a,
+      imageUrl: a.image,
+      content: a.content.join("\n\n")
+    })),
+    ...(achievements || [])
+  ];
+
+  const currentAchievement = allAchievements.find((a: any) => a.slug === slug);
 
   if (!currentAchievement) {
     return (
@@ -58,9 +68,9 @@ export default function AchievementDetailPage() {
     );
   }
 
-  const currentIndex = achievements?.findIndex((a: any) => a.slug === slug);
-  const prevAchievement = currentIndex > 0 ? achievements[currentIndex - 1] : null;
-  const nextAchievement = currentIndex < achievements.length - 1 ? achievements[currentIndex + 1] : null;
+  const currentIndex = allAchievements.findIndex((a: any) => a.slug === slug);
+  const prevAchievement = currentIndex > 0 ? allAchievements[currentIndex - 1] : null;
+  const nextAchievement = currentIndex < allAchievements.length - 1 ? allAchievements[currentIndex + 1] : null;
 
   const currentUrl = window.location.href;
 

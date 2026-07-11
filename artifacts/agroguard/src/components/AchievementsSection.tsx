@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { achievements as staticAchievements } from "@/data/achievements";
 
 export default function AchievementsSection() {
   const { data: achievements, isLoading } = useQuery({
@@ -11,6 +12,15 @@ export default function AchievementsSection() {
       return res.json();
     },
   });
+
+  const allAchievements = [
+    ...staticAchievements.map(a => ({
+      ...a,
+      imageUrl: a.image,
+      content: a.content.join("\n\n")
+    })),
+    ...(achievements || [])
+  ];
 
   return (
     <section className="py-24 bg-muted/20 border-y border-border">
@@ -32,7 +42,7 @@ export default function AchievementsSection() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {achievements?.map((achievement: any) => (
+            {allAchievements.map((achievement: any) => (
               <Link key={achievement.slug} href={`/achievements/${achievement.slug}`}>
                 <div className="group flex flex-col h-full bg-white rounded-2xl border border-border shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer">
                   {/* Featured Image */}
