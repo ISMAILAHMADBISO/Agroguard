@@ -4,6 +4,7 @@
  * All data is RBAC-scoped server-side to the farmer's own records.
  */
 import { useAuth } from "@/context/auth";
+import { Link } from "wouter";
 import {
   useGetFarmer,
   useGetFarmerDevices,
@@ -160,7 +161,14 @@ export default function MyFarmPage() {
           </CardHeader>
           <CardContent>
             {(devices ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">No devices registered yet.</p>
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <p className="text-sm text-muted-foreground mb-4">No devices registered yet. Get a smart sensor to monitor your farm in real-time.</p>
+                <Link href="/shop">
+                  <Button variant="outline">
+                    <Cpu className="mr-2 h-4 w-4" /> Purchase Device
+                  </Button>
+                </Link>
+              </div>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
                 {devices!.map((d) => (

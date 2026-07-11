@@ -212,6 +212,7 @@ export default function AiAssistantPage() {
                         { id: c.id },
                         {
                           onSuccess: () => {
+                            toast({ title: "Successfully deleted chat" });
                             queryClient.invalidateQueries({ queryKey: getListAiConversationsQueryKey() });
                             if (conversationId === c.id) {
                               startNew();
