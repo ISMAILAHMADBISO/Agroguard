@@ -12,6 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getGetFarmerQueryKey } from "@workspace/api-client-react";
 import { useAuth } from "@/context/auth";
 import { useToast } from "@/hooks/use-toast";
+import { usePaystackPayment } from "react-paystack";
 
 let openModalFn: (() => void) | null = null;
 
@@ -61,20 +62,31 @@ export function PricingModal() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  // Track which plan the user clicked so we can charge the right amount
+  const [selectedPlanAmount, setSelectedPlanAmount] = useState(0);
+  const [selectedPlanName, setSelectedPlanName] = useState("");
 
   useEffect(() => {
     openModalFn = () => setIsOpen(true);
     return () => { openModalFn = null; };
   }, []);
 
-  const handleSelectPlan = async (planName: string) => {
-    // Simulated Paystack Payment Flow for the Pitch
+  // Paystack Configuration
+  const config = {
+    reference: "AGRO_" + new Date().getTime().toString(),
+    email: user?.email || "farmer@agroguard.test",
+    amount: selectedPlanAmount * 100, // Paystack amount is in kobo (multiply by 100)
+    // ⚠️ IMPORTANT: Replace this with your actual Paystack Public Key
+    publicKey: "pk_test_REPLACE_THIS_WITH_YOUR_PAYSTACK_PUBLIC_KEY", 
+  };
+  
+  const initializePayment = usePaystackPayment(config);
+
+  const onSuccess = async (reference: any) => {
     setIsSimulatingPayment(true);
-    
-    // Simulate payment loading
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
     try {
+      // Payment was successful on Paystack, now upgrade the user in our DB
       const res = await fetch("/api/farmers/me/upgrade", { method: "POST" });
       if (!res.ok) throw new Error("Upgrade failed");
       
@@ -84,14 +96,31 @@ export function PricingModal() {
       
       toast({ 
         title: `Payment Successful!`, 
-        description: `You are now upgraded to the ${planName} plan.` 
+        description: `You are now upgraded to the ${selectedPlanName} plan.` 
       });
       setIsOpen(false);
     } catch {
-      toast({ title: "Payment failed", variant: "destructive" });
+      toast({ title: "Account Upgrade Failed", description: "Payment was successful but we couldn't upgrade your account. Please contact support.", variant: "destructive" });
     } finally {
       setIsSimulatingPayment(false);
     }
+  };
+
+  const onClose = () => {
+    // User closed the Paystack modal without completing payment
+    toast({ title: "Payment Cancelled", description: "You cancelled the payment.", variant: "destructive" });
+  };
+
+  const handleSelectPlan = (planName: string, priceString: string) => {
+    // Parse the price string (e.g. "₦2,500" -> 2500)
+    const amountNum = parseInt(priceString.replace(/\D/g, ""), 10);
+    setSelectedPlanAmount(amountNum);
+    setSelectedPlanName(planName);
+    
+    // We use setTimeout to ensure React state (amount) updates before initializing Paystack
+    setTimeout(() => {
+      initializePayment({ onSuccess, onClose });
+    }, 100);
   };
 
   return (
@@ -149,7 +178,7 @@ export function PricingModal() {
                 </ul>
                 
                 <Button 
-                  onClick={() => !plan.disabled && handleSelectPlan(plan.name)}
+                  onClick={() => !plan.disabled && handleSelectPlan(plan.name, plan.price)}
                   disabled={plan.disabled}
                   variant={plan.highlighted ? "default" : "outline"}
                   className={plan.highlighted ? "w-full bg-amber-500 hover:bg-amber-600 text-white" : "w-full"}

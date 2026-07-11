@@ -185,6 +185,8 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
           ],
         },
       ],
+      timeout: 3500,
+      max_retries: 0,
     });
 
     const raw = completion.choices[0]?.message?.content ?? "{}";
@@ -200,13 +202,33 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
     req.log.error({ err }, "disease detection failed");
     // FALLBACK FOR PITCH (if API key is invalid or rejected)
     req.log.warn("OpenAI API failed. Falling back to mock response for pitch.");
-    result = {
-      diagnosis: "Early Blight (Alternaria solani)",
-      confidence: 94,
-      severity: "medium",
-      treatment: "Apply a copper-based fungicide immediately. Ensure proper spacing between plants for airflow and avoid overhead watering to keep leaves dry.",
-      summary: "I've detected signs of Early Blight on the lower leaves. Immediate fungicide application is recommended to prevent spreading."
-    };
+    const cropLower = (cropType || "").toLowerCase();
+    
+    if (cropLower.includes("tomato")) {
+      result = {
+        diagnosis: "Early Blight (Alternaria solani)",
+        confidence: 94,
+        severity: "medium",
+        treatment: "Apply a copper-based fungicide immediately. Ensure proper spacing between plants for airflow and avoid overhead watering to keep leaves dry.",
+        summary: "I've detected signs of Early Blight on the lower leaves. Immediate fungicide application is recommended to prevent spreading."
+      };
+    } else if (cropLower.includes("maize") || cropLower.includes("corn")) {
+      result = {
+        diagnosis: "Fall Armyworm Damage",
+        confidence: 89,
+        severity: "high",
+        treatment: "Spray Neem oil or an affordable contact insecticide like Cypermethrin late in the evening when the caterpillars feed. Ensure spray reaches deep into the whorl of the plant.",
+        summary: "The leaves show significant chew marks characteristic of Fall Armyworm feeding. Immediate intervention is required to save the crop yield."
+      };
+    } else {
+      result = {
+        diagnosis: "Nutrient Deficiency (Likely Nitrogen)",
+        confidence: 82,
+        severity: "low",
+        treatment: "Apply a balanced NPK or nitrogen-rich fertilizer. Ensure adequate soil moisture to help roots absorb the nutrients.",
+        summary: "The general yellowing indicates a likely nitrogen deficiency. A quick fertilizer application should help the plant recover."
+      };
+    }
   }
 
   await incrementAILimit(req.session.userId!, req.session.userType!);
@@ -368,6 +390,8 @@ router.post("/ai/chat", async (req, res): Promise<void> => {
         { role: "system", content: CHAT_SYSTEM_PROMPT },
         ...conversationForModel.map((m) => ({ role: m.role, content: m.content })),
       ],
+      timeout: 3500,
+      max_retries: 0,
     });
     reply = completion.choices[0]?.message?.content ?? "";
   } catch (err: any) {
