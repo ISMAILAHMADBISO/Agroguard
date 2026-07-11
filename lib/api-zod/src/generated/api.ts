@@ -723,3 +723,42 @@ export const VerifyPaymentResponse = zod.object({
 })
 
 
+/**
+ * @summary List hardware orders (scoped by role - farmers see their own, admins see all)
+ */
+export const ListOrdersResponseItem = zod.object({
+  "id": zod.number(),
+  "farmerId": zod.number(),
+  "productType": zod.enum(['standard', 'premium']),
+  "price": zod.number(),
+  "farmName": zod.string().nullish(),
+  "farmAddress": zod.string(),
+  "state": zod.string(),
+  "lga": zod.string(),
+  "farmSizeHectares": zod.number().nullish(),
+  "cropTypes": zod.string().nullish(),
+  "contactPhone": zod.string(),
+  "paystackReference": zod.string().nullish(),
+  "status": zod.enum(['pending_review', 'payment_verified', 'approved', 'installation_scheduled', 'officer_assigned', 'installation_in_progress', 'installed', 'activated', 'completed', 'cancelled']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional()
+})
+export const ListOrdersResponse = zod.array(ListOrdersResponseItem)
+
+
+/**
+ * @summary Create a new hardware order after Paystack payment
+ */
+export const CheckoutOrderBody = zod.object({
+  "productType": zod.enum(['standard', 'premium']),
+  "farmName": zod.string().optional(),
+  "farmAddress": zod.string(),
+  "state": zod.string(),
+  "lga": zod.string(),
+  "farmSizeHectares": zod.number().optional(),
+  "cropTypes": zod.string().optional(),
+  "contactPhone": zod.string(),
+  "paystackReference": zod.string()
+})
+
+

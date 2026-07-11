@@ -779,3 +779,75 @@ export interface VerifyPaymentResponse {
   plan: VerifyPaymentResponsePlan;
 }
 
+export type OrderProductType = typeof OrderProductType[keyof typeof OrderProductType];
+
+
+export const OrderProductType = {
+  standard: 'standard',
+  premium: 'premium',
+} as const;
+
+export type OrderStatus = typeof OrderStatus[keyof typeof OrderStatus];
+
+
+export const OrderStatus = {
+  pending_review: 'pending_review',
+  payment_verified: 'payment_verified',
+  approved: 'approved',
+  installation_scheduled: 'installation_scheduled',
+  officer_assigned: 'officer_assigned',
+  installation_in_progress: 'installation_in_progress',
+  installed: 'installed',
+  activated: 'activated',
+  completed: 'completed',
+  cancelled: 'cancelled',
+} as const;
+
+export interface Order {
+  id: number;
+  farmerId: number;
+  productType: OrderProductType;
+  price: number;
+  /** @nullable */
+  farmName?: string | null;
+  farmAddress: string;
+  state: string;
+  lga: string;
+  /** @nullable */
+  farmSizeHectares?: number | null;
+  /** @nullable */
+  cropTypes?: string | null;
+  contactPhone: string;
+  /** @nullable */
+  paystackReference?: string | null;
+  status: OrderStatus;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type CheckoutInputProductType = typeof CheckoutInputProductType[keyof typeof CheckoutInputProductType];
+
+
+export const CheckoutInputProductType = {
+  standard: 'standard',
+  premium: 'premium',
+} as const;
+
+export interface CheckoutInput {
+  productType: CheckoutInputProductType;
+  farmName?: string;
+  farmAddress: string;
+  state: string;
+  lga: string;
+  farmSizeHectares?: number;
+  cropTypes?: string;
+  contactPhone: string;
+  paystackReference: string;
+}
+
+export interface CheckoutResponse {
+  status: string;
+  message: string;
+  orderId: number;
+}
+

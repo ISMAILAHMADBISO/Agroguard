@@ -720,6 +720,42 @@ paths:
         "400":
           description: Invalid request or verification failed
 
+  /orders:
+    get:
+      operationId: listOrders
+      tags: [orders]
+      summary: List hardware orders (scoped by role - farmers see their own, admins see all)
+      responses:
+        "200":
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+
+  /orders/checkout:
+    post:
+      operationId: checkoutOrder
+      tags: [orders]
+      summary: Create a new hardware order after Paystack payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutInput"
+      responses:
+        "201":
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutResponse"
+        "400":
+          description: Invalid request or verification failed
+
 components:
   schemas:
     HealthStatus:
@@ -1504,3 +1540,78 @@ components:
         plan:
           type: string
           enum: [free, basic, standard, premium]
+
+    # ── ORDERS ───────────────────────────────────────────────────────────────────
+    Order:
+      type: object
+      required: [id, farmerId, productType, price, farmAddress, state, lga, contactPhone, status, createdAt]
+      properties:
+        id:
+          type: integer
+        farmerId:
+          type: integer
+        productType:
+          type: string
+          enum: [standard, premium]
+        price:
+          type: integer
+        farmName:
+          type: ["string", "null"]
+        farmAddress:
+          type: string
+        state:
+          type: string
+        lga:
+          type: string
+        farmSizeHectares:
+          type: ["number", "null"]
+        cropTypes:
+          type: ["string", "null"]
+        contactPhone:
+          type: string
+        paystackReference:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending_review, payment_verified, approved, installation_scheduled, officer_assigned, installation_in_progress, installed, activated, completed, cancelled]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CheckoutInput:
+      type: object
+      required: [productType, farmAddress, state, lga, contactPhone, paystackReference]
+      properties:
+        productType:
+          type: string
+          enum: [standard, premium]
+        farmName:
+          type: string
+        farmAddress:
+          type: string
+        state:
+          type: string
+        lga:
+          type: string
+        farmSizeHectares:
+          type: number
+        cropTypes:
+          type: string
+        contactPhone:
+          type: string
+        paystackReference:
+          type: string
+
+    CheckoutResponse:
+      type: object
+      required: [status, message, orderId]
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        orderId:
+          type: integer
