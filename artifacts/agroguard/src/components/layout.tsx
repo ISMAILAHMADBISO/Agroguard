@@ -155,6 +155,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     <NavLink href="/knowledge" icon={BookOpen} isActive={location === "/knowledge"}>
                       Knowledge Centre
                     </NavLink>
+                    <NavLink href="/admin/knowledge" icon={BookOpen} isActive={location === "/admin/knowledge"}>
+                      Manage Knowledge
+                    </NavLink>
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>

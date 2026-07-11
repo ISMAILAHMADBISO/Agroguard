@@ -4,11 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, BookOpen, Bug, Leaf, Lightbulb, PlayCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useListKnowledge } from "@workspace/api-client-react";
+import type { KnowledgeArticle } from "@workspace/api-zod";
 
 export default function KnowledgeCentre() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [selectedArticle, setSelectedArticle] = useState<KnowledgeArticle | null>(null);
 
   const { data: articles, isLoading } = useListKnowledge();
 
@@ -97,7 +100,7 @@ export default function KnowledgeCentre() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <Button variant="ghost" className="w-full justify-start text-primary -ml-4" size="sm">
+                  <Button variant="ghost" className="w-full justify-start text-primary -ml-4" size="sm" onClick={() => setSelectedArticle(article)}>
                     {article.videoUrl ? "Watch Video →" : "Read Article →"}
                   </Button>
                 </CardContent>
@@ -105,6 +108,33 @@ export default function KnowledgeCentre() {
             );
           })}
         </div>
+      )}
+
+      {selectedArticle && (
+        <Dialog open={!!selectedArticle} onOpenChange={(open) => !open && setSelectedArticle(null)}>
+          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="secondary">{selectedArticle.category}</Badge>
+              </div>
+              <DialogTitle className="text-2xl">{selectedArticle.title}</DialogTitle>
+            </DialogHeader>
+            <div className="mt-4 space-y-4">
+              {selectedArticle.videoUrl && (
+                <div className="aspect-video w-full rounded-md overflow-hidden bg-black/5">
+                  <iframe 
+                    src={selectedArticle.videoUrl.replace("watch?v=", "embed/")} 
+                    className="w-full h-full"
+                    allowFullScreen
+                  />
+                </div>
+              )}
+              <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none whitespace-pre-wrap leading-relaxed text-muted-foreground">
+                {selectedArticle.content}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
