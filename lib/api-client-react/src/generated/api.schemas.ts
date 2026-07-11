@@ -467,6 +467,7 @@ export const StaffMemberRole = {
   admin: 'admin',
   agronomist: 'agronomist',
   staff: 'staff',
+  field_officer: 'field_officer',
 } as const;
 
 export type StaffMemberStatus = typeof StaffMemberStatus[keyof typeof StaffMemberStatus];
@@ -498,6 +499,7 @@ export const StaffCreateResultRole = {
   admin: 'admin',
   agronomist: 'agronomist',
   staff: 'staff',
+  field_officer: 'field_officer',
 } as const;
 
 export type StaffCreateResultStatus = typeof StaffCreateResultStatus[keyof typeof StaffCreateResultStatus];
@@ -531,6 +533,7 @@ export const StaffInputRole = {
   admin: 'admin',
   agronomist: 'agronomist',
   staff: 'staff',
+  field_officer: 'field_officer',
 } as const;
 
 export interface StaffInput {
@@ -550,6 +553,7 @@ export const StaffUpdateRole = {
   admin: 'admin',
   agronomist: 'agronomist',
   staff: 'staff',
+  field_officer: 'field_officer',
 } as const;
 
 export type StaffUpdateStatus = typeof StaffUpdateStatus[keyof typeof StaffUpdateStatus];
@@ -763,20 +767,20 @@ export interface VerifyPaymentInput {
   plan: VerifyPaymentInputPlan;
 }
 
-export type VerifyPaymentResponsePlan = typeof VerifyPaymentResponsePlan[keyof typeof VerifyPaymentResponsePlan];
+export type PaymentVerificationResponsePlan = typeof PaymentVerificationResponsePlan[keyof typeof PaymentVerificationResponsePlan];
 
 
-export const VerifyPaymentResponsePlan = {
+export const PaymentVerificationResponsePlan = {
   free: 'free',
   basic: 'basic',
   standard: 'standard',
   premium: 'premium',
 } as const;
 
-export interface VerifyPaymentResponse {
+export interface PaymentVerificationResponse {
   status: string;
   message: string;
-  plan: VerifyPaymentResponsePlan;
+  plan: PaymentVerificationResponsePlan;
 }
 
 export type OrderProductType = typeof OrderProductType[keyof typeof OrderProductType];
@@ -849,5 +853,151 @@ export interface CheckoutResponse {
   status: string;
   message: string;
   orderId: number;
+}
+
+export type DeploymentStatus = typeof DeploymentStatus[keyof typeof DeploymentStatus];
+
+
+export const DeploymentStatus = {
+  scheduled: 'scheduled',
+  in_transit: 'in_transit',
+  arrived: 'arrived',
+  installing: 'installing',
+  testing: 'testing',
+  completed: 'completed',
+  failed: 'failed',
+} as const;
+
+export interface Deployment {
+  id: number;
+  orderId: number;
+  /** @nullable */
+  fieldOfficerId?: number | null;
+  /** @nullable */
+  deviceId?: number | null;
+  status: DeploymentStatus;
+  /** @nullable */
+  scheduledDate?: string | null;
+  powerTested?: boolean;
+  networkTested?: boolean;
+  sensorsTested?: boolean;
+  /** @nullable */
+  installationNotes?: string | null;
+  /** @nullable */
+  installedLat?: string | null;
+  /** @nullable */
+  installedLng?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type UpdateDeploymentStatusInputStatus = typeof UpdateDeploymentStatusInputStatus[keyof typeof UpdateDeploymentStatusInputStatus];
+
+
+export const UpdateDeploymentStatusInputStatus = {
+  scheduled: 'scheduled',
+  in_transit: 'in_transit',
+  arrived: 'arrived',
+  installing: 'installing',
+  testing: 'testing',
+  completed: 'completed',
+  failed: 'failed',
+} as const;
+
+export interface UpdateDeploymentStatusInput {
+  status: UpdateDeploymentStatusInputStatus;
+  powerTested?: boolean;
+  networkTested?: boolean;
+  sensorsTested?: boolean;
+  installationNotes?: string;
+  installedLat?: string;
+  installedLng?: string;
+}
+
+export interface ActivateDeviceInput {
+  deploymentId: number;
+  serialNumber: string;
+}
+
+export type InventoryItemStatus = typeof InventoryItemStatus[keyof typeof InventoryItemStatus];
+
+
+export const InventoryItemStatus = {
+  available: 'available',
+  reserved: 'reserved',
+  installed: 'installed',
+  repair: 'repair',
+  decommissioned: 'decommissioned',
+} as const;
+
+export interface InventoryItem {
+  id: number;
+  serialNumber: string;
+  productType: string;
+  status: InventoryItemStatus;
+  /** @nullable */
+  deviceId?: number | null;
+  /** @nullable */
+  manufacturingDate?: string | null;
+  /** @nullable */
+  warrantyExpiry?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface AddInventoryInput {
+  serialNumber: string;
+  productType: string;
+}
+
+export type MaintenanceLogType = typeof MaintenanceLogType[keyof typeof MaintenanceLogType];
+
+
+export const MaintenanceLogType = {
+  routine: 'routine',
+  repair: 'repair',
+  sensor_replacement: 'sensor_replacement',
+  firmware_update: 'firmware_update',
+} as const;
+
+export type MaintenanceLogStatus = typeof MaintenanceLogStatus[keyof typeof MaintenanceLogStatus];
+
+
+export const MaintenanceLogStatus = {
+  scheduled: 'scheduled',
+  in_progress: 'in_progress',
+  completed: 'completed',
+  cancelled: 'cancelled',
+} as const;
+
+export interface MaintenanceLog {
+  id: number;
+  deviceId: number;
+  /** @nullable */
+  staffId?: number | null;
+  type: MaintenanceLogType;
+  status: MaintenanceLogStatus;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  scheduledDate?: string | null;
+  /** @nullable */
+  completedDate?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface SystemLog {
+  id: number;
+  level: string;
+  action: string;
+  description: string;
+  /** @nullable */
+  actorId?: number | null;
+  /** @nullable */
+  targetResource?: string | null;
+  /** @nullable */
+  ipAddress?: string | null;
+  createdAt: string;
 }
 

@@ -5,10 +5,10 @@
  * AgroGuard Limited - Agricultural IoT Platform API
  * OpenAPI spec version: 0.2.0
  */
-import type { VerifyPaymentResponsePlan } from './verifyPaymentResponsePlan.ts';
+import type { PaymentVerificationResponsePlan } from './paymentVerificationResponsePlan.ts';
 
-export interface VerifyPaymentResponse {
+export interface PaymentVerificationResponse {
   status: string;
   message: string;
-  plan: VerifyPaymentResponsePlan;
+  plan: PaymentVerificationResponsePlan;
 }

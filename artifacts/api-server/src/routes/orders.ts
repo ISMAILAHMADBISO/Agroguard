@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, desc } from "drizzle-orm";
 import { db, ordersTable } from "@workspace/db";
-import { CheckoutInput, CheckoutResponse, Order } from "@workspace/api-zod";
+import { CheckoutOrderBody, type Order } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
@@ -45,7 +45,7 @@ router.post("/orders/checkout", async (req, res): Promise<void> => {
     return;
   }
 
-  const parsed = CheckoutInput.safeParse(req.body);
+  const parsed = CheckoutOrderBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
@@ -71,13 +71,11 @@ router.post("/orders/checkout", async (req, res): Promise<void> => {
     })
     .returning();
 
-  res.status(201).json(
-    CheckoutResponse.parse({
+  res.status(201).json({
       status: "success",
       message: "Order placed successfully.",
       orderId: order.id,
-    })
-  );
+    });
 });
 
 export default router;

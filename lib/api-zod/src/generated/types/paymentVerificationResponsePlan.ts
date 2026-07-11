@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export type VerifyPaymentResponsePlan = typeof VerifyPaymentResponsePlan[keyof typeof VerifyPaymentResponsePlan];
+export type PaymentVerificationResponsePlan = typeof PaymentVerificationResponsePlan[keyof typeof PaymentVerificationResponsePlan];
 
 
-export const VerifyPaymentResponsePlan = {
+export const PaymentVerificationResponsePlan = {
   free: 'free',
   basic: 'basic',
   standard: 'standard',

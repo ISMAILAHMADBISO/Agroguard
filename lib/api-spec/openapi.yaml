@@ -716,7 +716,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/VerifyPaymentResponse"
+                $ref: "#/components/schemas/PaymentVerificationResponse"
         "400":
           description: Invalid request or verification failed
 
@@ -755,6 +755,131 @@ paths:
                 $ref: "#/components/schemas/CheckoutResponse"
         "400":
           description: Invalid request or verification failed
+
+  /deployments:
+    get:
+      operationId: listDeployments
+      tags: [deployments]
+      summary: List deployments (scoped by role - field officers see their own, admins see all)
+      responses:
+        "200":
+          description: List of deployments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Deployment"
+                  
+  /deployments/{id}/status:
+    post:
+      operationId: updateDeploymentStatus
+      tags: [deployments]
+      summary: Update deployment status (for field officers)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDeploymentStatusInput"
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deployment"
+
+  /devices/activate:
+    post:
+      operationId: activateDevice
+      tags: [devices]
+      summary: Activate a device hardware (link serial number to order and farmer)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivateDeviceInput"
+      responses:
+        "200":
+          description: Device activated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+
+
+
+  /inventory:
+    get:
+      operationId: listInventory
+      tags: [inventory]
+      summary: List inventory (Admins only)
+      responses:
+        "200":
+          description: List of inventory items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InventoryItem"
+
+  /inventory/scan:
+    post:
+      operationId: scanInventory
+      tags: [inventory]
+      summary: Scan a new serial number into inventory (Admins/Staff)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddInventoryInput"
+      responses:
+        "200":
+          description: Inventory added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryItem"
+
+  /maintenance:
+    get:
+      operationId: listMaintenance
+      tags: [maintenance]
+      summary: List maintenance tasks
+      responses:
+        "200":
+          description: List of maintenance tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MaintenanceLog"
+
+  /system-logs:
+    get:
+      operationId: listSystemLogs
+      tags: [system]
+      summary: List system logs (Super Admin only)
+      responses:
+        "200":
+          description: List of system logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SystemLog"
 
 components:
   schemas:
@@ -1207,7 +1332,7 @@ components:
           type: ["string", "null"]
         role:
           type: string
-          enum: [super_admin, admin, agronomist, staff]
+          enum: [super_admin, admin, agronomist, staff, field_officer]
         status:
           type: string
           enum: [active, inactive]
@@ -1231,7 +1356,7 @@ components:
           type: ["string", "null"]
         role:
           type: string
-          enum: [super_admin, admin, agronomist, staff]
+          enum: [super_admin, admin, agronomist, staff, field_officer]
         status:
           type: string
           enum: [active, inactive]
@@ -1258,7 +1383,7 @@ components:
           type: string
         role:
           type: string
-          enum: [super_admin, admin, agronomist, staff]
+          enum: [super_admin, admin, agronomist, staff, field_officer]
         department:
           type: string
 
@@ -1273,7 +1398,7 @@ components:
           type: string
         role:
           type: string
-          enum: [super_admin, admin, agronomist, staff]
+          enum: [super_admin, admin, agronomist, staff, field_officer]
         status:
           type: string
           enum: [active, inactive]
@@ -1529,7 +1654,7 @@ components:
           enum: [free, basic, standard, premium]
           description: The plan the user is upgrading to
 
-    VerifyPaymentResponse:
+    PaymentVerificationResponse:
       type: object
       required: [status, message, plan]
       properties:
@@ -1615,3 +1740,162 @@ components:
           type: string
         orderId:
           type: integer
+
+    # ── DEPLOYMENTS ──────────────────────────────────────────────────────────────
+    Deployment:
+      type: object
+      required: [id, orderId, status, createdAt]
+      properties:
+        id:
+          type: integer
+        orderId:
+          type: integer
+        fieldOfficerId:
+          type: ["integer", "null"]
+        deviceId:
+          type: ["integer", "null"]
+        status:
+          type: string
+          enum: [scheduled, in_transit, arrived, installing, testing, completed, failed]
+        scheduledDate:
+          type: ["string", "null"]
+          format: date-time
+        powerTested:
+          type: boolean
+        networkTested:
+          type: boolean
+        sensorsTested:
+          type: boolean
+        installationNotes:
+          type: ["string", "null"]
+        installedLat:
+          type: ["string", "null"]
+        installedLng:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UpdateDeploymentStatusInput:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [scheduled, in_transit, arrived, installing, testing, completed, failed]
+        powerTested:
+          type: boolean
+        networkTested:
+          type: boolean
+        sensorsTested:
+          type: boolean
+        installationNotes:
+          type: string
+        installedLat:
+          type: string
+        installedLng:
+          type: string
+
+    ActivateDeviceInput:
+      type: object
+      required: [deploymentId, serialNumber]
+      properties:
+        deploymentId:
+          type: integer
+        serialNumber:
+          type: string
+
+    # ── INVENTORY ────────────────────────────────────────────────────────────────
+    InventoryItem:
+      type: object
+      required: [id, serialNumber, productType, status, createdAt]
+      properties:
+        id:
+          type: integer
+        serialNumber:
+          type: string
+        productType:
+          type: string
+        status:
+          type: string
+          enum: [available, reserved, installed, repair, decommissioned]
+        deviceId:
+          type: ["integer", "null"]
+        manufacturingDate:
+          type: ["string", "null"]
+          format: date-time
+        warrantyExpiry:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AddInventoryInput:
+      type: object
+      required: [serialNumber, productType]
+      properties:
+        serialNumber:
+          type: string
+        productType:
+          type: string
+
+    # ── MAINTENANCE ──────────────────────────────────────────────────────────────
+    MaintenanceLog:
+      type: object
+      required: [id, deviceId, type, status, createdAt]
+      properties:
+        id:
+          type: integer
+        deviceId:
+          type: integer
+        staffId:
+          type: ["integer", "null"]
+        type:
+          type: string
+          enum: [routine, repair, sensor_replacement, firmware_update]
+        status:
+          type: string
+          enum: [scheduled, in_progress, completed, cancelled]
+        description:
+          type: ["string", "null"]
+        scheduledDate:
+          type: ["string", "null"]
+          format: date-time
+        completedDate:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SystemLog:
+      type: object
+      required: [id, level, action, description, createdAt]
+      properties:
+        id:
+          type: integer
+        level:
+          type: string
+        action:
+          type: string
+        description:
+          type: string
+        actorId:
+          type: ["integer", "null"]
+        targetResource:
+          type: ["string", "null"]
+        ipAddress:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time

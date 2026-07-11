@@ -475,7 +475,7 @@ export const ListStaffResponseItem = zod.object({
   "name": zod.string(),
   "email": zod.string(),
   "phone": zod.string().nullish(),
-  "role": zod.enum(['super_admin', 'admin', 'agronomist', 'staff']),
+  "role": zod.enum(['super_admin', 'admin', 'agronomist', 'staff', 'field_officer']),
   "status": zod.enum(['active', 'inactive']),
   "department": zod.string().nullish(),
   "createdAt": zod.coerce.date()
@@ -493,7 +493,7 @@ export const CreateStaffBody = zod.object({
   "name": zod.string().min(1),
   "email": zod.string().email(),
   "phone": zod.string().optional(),
-  "role": zod.enum(['super_admin', 'admin', 'agronomist', 'staff']),
+  "role": zod.enum(['super_admin', 'admin', 'agronomist', 'staff', 'field_officer']),
   "department": zod.string().optional()
 })
 
@@ -509,7 +509,7 @@ export const UpdateStaffBody = zod.object({
   "name": zod.string().optional(),
   "email": zod.string().optional(),
   "phone": zod.string().optional(),
-  "role": zod.enum(['super_admin', 'admin', 'agronomist', 'staff']).optional(),
+  "role": zod.enum(['super_admin', 'admin', 'agronomist', 'staff', 'field_officer']).optional(),
   "status": zod.enum(['active', 'inactive']).optional(),
   "department": zod.string().optional()
 })
@@ -519,7 +519,7 @@ export const UpdateStaffResponse = zod.object({
   "name": zod.string(),
   "email": zod.string(),
   "phone": zod.string().nullish(),
-  "role": zod.enum(['super_admin', 'admin', 'agronomist', 'staff']),
+  "role": zod.enum(['super_admin', 'admin', 'agronomist', 'staff', 'field_officer']),
   "status": zod.enum(['active', 'inactive']),
   "department": zod.string().nullish(),
   "createdAt": zod.coerce.date()
@@ -760,5 +760,158 @@ export const CheckoutOrderBody = zod.object({
   "contactPhone": zod.string(),
   "paystackReference": zod.string()
 })
+
+
+/**
+ * @summary List deployments (scoped by role - field officers see their own, admins see all)
+ */
+export const ListDeploymentsResponseItem = zod.object({
+  "id": zod.number(),
+  "orderId": zod.number(),
+  "fieldOfficerId": zod.number().nullish(),
+  "deviceId": zod.number().nullish(),
+  "status": zod.enum(['scheduled', 'in_transit', 'arrived', 'installing', 'testing', 'completed', 'failed']),
+  "scheduledDate": zod.coerce.date().nullish(),
+  "powerTested": zod.boolean().optional(),
+  "networkTested": zod.boolean().optional(),
+  "sensorsTested": zod.boolean().optional(),
+  "installationNotes": zod.string().nullish(),
+  "installedLat": zod.string().nullish(),
+  "installedLng": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional()
+})
+export const ListDeploymentsResponse = zod.array(ListDeploymentsResponseItem)
+
+
+/**
+ * @summary Update deployment status (for field officers)
+ */
+export const UpdateDeploymentStatusParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateDeploymentStatusBody = zod.object({
+  "status": zod.enum(['scheduled', 'in_transit', 'arrived', 'installing', 'testing', 'completed', 'failed']),
+  "powerTested": zod.boolean().optional(),
+  "networkTested": zod.boolean().optional(),
+  "sensorsTested": zod.boolean().optional(),
+  "installationNotes": zod.string().optional(),
+  "installedLat": zod.string().optional(),
+  "installedLng": zod.string().optional()
+})
+
+export const UpdateDeploymentStatusResponse = zod.object({
+  "id": zod.number(),
+  "orderId": zod.number(),
+  "fieldOfficerId": zod.number().nullish(),
+  "deviceId": zod.number().nullish(),
+  "status": zod.enum(['scheduled', 'in_transit', 'arrived', 'installing', 'testing', 'completed', 'failed']),
+  "scheduledDate": zod.coerce.date().nullish(),
+  "powerTested": zod.boolean().optional(),
+  "networkTested": zod.boolean().optional(),
+  "sensorsTested": zod.boolean().optional(),
+  "installationNotes": zod.string().nullish(),
+  "installedLat": zod.string().nullish(),
+  "installedLng": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary Activate a device hardware (link serial number to order and farmer)
+ */
+export const ActivateDeviceBody = zod.object({
+  "deploymentId": zod.number(),
+  "serialNumber": zod.string()
+})
+
+export const ActivateDeviceResponse = zod.object({
+  "id": zod.number(),
+  "deviceId": zod.string().describe('Unique hardware identifier (ESP32 chip ID \/ auto-generated UUID)'),
+  "name": zod.string(),
+  "farmerId": zod.number().nullish().describe('Assigned farmer ID, null if unassigned'),
+  "location": zod.string().nullish(),
+  "status": zod.enum(['online', 'offline', 'maintenance']),
+  "lastSeenAt": zod.coerce.date().nullish(),
+  "firmwareVersion": zod.string().nullish(),
+  "batteryLevel": zod.number().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary List inventory (Admins only)
+ */
+export const ListInventoryResponseItem = zod.object({
+  "id": zod.number(),
+  "serialNumber": zod.string(),
+  "productType": zod.string(),
+  "status": zod.enum(['available', 'reserved', 'installed', 'repair', 'decommissioned']),
+  "deviceId": zod.number().nullish(),
+  "manufacturingDate": zod.coerce.date().nullish(),
+  "warrantyExpiry": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional()
+})
+export const ListInventoryResponse = zod.array(ListInventoryResponseItem)
+
+
+/**
+ * @summary Scan a new serial number into inventory (Admins/Staff)
+ */
+export const ScanInventoryBody = zod.object({
+  "serialNumber": zod.string(),
+  "productType": zod.string()
+})
+
+export const ScanInventoryResponse = zod.object({
+  "id": zod.number(),
+  "serialNumber": zod.string(),
+  "productType": zod.string(),
+  "status": zod.enum(['available', 'reserved', 'installed', 'repair', 'decommissioned']),
+  "deviceId": zod.number().nullish(),
+  "manufacturingDate": zod.coerce.date().nullish(),
+  "warrantyExpiry": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary List maintenance tasks
+ */
+export const ListMaintenanceResponseItem = zod.object({
+  "id": zod.number(),
+  "deviceId": zod.number(),
+  "staffId": zod.number().nullish(),
+  "type": zod.enum(['routine', 'repair', 'sensor_replacement', 'firmware_update']),
+  "status": zod.enum(['scheduled', 'in_progress', 'completed', 'cancelled']),
+  "description": zod.string().nullish(),
+  "scheduledDate": zod.coerce.date().nullish(),
+  "completedDate": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional()
+})
+export const ListMaintenanceResponse = zod.array(ListMaintenanceResponseItem)
+
+
+/**
+ * @summary List system logs (Super Admin only)
+ */
+export const ListSystemLogsResponseItem = zod.object({
+  "id": zod.number(),
+  "level": zod.string(),
+  "action": zod.string(),
+  "description": zod.string(),
+  "actorId": zod.number().nullish(),
+  "targetResource": zod.string().nullish(),
+  "ipAddress": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListSystemLogsResponse = zod.array(ListSystemLogsResponseItem)
 
 

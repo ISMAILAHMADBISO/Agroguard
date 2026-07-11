@@ -14,4 +14,5 @@ export const StaffInputRole = {
   admin: 'admin',
   agronomist: 'agronomist',
   staff: 'staff',
+  field_officer: 'field_officer',
 } as const;

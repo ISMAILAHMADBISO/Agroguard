@@ -12,6 +12,7 @@ import path from "path";
 import express from "express";
 import app from "./app";
 import { logger } from "./lib/logger";
+import { startAlertsScheduler } from "./jobs/alerts-job";
 
 // PORT defaults to 8080 (the documented local API port) for a zero-config start.
 // Use API_PORT env if defined, otherwise fall back to PORT or 8080.
@@ -43,8 +44,10 @@ if (process.env["SERVE_CLIENT"] === "true") {
   });
 }
 
-const server = createServer(app);
-
-server.listen(port, () => {
-  logger.info({ port }, "Server listening");
+const server = app.listen(port, () => {
+  logger.info(`AgroGuard API server started and listening on port ${port}`);
 });
+
+// Start background jobs
+startAlertsScheduler();
+logger.info("Background jobs initialized.");

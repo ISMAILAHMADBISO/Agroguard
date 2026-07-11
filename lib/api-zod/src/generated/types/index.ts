@@ -6,8 +6,10 @@
  * OpenAPI spec version: 0.2.0
  */
 
+export * from './activateDeviceInput.ts';
 export * from './activityEvent.ts';
 export * from './activityEventType.ts';
+export * from './addInventoryInput.ts';
 export * from './aiConversation.ts';
 export * from './aiConversationSummary.ts';
 export * from './alert.ts';
@@ -25,6 +27,8 @@ export * from './checkoutInput.ts';
 export * from './checkoutInputProductType.ts';
 export * from './checkoutResponse.ts';
 export * from './dashboardStats.ts';
+export * from './deployment.ts';
+export * from './deploymentStatus.ts';
 export * from './device.ts';
 export * from './deviceInput.ts';
 export * from './deviceStatus.ts';
@@ -45,10 +49,17 @@ export * from './farmerUpdateSubscriptionPlan.ts';
 export * from './farmOverview.ts';
 export * from './farmOverviewStatus.ts';
 export * from './healthStatus.ts';
+export * from './inventoryItem.ts';
+export * from './inventoryItemStatus.ts';
+export * from './maintenanceLog.ts';
+export * from './maintenanceLogStatus.ts';
+export * from './maintenanceLogType.ts';
 export * from './order.ts';
 export * from './orderProductType.ts';
 export * from './orderStatus.ts';
 export * from './passwordResetResult.ts';
+export * from './paymentVerificationResponse.ts';
+export * from './paymentVerificationResponsePlan.ts';
 export * from './recommendation.ts';
 export * from './recommendationCategory.ts';
 export * from './recommendationInput.ts';
@@ -70,7 +81,8 @@ export * from './staffMemberStatus.ts';
 export * from './staffUpdate.ts';
 export * from './staffUpdateRole.ts';
 export * from './staffUpdateStatus.ts';
+export * from './systemLog.ts';
+export * from './updateDeploymentStatusInput.ts';
+export * from './updateDeploymentStatusInputStatus.ts';
 export * from './verifyPaymentInput.ts';
 export * from './verifyPaymentInputPlan.ts';
-export * from './verifyPaymentResponse.ts';
-export * from './verifyPaymentResponsePlan.ts';

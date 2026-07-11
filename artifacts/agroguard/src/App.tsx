@@ -37,6 +37,14 @@ import AchievementsPage from "@/pages/achievements";
 import ShopPage from "@/pages/shop";
 import CheckoutPage from "@/pages/checkout";
 import OrdersPage from "@/pages/orders";
+import AdminDashboardPage from "@/pages/admin-dashboard";
+import AdminLogsPage from "@/pages/admin-logs";
+import AdminDeploymentsPage from "@/pages/admin-deployments";
+import AdminDevicesPage from "@/pages/admin-devices";
+import AdminInventoryPage from "@/pages/admin-inventory";
+import AdminMaintenancePage from "@/pages/admin-maintenance";
+import OfficerDashboardPage from "@/pages/officer-dashboard";
+import OfficerInstallationPage from "@/pages/officer-installation";
 
 // Attach the stored session token as `Authorization: Bearer` to every generated
 // API call. This keeps auth working inside the cross-site Replit iframe where
@@ -137,6 +145,15 @@ function Router() {
       <Route path="/ai-assistant" component={() => <ProtectedRoute access="any" component={AiAssistantPage} />} />
       <Route path="/analytics" component={() => <ProtectedRoute component={AnalyticsPage} />} />
       <Route path="/staff" component={() => <ProtectedRoute access="staff" component={StaffPage} />} />
+      {/* Admin Protected Routes */}
+      <Route path="/admin/dashboard" component={() => <ProtectedRoute access="admin" component={AdminDashboardPage} />} />
+      <Route path="/admin/logs" component={() => <ProtectedRoute access="admin" component={AdminLogsPage} />} />
+      <Route path="/admin/deployments" component={() => <ProtectedRoute access="admin" component={AdminDeploymentsPage} />} />
+      <Route path="/admin/devices" component={() => <ProtectedRoute access="admin" component={AdminDevicesPage} />} />
+      <Route path="/admin/inventory" component={() => <ProtectedRoute access="admin" component={AdminInventoryPage} />} />
+      <Route path="/admin/maintenance" component={() => <ProtectedRoute access="admin" component={AdminMaintenancePage} />} />
+      <Route path="/officer/dashboard" component={() => <ProtectedRoute access="staff" component={OfficerDashboardPage} />} />
+      <Route path="/officer/installation/:id" component={() => <ProtectedRoute access="staff" component={OfficerInstallationPage} />} />
       <Route path="/achievements" component={() => <ProtectedRoute access="staff" component={AchievementsPage} />} />
       <Route component={NotFound} />
     </Switch>

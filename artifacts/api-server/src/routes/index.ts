@@ -17,6 +17,9 @@ import staffRouter from "./staff";
 import achievementsRouter from "./achievements";
 import paymentsRouter from "./payments";
 import ordersRouter from "./orders";
+import deploymentsRouter from "./deployments";
+import inventoryRouter from "./inventory";
+import maintenanceRouter from "./maintenance";
 
 const router: IRouter = Router();
 
@@ -33,5 +36,8 @@ router.use(aiRouter);
 router.use(achievementsRouter);
 router.use(paymentsRouter);
 router.use(ordersRouter);
+router.use(deploymentsRouter);
+router.use(inventoryRouter);
+router.use(maintenanceRouter);
 
 export default router;
