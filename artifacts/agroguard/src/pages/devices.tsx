@@ -191,6 +191,19 @@ export default function DevicesPage() {
       d.deviceId.toLowerCase().includes(search.toLowerCase())
   );
 
+  if (!isLoading && user?.userType === "farmer" && (!devices || devices.length === 0)) {
+    return (
+      <div className="container mx-auto py-12 max-w-4xl text-center">
+        <Cpu className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
+        <h2 className="text-2xl font-bold tracking-tight mb-2">No Devices Found</h2>
+        <p className="text-muted-foreground mb-6">You don't have any active AgroGuard smart sensors yet.</p>
+        <Link href="/shop">
+          <Button>Buy Hardware</Button>
+        </Link>
+      </div>
+    );
+  }
+
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
@@ -446,33 +459,19 @@ export default function DevicesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Empty state for Farmers */}
-      {user?.userType === "farmer" && devices?.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-xl bg-muted/20">
-          <Cpu className="h-16 w-16 text-muted-foreground mb-4" />
-          <h3 className="text-xl font-bold mb-2">You don't have any active devices yet</h3>
-          <p className="text-muted-foreground max-w-md mb-6">
-            Unlock the full potential of your farm by installing AgroGuard smart sensors. Monitor soil moisture, temperature, and receive AI-driven alerts in real-time.
-          </p>
-          <Button asChild size="lg">
-            <Link href="/shop">Buy Hardware</Link>
-          </Button>
-        </div>
-      ) : (
-        <>
-          {/* Search */}
-          <div className="relative max-w-sm mb-4">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name or device ID..."
-              className="pl-8"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+      {/* Search */}
+      <div className="relative max-w-sm mb-4">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search by name or device ID..."
+          className="pl-8"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
 
-          {/* Table */}
-          <div className="border rounded-lg bg-card overflow-hidden">
+      {/* Table */}
+      <div className="border rounded-lg bg-card overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
@@ -639,8 +638,6 @@ export default function DevicesPage() {
           </TableBody>
         </Table>
       </div>
-      </>
-      )}
     </div>
   );
 }

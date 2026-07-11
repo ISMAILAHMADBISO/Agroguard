@@ -146,6 +146,7 @@ export default function CropDiagnosisPage() {
         {
           onSuccess: () => {
             toast({ title: "Successfully deleted diagnosis" });
+            alert("Successfully deleted diagnosis");
             queryClient.invalidateQueries({ queryKey: getListDiseaseReportsQueryKey() });
           }
         }
