@@ -1338,6 +1338,18 @@ components:
           type: ["integer", "null"]
         severity:
           type: ["string", "null"]
+        soilMoisture:
+          type: ["number", "null"]
+        temperature:
+          type: ["number", "null"]
+        ph:
+          type: ["number", "null"]
+        nitrogen:
+          type: ["number", "null"]
+        phosphorus:
+          type: ["number", "null"]
+        potassium:
+          type: ["number", "null"]
 
     SensorTrendPoint:
       type: object

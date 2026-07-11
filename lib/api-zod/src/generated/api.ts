@@ -599,7 +599,13 @@ export const GetRecentActivityResponseItem = zod.object({
   "timestamp": zod.coerce.date(),
   "farmerId": zod.number().nullish(),
   "deviceId": zod.number().nullish(),
-  "severity": zod.string().nullish()
+  "severity": zod.string().nullish(),
+  "soilMoisture": zod.number().nullish(),
+  "temperature": zod.number().nullish(),
+  "ph": zod.number().nullish(),
+  "nitrogen": zod.number().nullish(),
+  "phosphorus": zod.number().nullish(),
+  "potassium": zod.number().nullish()
 })
 export const GetRecentActivityResponse = zod.array(GetRecentActivityResponseItem)
 

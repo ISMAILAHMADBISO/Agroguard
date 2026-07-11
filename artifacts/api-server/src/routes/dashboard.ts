@@ -230,6 +230,12 @@ router.get(
         farmerId: null,
         deviceId: r.deviceId,
         severity: null,
+        soilMoisture: r.soilMoisture,
+        temperature: r.temperature,
+        ph: r.ph,
+        nitrogen: r.nitrogen,
+        phosphorus: r.phosphorus,
+        potassium: r.potassium,
       })),
     ]
       .sort(

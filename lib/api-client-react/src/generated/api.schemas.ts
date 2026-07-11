@@ -636,6 +636,18 @@ export interface ActivityEvent {
   deviceId?: number | null;
   /** @nullable */
   severity?: string | null;
+  /** @nullable */
+  soilMoisture?: number | null;
+  /** @nullable */
+  temperature?: number | null;
+  /** @nullable */
+  ph?: number | null;
+  /** @nullable */
+  nitrogen?: number | null;
+  /** @nullable */
+  phosphorus?: number | null;
+  /** @nullable */
+  potassium?: number | null;
 }
 
 export interface SensorTrendPoint {
