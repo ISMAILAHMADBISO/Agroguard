@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { apiErrorMessage } from "@/lib/api-error";
 import { Upload, Loader2, Leaf, ScanLine, ShieldAlert, Stethoscope, Star } from "lucide-react";
+import { openPricingModal } from "@/components/pricing-modal";
 
 // Accept large originals; we downscale before upload so the request stays small.
 const MAX_BYTES = 20 * 1024 * 1024;
@@ -117,19 +118,11 @@ export default function CropDiagnosisPage() {
             variant: "destructive",
             action: isLimitHit ? (
               <ToastAction 
-                altText="Upgrade to Premium" 
-                onClick={async () => {
-                  try {
-                    const res = await fetch("/api/farmers/me/upgrade", { method: "POST" });
-                    if (!res.ok) throw new Error();
-                    toast({ title: "Welcome to Premium!", description: "You now have unlimited AI access. Try your diagnosis again!" });
-                  } catch {
-                    toast({ title: "Upgrade failed", variant: "destructive" });
-                  }
-                }}
+                altText="View Plans" 
+                onClick={openPricingModal}
                 className="bg-amber-500 hover:bg-amber-600 text-white border-none mt-2 sm:mt-0"
               >
-                <Star className="h-4 w-4 mr-2" /> Upgrade
+                <Star className="h-4 w-4 mr-2" /> View Plans
               </ToastAction>
             ) : undefined
           });

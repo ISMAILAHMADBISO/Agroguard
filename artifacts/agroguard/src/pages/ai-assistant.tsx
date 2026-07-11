@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { apiErrorMessage } from "@/lib/api-error";
 import { Send, Loader2, Bot, User, Plus, MessageSquare, Sprout, Star } from "lucide-react";
+import { openPricingModal } from "@/components/pricing-modal";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -64,19 +65,11 @@ export default function AiAssistantPage() {
             variant: "destructive",
             action: isLimitHit ? (
               <ToastAction 
-                altText="Upgrade to Premium" 
-                onClick={async () => {
-                  try {
-                    const res = await fetch("/api/farmers/me/upgrade", { method: "POST" });
-                    if (!res.ok) throw new Error();
-                    toast({ title: "Welcome to Premium!", description: "You now have unlimited AI access. Try your message again!" });
-                  } catch {
-                    toast({ title: "Upgrade failed", variant: "destructive" });
-                  }
-                }}
+                altText="View Plans" 
+                onClick={openPricingModal}
                 className="bg-amber-500 hover:bg-amber-600 text-white border-none mt-2 sm:mt-0"
               >
-                <Star className="h-4 w-4 mr-2" /> Upgrade
+                <Star className="h-4 w-4 mr-2" /> View Plans
               </ToastAction>
             ) : undefined
           });

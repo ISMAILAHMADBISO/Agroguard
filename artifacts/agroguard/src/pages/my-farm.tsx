@@ -13,11 +13,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Cpu, Bell, Lightbulb, MapPin, Leaf, Star, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { Cpu, Bell, Lightbulb, MapPin, Leaf, Star } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { getGetFarmerQueryKey } from "@workspace/api-client-react";
-import { useToast } from "@/hooks/use-toast";
+import { openPricingModal } from "@/components/pricing-modal";
 
 const SEVERITY_STYLES: Record<string, string> = {
   critical: "bg-red-50 text-red-700 border-red-200",
@@ -40,21 +38,9 @@ export default function MyFarmPage() {
   const onlineDevices = (devices ?? []).filter((d) => d.status === "online").length;
 
   const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const [isUpgrading, setIsUpgrading] = useState(false);
 
-  const upgradeToPremium = async () => {
-    setIsUpgrading(true);
-    try {
-      const res = await fetch("/api/farmers/me/upgrade", { method: "POST" });
-      if (!res.ok) throw new Error("Upgrade failed");
-      queryClient.invalidateQueries({ queryKey: getGetFarmerQueryKey(farmerId) });
-      toast({ title: "Welcome to AgroGuard Premium!", description: "You now have unlimited AI access." });
-    } catch {
-      toast({ title: "Failed to upgrade", variant: "destructive" });
-    } finally {
-      setIsUpgrading(false);
-    }
+  const upgradeToPremium = () => {
+    openPricingModal();
   };
 
   return (
@@ -76,9 +62,8 @@ export default function MyFarmPage() {
               size="sm" 
               className="bg-amber-500 hover:bg-amber-600 text-white w-full sm:w-auto"
               onClick={upgradeToPremium}
-              disabled={isUpgrading}
             >
-              {isUpgrading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Upgrade to Premium"}
+              View Plans & Upgrade
             </Button>
           </div>
         )}

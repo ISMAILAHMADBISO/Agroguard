@@ -13,6 +13,7 @@ import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth, homePathForUser, getAuthToken } from "@/context/auth";
+import { PricingModal } from "@/components/pricing-modal";
 import NotFound from "@/pages/not-found";
 import { AppLayout } from "@/components/layout";
 import LandingPage from "@/pages/landing";
@@ -145,6 +146,7 @@ function App() {
             <Router />
           </WouterRouter>
           <Toaster />
+          <PricingModal />
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
