@@ -5,8 +5,8 @@
  * AgroGuard Limited - Agricultural IoT Platform API
  * OpenAPI spec version: 0.2.0
  */
-import type { AlertInputSeverity } from './alertInputSeverity';
-import type { AlertInputType } from './alertInputType';
+import type { AlertInputSeverity } from './alertInputSeverity.ts';
+import type { AlertInputType } from './alertInputType.ts';
 
 export interface AlertInput {
   farmerId?: number;

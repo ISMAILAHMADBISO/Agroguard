@@ -5,7 +5,7 @@
  * AgroGuard Limited - Agricultural IoT Platform API
  * OpenAPI spec version: 0.2.0
  */
-import type { ChatMessageRole } from './chatMessageRole';
+import type { ChatMessageRole } from './chatMessageRole.ts';
 
 export interface ChatMessage {
   role: ChatMessageRole;

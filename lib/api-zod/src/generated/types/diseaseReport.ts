@@ -5,7 +5,7 @@
  * AgroGuard Limited - Agricultural IoT Platform API
  * OpenAPI spec version: 0.2.0
  */
-import type { DiseaseReportSeverity } from './diseaseReportSeverity';
+import type { DiseaseReportSeverity } from './diseaseReportSeverity.ts';
 
 export interface DiseaseReport {
   id: number;

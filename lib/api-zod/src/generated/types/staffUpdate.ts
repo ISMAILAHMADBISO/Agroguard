@@ -5,8 +5,8 @@
  * AgroGuard Limited - Agricultural IoT Platform API
  * OpenAPI spec version: 0.2.0
  */
-import type { StaffUpdateRole } from './staffUpdateRole';
-import type { StaffUpdateStatus } from './staffUpdateStatus';
+import type { StaffUpdateRole } from './staffUpdateRole.ts';
+import type { StaffUpdateStatus } from './staffUpdateStatus.ts';
 
 export interface StaffUpdate {
   name?: string;

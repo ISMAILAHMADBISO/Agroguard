@@ -5,7 +5,7 @@
  * AgroGuard Limited - Agricultural IoT Platform API
  * OpenAPI spec version: 0.2.0
  */
-import type { ActivityEventType } from './activityEventType';
+import type { ActivityEventType } from './activityEventType.ts';
 
 export interface ActivityEvent {
   id: string;

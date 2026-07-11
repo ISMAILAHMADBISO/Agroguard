@@ -699,6 +699,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/ChatResponse"
 
+  /payments/verify:
+    post:
+      operationId: verifyPayment
+      tags: [payments]
+      summary: Verify Paystack transaction and upgrade subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyPaymentInput"
+      responses:
+        "200":
+          description: Payment verified and subscription updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyPaymentResponse"
+        "400":
+          description: Invalid request or verification failed
+
 components:
   schemas:
     HealthStatus:
@@ -740,6 +761,19 @@ components:
         fieldOfficerId:
           type: ["integer", "null"]
           description: ID of the field officer assigned to manage this farmer
+        subscriptionPlan:
+          type: string
+          enum: [free, basic, standard, premium]
+        subscriptionStartDate:
+          type: ["string", "null"]
+          format: date-time
+        subscriptionExpiryDate:
+          type: ["string", "null"]
+          format: date-time
+        aiChatUsageCount:
+          type: integer
+        aiDiseaseUsageCount:
+          type: integer
         createdAt:
           type: string
           format: date-time
@@ -852,6 +886,9 @@ components:
         fieldOfficerId:
           type: ["integer", "null"]
           description: Assign or unassign a field officer (null to unassign)
+        subscriptionPlan:
+          type: string
+          enum: [free, basic, standard, premium]
 
     # ── DEVICE ──────────────────────────────────────────────────────────────────
     Device:
@@ -1247,6 +1284,10 @@ components:
           type: number
         avgHumidity:
           type: number
+        premiumFarmers:
+          type: number
+        totalRevenue:
+          type: number
 
     FarmOverview:
       type: object
@@ -1409,6 +1450,11 @@ components:
         conversationId:
           type: ["integer", "null"]
           description: Existing conversation to append to; omit to start a new one.
+        history:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatMessage"
+          description: Optional truncated history if editing a past message.
 
     ChatResponse:
       type: object
@@ -1422,3 +1468,27 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ChatMessage"
+
+    VerifyPaymentInput:
+      type: object
+      required: [reference, plan]
+      properties:
+        reference:
+          type: string
+          description: Paystack transaction reference
+        plan:
+          type: string
+          enum: [free, basic, standard, premium]
+          description: The plan the user is upgrading to
+
+    VerifyPaymentResponse:
+      type: object
+      required: [status, message, plan]
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        plan:
+          type: string
+          enum: [free, basic, standard, premium]

@@ -77,6 +77,7 @@
     "@types/express-session": "^1.19.0",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
+    "react-markdown": "^10.1.0",
     "react-paystack": "^6.0.0"
   }
 }

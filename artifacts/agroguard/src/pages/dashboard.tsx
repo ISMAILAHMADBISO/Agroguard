@@ -20,8 +20,18 @@ export default function Dashboard() {
             <Leaf className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.activeFarmers || 0} / {stats?.totalFarmers || 0}</div>
-            <p className="text-xs text-muted-foreground">Total registered farmers</p>
+            <div className="text-2xl font-bold">{stats?.activeFarmers || 0}</div>
+            <p className="text-xs text-muted-foreground">{stats?.premiumFarmers || 0} premium farmers</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <div className="h-4 w-4 text-emerald-500 font-bold">₦</div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">₦{(stats?.totalRevenue || 0).toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">From subscriptions</p>
           </CardContent>
         </Card>
         <Card>

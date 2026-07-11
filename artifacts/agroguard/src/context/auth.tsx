@@ -10,6 +10,9 @@ export interface AuthUser {
   role: string;
   userType: UserType;
   mustChangePassword: boolean;
+  subscriptionPlan?: string;
+  aiChatUsageCount?: number;
+  aiDiseaseUsageCount?: number;
 }
 
 export interface FarmerSignupInput {
@@ -80,6 +83,9 @@ function normalize(data: Partial<AuthUser> | null): AuthUser | null {
     role: data.role ?? "staff",
     userType: (data.userType as UserType) ?? "staff",
     mustChangePassword: data.mustChangePassword ?? false,
+    subscriptionPlan: data.subscriptionPlan,
+    aiChatUsageCount: data.aiChatUsageCount,
+    aiDiseaseUsageCount: data.aiDiseaseUsageCount,
   };
 }
 

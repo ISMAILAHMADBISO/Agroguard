@@ -13,5 +13,7 @@ export * from "./ai_conversations";
 export * from "./user_sessions";
 export * from "./activities";
 export * from "./farm_thresholds";
+export * from "./payments";
 export * from "./advisories";
+export * from "./payments";
 export * from "./achievements";

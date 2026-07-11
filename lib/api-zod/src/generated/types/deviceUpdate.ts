@@ -5,7 +5,7 @@
  * AgroGuard Limited - Agricultural IoT Platform API
  * OpenAPI spec version: 0.2.0
  */
-import type { DeviceUpdateStatus } from './deviceUpdateStatus';
+import type { DeviceUpdateStatus } from './deviceUpdateStatus.ts';
 
 export interface DeviceUpdate {
   name?: string;

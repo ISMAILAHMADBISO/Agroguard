@@ -15,6 +15,7 @@ import dashboardRouter from "./dashboard";
 import aiRouter from "./ai";
 import staffRouter from "./staff";
 import achievementsRouter from "./achievements";
+import paymentsRouter from "./payments";
 
 const router: IRouter = Router();
 
@@ -29,5 +30,6 @@ router.use(staffRouter);
 router.use(dashboardRouter);
 router.use(aiRouter);
 router.use(achievementsRouter);
+router.use(paymentsRouter);
 
 export default router;

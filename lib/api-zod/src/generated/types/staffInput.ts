@@ -5,7 +5,7 @@
  * AgroGuard Limited - Agricultural IoT Platform API
  * OpenAPI spec version: 0.2.0
  */
-import type { StaffInputRole } from './staffInputRole';
+import type { StaffInputRole } from './staffInputRole.ts';
 
 export interface StaffInput {
   /** @minLength 1 */

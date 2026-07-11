@@ -5,8 +5,8 @@
  * AgroGuard Limited - Agricultural IoT Platform API
  * OpenAPI spec version: 0.2.0
  */
-import type { RecommendationInputCategory } from './recommendationInputCategory';
-import type { RecommendationInputPriority } from './recommendationInputPriority';
+import type { RecommendationInputCategory } from './recommendationInputCategory.ts';
+import type { RecommendationInputPriority } from './recommendationInputPriority.ts';
 
 export interface RecommendationInput {
   farmerId: number;

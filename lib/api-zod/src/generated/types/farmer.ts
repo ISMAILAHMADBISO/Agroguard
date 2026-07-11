@@ -5,7 +5,8 @@
  * AgroGuard Limited - Agricultural IoT Platform API
  * OpenAPI spec version: 0.2.0
  */
-import type { FarmerStatus } from './farmerStatus';
+import type { FarmerStatus } from './farmerStatus.ts';
+import type { FarmerSubscriptionPlan } from './farmerSubscriptionPlan.ts';
 
 export interface Farmer {
   id: number;
@@ -29,6 +30,13 @@ export interface Farmer {
      * @nullable
      */
   fieldOfficerId?: number | null;
+  subscriptionPlan?: FarmerSubscriptionPlan;
+  /** @nullable */
+  subscriptionStartDate?: Date | null;
+  /** @nullable */
+  subscriptionExpiryDate?: Date | null;
+  aiChatUsageCount?: number;
+  aiDiseaseUsageCount?: number;
   createdAt: Date;
   updatedAt?: Date;
 }

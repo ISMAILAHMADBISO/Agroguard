@@ -73,17 +73,17 @@ function normaliseSeverity(value: unknown): Severity {
   return value === "high" || value === "medium" ? value : "low";
 }
 
-async function checkAILimit(userId: number, userType: string): Promise<string | null> {
+async function checkAILimit(userId: number, userType: string, serviceType: "chat" | "disease"): Promise<string | null> {
   if (userType !== "farmer") return null;
   const [farmer] = await db.select().from(farmersTable).where(eq(farmersTable.id, userId));
   if (!farmer) return "User not found";
   
-  if (farmer.isPremium) return null;
+  if (farmer.subscriptionPlan !== "free") return null;
   
   const today = new Date();
   const usageDate = farmer.aiUsageDate ? new Date(farmer.aiUsageDate) : null;
   
-  let currentCount = farmer.aiUsageCount;
+  let currentCount = serviceType === "chat" ? farmer.aiChatUsageCount : farmer.aiDiseaseUsageCount;
   if (!usageDate || usageDate.toDateString() !== today.toDateString()) {
     currentCount = 0;
   }
@@ -94,21 +94,30 @@ async function checkAILimit(userId: number, userType: string): Promise<string | 
   return null;
 }
 
-async function incrementAILimit(userId: number, userType: string) {
+async function incrementAILimit(userId: number, userType: string, serviceType: "chat" | "disease") {
   if (userType !== "farmer") return;
   const [farmer] = await db.select().from(farmersTable).where(eq(farmersTable.id, userId));
-  if (!farmer || farmer.isPremium) return;
+  if (!farmer || farmer.subscriptionPlan !== "free") return;
   
   const today = new Date();
   const usageDate = farmer.aiUsageDate ? new Date(farmer.aiUsageDate) : null;
   
-  let newCount = farmer.aiUsageCount;
+  let newChatCount = farmer.aiChatUsageCount;
+  let newDiseaseCount = farmer.aiDiseaseUsageCount;
+  
   if (!usageDate || usageDate.toDateString() !== today.toDateString()) {
-    newCount = 0;
+    newChatCount = 0;
+    newDiseaseCount = 0;
+  }
+  
+  if (serviceType === "chat") {
+    newChatCount++;
+  } else {
+    newDiseaseCount++;
   }
   
   await db.update(farmersTable)
-    .set({ aiUsageCount: newCount + 1, aiUsageDate: today })
+    .set({ aiChatUsageCount: newChatCount, aiDiseaseUsageCount: newDiseaseCount, aiUsageDate: today })
     .where(eq(farmersTable.id, userId));
 }
 
@@ -152,7 +161,7 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
     ? imageBase64
     : `data:image/jpeg;base64,${imageBase64}`;
 
-  const limitError = await checkAILimit(req.session.userId!, req.session.userType!);
+  const limitError = await checkAILimit(req.session.userId!, req.session.userType!, "disease");
   if (limitError) {
     res.status(403).json({ error: limitError });
     return;
@@ -231,7 +240,7 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
     }
   }
 
-  await incrementAILimit(req.session.userId!, req.session.userType!);
+  await incrementAILimit(req.session.userId!, req.session.userType!, "disease");
 
   const [report] = await db
     .insert(diseaseReportsTable)
@@ -340,7 +349,7 @@ router.post("/ai/chat", async (req, res): Promise<void> => {
     return;
   }
 
-  const { message, conversationId } = parsed.data;
+  const { message, conversationId, history: payloadHistory } = parsed.data;
 
   if (message.trim().length === 0) {
     res.status(400).json({ error: "Message cannot be empty." });
@@ -351,14 +360,14 @@ router.post("/ai/chat", async (req, res): Promise<void> => {
     return;
   }
 
-  const limitError = await checkAILimit(req.session.userId!, req.session.userType!);
+  const limitError = await checkAILimit(req.session.userId!, req.session.userType!, "chat");
   if (limitError) {
     res.status(403).json({ error: limitError });
     return;
   }
 
   // Load (and authorise) an existing conversation, or start a fresh one.
-  let history: ChatMessage[] = [];
+  let history: ChatMessage[] = payloadHistory ?? [];
   let convId: number | null = conversationId ?? null;
   let title = message.slice(0, 60);
 
@@ -375,7 +384,9 @@ router.post("/ai/chat", async (req, res): Promise<void> => {
       res.status(404).json({ error: "Conversation not found" });
       return;
     }
-    history = conv.messages;
+    if (!payloadHistory) {
+      history = conv.messages;
+    }
     title = conv.title;
   }
 
@@ -412,7 +423,7 @@ router.post("/ai/chat", async (req, res): Promise<void> => {
     }
   }
   
-  await incrementAILimit(req.session.userId!, req.session.userType!);
+  await incrementAILimit(req.session.userId!, req.session.userType!, "chat");
 
   const assistantMessage: ChatMessage = { role: "assistant", content: reply };
   const updatedMessages = [...conversationForModel, assistantMessage];

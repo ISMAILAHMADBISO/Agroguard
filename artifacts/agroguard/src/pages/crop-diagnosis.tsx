@@ -3,7 +3,9 @@ import {
   useDetectDisease,
   useListDiseaseReports,
   getListDiseaseReportsQueryKey,
+  useGetFarmer,
 } from "@workspace/api-client-react";
+import { useAuth } from "@/context/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -77,6 +79,10 @@ export default function CropDiagnosisPage() {
   const { data: reports, isLoading } = useListDiseaseReports();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { data: farmer } = useGetFarmer(user?.id ?? 0, { query: { enabled: user?.userType === "farmer" } });
+  
+  const remainingDetections = farmer && farmer.subscriptionPlan === "free" ? Math.max(0, 5 - (farmer.aiDiseaseUsageCount ?? 0)) : null;
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
@@ -135,11 +141,23 @@ export default function CropDiagnosisPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Crop Disease Detection</h2>
-        <p className="text-muted-foreground">
-          Upload a clear photo of a crop leaf or plant and get an instant AI diagnosis with treatment guidance.
-        </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Crop Disease Detection</h2>
+          <p className="text-muted-foreground">
+            Upload a clear photo of a crop leaf or plant and get an instant AI diagnosis with treatment guidance.
+          </p>
+        </div>
+        {remainingDetections !== null && (
+          <div className="bg-amber-500/10 border border-amber-200 text-amber-800 rounded-lg px-4 py-2 flex items-center gap-3 text-sm shrink-0">
+            <div>
+              <span className="font-bold">{remainingDetections} of 5</span> free scans remaining today
+            </div>
+            <Button size="sm" className="h-8 bg-amber-500 hover:bg-amber-600 text-white" onClick={openPricingModal}>
+              <Star className="h-3.5 w-3.5 mr-1.5" /> Upgrade
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

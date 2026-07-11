@@ -9,6 +9,7 @@ export const socialLinks = {
   facebook: "https://www.facebook.com/share/1BDF2vHEkH/?mibextid=wwXIfr",
   linkedin: "https://www.linkedin.com/company/agroguard-ltd/",
   instagram: "https://www.instagram.com/agroguard_ltd?igsh=MTAyYzFva29heW5uaA==",
+  twitter: "https://x.com/agroguard_ltd",
   website: "https://agroguard.tech",
   email: "info@agroguard.tech",
   phone: "+2347089459265",

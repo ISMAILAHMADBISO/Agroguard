@@ -25,6 +25,7 @@ import {
   Clock,
   Send,
   ChevronRight,
+  Menu,
 } from "lucide-react";
 import { ProductCarousel } from "@/components/product-carousel";
 import AchievementsSection from "@/components/AchievementsSection";
@@ -47,6 +48,7 @@ export default function LandingPage() {
   const [contactEmail, setContactEmail] = useState("");
   const [contactMessage, setContactMessage] = useState("");
   const [contactType, setContactType] = useState("demo");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,8 +87,36 @@ export default function LandingPage() {
             <Link href="/login" className="hidden md:inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
               Login
             </Link>
+            <button 
+              className="lg:hidden p-2 text-foreground"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
         </div>
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden bg-background border-b border-border absolute w-full left-0 top-16 shadow-lg pb-4">
+            <nav className="flex flex-col px-4 pt-2 space-y-4 text-sm font-medium">
+              <a href="#about" className="hover:text-primary transition-colors" onClick={() => setMobileMenuOpen(false)}>About</a>
+              <a href="#features" className="hover:text-primary transition-colors" onClick={() => setMobileMenuOpen(false)}>Features</a>
+              <a href="#product" className="hover:text-primary transition-colors" onClick={() => setMobileMenuOpen(false)}>Product</a>
+              <a href="#pricing" className="hover:text-primary transition-colors" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
+              <a href="#how-it-works" className="hover:text-primary transition-colors" onClick={() => setMobileMenuOpen(false)}>How it Works</a>
+              <a href="#trust" className="hover:text-primary transition-colors" onClick={() => setMobileMenuOpen(false)}>Why Us</a>
+              <a href="#team" className="hover:text-primary transition-colors" onClick={() => setMobileMenuOpen(false)}>Team</a>
+              <a href="#contact" className="hover:text-primary transition-colors" onClick={() => setMobileMenuOpen(false)}>Contact</a>
+              <div className="pt-2 border-t flex flex-col gap-4">
+                <SocialIcons variant="primary" size="sm" />
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
+                  Login
+                </Link>
+              </div>
+            </nav>
+          </div>
+        )}
       </header>
 
       <main className="flex-1">

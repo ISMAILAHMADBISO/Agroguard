@@ -19,4 +19,6 @@ export interface DashboardStats {
   avgSoilMoisture: number;
   avgTemperature: number;
   avgHumidity: number;
+  premiumFarmers?: number;
+  totalRevenue?: number;
 }

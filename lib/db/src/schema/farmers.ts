@@ -29,8 +29,11 @@ export const farmersTable = pgTable("farmers", {
   /** One-time activation token sent via email/WhatsApp for account activation */
   activationToken: text("activation_token"),
   /** AI Usage quotas */
-  isPremium: boolean("is_premium").notNull().default(false),
-  aiUsageCount: integer("ai_usage_count").notNull().default(0),
+  subscriptionPlan: text("subscription_plan").notNull().default("free"),
+  subscriptionStartDate: timestamp("subscription_start_date", { withTimezone: true }),
+  subscriptionExpiryDate: timestamp("subscription_expiry_date", { withTimezone: true }),
+  aiChatUsageCount: integer("ai_chat_usage_count").notNull().default(0),
+  aiDiseaseUsageCount: integer("ai_disease_usage_count").notNull().default(0),
   aiUsageDate: timestamp("ai_usage_date", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

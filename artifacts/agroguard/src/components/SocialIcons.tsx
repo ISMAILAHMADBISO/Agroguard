@@ -1,5 +1,5 @@
 import { socialLinks } from "@/data/site-config";
-import { FaFacebookF, FaLinkedinIn, FaInstagram } from "react-icons/fa";
+import { FaFacebookF, FaLinkedinIn, FaInstagram, FaXTwitter } from "react-icons/fa6";
 
 interface SocialIconsProps {
   /** Color variant for different backgrounds */
@@ -21,6 +21,7 @@ export default function SocialIcons({ variant = "dark", size = "md" }: SocialIco
   const iconSize = iconSizeMap[size];
   const links = [
     { href: socialLinks.facebook, icon: <FaFacebookF size={iconSize} />, label: "Facebook" },
+    { href: socialLinks.twitter, icon: <FaXTwitter size={iconSize} />, label: "X (Twitter)" },
     { href: socialLinks.linkedin, icon: <FaLinkedinIn size={iconSize} />, label: "LinkedIn" },
     { href: socialLinks.instagram, icon: <FaInstagram size={iconSize} />, label: "Instagram" },
   ];

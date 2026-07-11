@@ -5,6 +5,7 @@
  * AgroGuard Limited - Agricultural IoT Platform API
  * OpenAPI spec version: 0.2.0
  */
+import type { ChatMessage } from './chatMessage.ts';
 
 export interface ChatInput {
   /** The user's question for the AI farming advisor. */
@@ -14,4 +15,6 @@ export interface ChatInput {
      * @nullable
      */
   conversationId?: number | null;
+  /** Optional truncated history if editing a past message. */
+  history?: ChatMessage[];
 }

@@ -33,6 +33,11 @@ export const ListFarmersResponseItem = zod.object({
   "whatsappNumber": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "fieldOfficerId": zod.number().nullish().describe('ID of the field officer assigned to manage this farmer'),
+  "subscriptionPlan": zod.enum(['free', 'basic', 'standard', 'premium']).optional(),
+  "subscriptionStartDate": zod.coerce.date().nullish(),
+  "subscriptionExpiryDate": zod.coerce.date().nullish(),
+  "aiChatUsageCount": zod.number().optional(),
+  "aiDiseaseUsageCount": zod.number().optional(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date().optional()
 })
@@ -79,7 +84,11 @@ export const GetFarmerResponse = zod.object({
   "whatsappNumber": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "fieldOfficerId": zod.number().nullish().describe('ID of the field officer assigned to manage this farmer'),
-  "isPremium": zod.boolean().optional(),
+  "subscriptionPlan": zod.enum(['free', 'basic', 'standard', 'premium']).optional(),
+  "subscriptionStartDate": zod.coerce.date().nullish(),
+  "subscriptionExpiryDate": zod.coerce.date().nullish(),
+  "aiChatUsageCount": zod.number().optional(),
+  "aiDiseaseUsageCount": zod.number().optional(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date().optional()
 })
@@ -100,11 +109,11 @@ export const UpdateFarmerBody = zod.object({
   "farmName": zod.string().optional(),
   "farmSizeHectares": zod.number().optional(),
   "cropTypes": zod.string().optional(),
-  status: zod.enum(['active', 'inactive', 'pending']).optional(),
-  whatsappNumber: zod.string().optional(),
-  notes: zod.string().optional(),
-  fieldOfficerId: zod.number().nullish().describe('Assign or unassign a field officer (null to unassign)'),
-  isPremium: zod.boolean().optional()
+  "status": zod.enum(['active', 'inactive', 'pending']).optional(),
+  "whatsappNumber": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "fieldOfficerId": zod.number().nullish().describe('Assign or unassign a field officer (null to unassign)'),
+  "subscriptionPlan": zod.enum(['free', 'basic', 'standard', 'premium']).optional()
 })
 
 export const UpdateFarmerResponse = zod.object({
@@ -120,6 +129,11 @@ export const UpdateFarmerResponse = zod.object({
   "whatsappNumber": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "fieldOfficerId": zod.number().nullish().describe('ID of the field officer assigned to manage this farmer'),
+  "subscriptionPlan": zod.enum(['free', 'basic', 'standard', 'premium']).optional(),
+  "subscriptionStartDate": zod.coerce.date().nullish(),
+  "subscriptionExpiryDate": zod.coerce.date().nullish(),
+  "aiChatUsageCount": zod.number().optional(),
+  "aiDiseaseUsageCount": zod.number().optional(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date().optional()
 })
@@ -550,7 +564,9 @@ export const GetDashboardStatsResponse = zod.object({
   "pendingRecommendations": zod.number(),
   "avgSoilMoisture": zod.number(),
   "avgTemperature": zod.number(),
-  "avgHumidity": zod.number()
+  "avgHumidity": zod.number(),
+  "premiumFarmers": zod.number().optional(),
+  "totalRevenue": zod.number().optional()
 })
 
 
@@ -669,7 +685,11 @@ export const GetAiConversationResponse = zod.object({
  */
 export const SendChatMessageBody = zod.object({
   "message": zod.string().describe('The user\'s question for the AI farming advisor.'),
-  "conversationId": zod.number().nullish().describe('Existing conversation to append to; omit to start a new one.')
+  "conversationId": zod.number().nullish().describe('Existing conversation to append to; omit to start a new one.'),
+  "history": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant']),
+  "content": zod.string()
+})).optional().describe('Optional truncated history if editing a past message.')
 })
 
 export const SendChatMessageResponse = zod.object({
@@ -679,6 +699,21 @@ export const SendChatMessageResponse = zod.object({
   "role": zod.enum(['user', 'assistant']),
   "content": zod.string()
 }))
+})
+
+
+/**
+ * @summary Verify Paystack transaction and upgrade subscription
+ */
+export const VerifyPaymentBody = zod.object({
+  "reference": zod.string().describe('Paystack transaction reference'),
+  "plan": zod.enum(['free', 'basic', 'standard', 'premium']).describe('The plan the user is upgrading to')
+})
+
+export const VerifyPaymentResponse = zod.object({
+  "status": zod.string(),
+  "message": zod.string(),
+  "plan": zod.enum(['free', 'basic', 'standard', 'premium'])
 })
 
 

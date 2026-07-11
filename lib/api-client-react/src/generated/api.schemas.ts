@@ -18,6 +18,16 @@ export const FarmerStatus = {
   pending: 'pending',
 } as const;
 
+export type FarmerSubscriptionPlan = typeof FarmerSubscriptionPlan[keyof typeof FarmerSubscriptionPlan];
+
+
+export const FarmerSubscriptionPlan = {
+  free: 'free',
+  basic: 'basic',
+  standard: 'standard',
+  premium: 'premium',
+} as const;
+
 export interface Farmer {
   id: number;
   name: string;
@@ -40,6 +50,13 @@ export interface Farmer {
      * @nullable
      */
   fieldOfficerId?: number | null;
+  subscriptionPlan?: FarmerSubscriptionPlan;
+  /** @nullable */
+  subscriptionStartDate?: string | null;
+  /** @nullable */
+  subscriptionExpiryDate?: string | null;
+  aiChatUsageCount?: number;
+  aiDiseaseUsageCount?: number;
   createdAt: string;
   updatedAt?: string;
 }
@@ -109,6 +126,16 @@ export const FarmerUpdateStatus = {
   pending: 'pending',
 } as const;
 
+export type FarmerUpdateSubscriptionPlan = typeof FarmerUpdateSubscriptionPlan[keyof typeof FarmerUpdateSubscriptionPlan];
+
+
+export const FarmerUpdateSubscriptionPlan = {
+  free: 'free',
+  basic: 'basic',
+  standard: 'standard',
+  premium: 'premium',
+} as const;
+
 export interface FarmerUpdate {
   name?: string;
   email?: string;
@@ -125,6 +152,7 @@ export interface FarmerUpdate {
      * @nullable
      */
   fieldOfficerId?: number | null;
+  subscriptionPlan?: FarmerUpdateSubscriptionPlan;
 }
 
 export type DeviceStatus = typeof DeviceStatus[keyof typeof DeviceStatus];
@@ -554,6 +582,8 @@ export interface DashboardStats {
   avgSoilMoisture: number;
   avgTemperature: number;
   avgHumidity: number;
+  premiumFarmers?: number;
+  totalRevenue?: number;
 }
 
 export type FarmOverviewStatus = typeof FarmOverviewStatus[keyof typeof FarmOverviewStatus];
@@ -691,11 +721,49 @@ export interface ChatInput {
      * @nullable
      */
   conversationId?: number | null;
+  /** Optional truncated history if editing a past message. */
+  history?: ChatMessage[];
 }
 
 export interface ChatResponse {
   conversationId: number;
   reply: string;
   messages: ChatMessage[];
+}
+
+/**
+ * The plan the user is upgrading to
+ */
+export type VerifyPaymentInputPlan = typeof VerifyPaymentInputPlan[keyof typeof VerifyPaymentInputPlan];
+
+
+export const VerifyPaymentInputPlan = {
+  free: 'free',
+  basic: 'basic',
+  standard: 'standard',
+  premium: 'premium',
+} as const;
+
+export interface VerifyPaymentInput {
+  /** Paystack transaction reference */
+  reference: string;
+  /** The plan the user is upgrading to */
+  plan: VerifyPaymentInputPlan;
+}
+
+export type VerifyPaymentResponsePlan = typeof VerifyPaymentResponsePlan[keyof typeof VerifyPaymentResponsePlan];
+
+
+export const VerifyPaymentResponsePlan = {
+  free: 'free',
+  basic: 'basic',
+  standard: 'standard',
+  premium: 'premium',
+} as const;
+
+export interface VerifyPaymentResponse {
+  status: string;
+  message: string;
+  plan: VerifyPaymentResponsePlan;
 }
 

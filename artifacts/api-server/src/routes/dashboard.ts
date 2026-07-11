@@ -4,7 +4,7 @@
  * and 24h sensor trend data for charting.
  */
 import { Router, type IRouter } from "express";
-import { eq, desc, gte, count, avg, and, inArray } from "drizzle-orm";
+import { eq, desc, gte, count, avg, sum, and, inArray, ne } from "drizzle-orm";
 import {
   db,
   farmersTable,
@@ -12,6 +12,7 @@ import {
   sensorReadingsTable,
   alertsTable,
   recommendationsTable,
+  paymentsTable,
 } from "@workspace/db";
 import {
   GetSensorTrendsParams,
@@ -41,7 +42,7 @@ router.get("/dashboard/stats", async (_req, res): Promise<void> => {
     now.getDate(),
   );
 
-  const [farmerCounts, deviceCounts, alertCounts, readingCount, pendingRecs, sensorAvgs] =
+  const [farmerCounts, deviceCounts, alertCounts, readingCount, pendingRecs, sensorAvgs, premiumFarmersCount, revenueResult] =
     await Promise.all([
       db.select({ total: count() }).from(farmersTable),
       db
@@ -72,6 +73,14 @@ router.get("/dashboard/stats", async (_req, res): Promise<void> => {
         })
         .from(sensorReadingsTable)
         .where(gte(sensorReadingsTable.recordedAt, todayStart)),
+      db
+        .select({ total: count() })
+        .from(farmersTable)
+        .where(ne(farmersTable.subscriptionPlan, "free")),
+      db
+        .select({ totalRevenue: sum(paymentsTable.amount) })
+        .from(paymentsTable)
+        .where(eq(paymentsTable.status, "success")),
     ]);
 
   const totalFarmers = Number(farmerCounts[0]?.total ?? 0);
@@ -110,6 +119,8 @@ router.get("/dashboard/stats", async (_req, res): Promise<void> => {
       (sensorAvgs[0]?.avgTemperature ?? "0").toString(),
     ),
     avgHumidity: parseFloat((sensorAvgs[0]?.avgHumidity ?? "0").toString()),
+    premiumFarmers: Number(premiumFarmersCount[0]?.total ?? 0),
+    totalRevenue: Number(revenueResult[0]?.totalRevenue ?? 0),
   };
 
   res.json(GetDashboardStatsResponse.parse(stats));

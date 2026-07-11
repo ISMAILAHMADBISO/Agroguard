@@ -5,7 +5,7 @@
  * AgroGuard Limited - Agricultural IoT Platform API
  * OpenAPI spec version: 0.2.0
  */
-import type { FarmOverviewStatus } from './farmOverviewStatus';
+import type { FarmOverviewStatus } from './farmOverviewStatus.ts';
 
 export interface FarmOverview {
   farmerId: number;
