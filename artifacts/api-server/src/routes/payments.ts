@@ -1,7 +1,12 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, farmersTable, paymentsTable } from "@workspace/db";
-import { VerifyPaymentInput } from "@workspace/api-zod";
+import { z } from "zod";
+
+const VerifyPaymentInput = z.object({
+  reference: z.string(),
+  plan: z.enum(["free", "basic", "standard", "premium"]),
+});
 
 const router: IRouter = Router();
 
