@@ -657,6 +657,14 @@ export const ListDiseaseReportsResponse = zod.array(ListDiseaseReportsResponseIt
 
 
 /**
+ * @summary Delete a crop-disease report
+ */
+export const DeleteDiseaseReportParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary List the current user's advisory conversations
  */
 export const ListAiConversationsResponseItem = zod.object({
@@ -683,6 +691,14 @@ export const GetAiConversationResponse = zod.object({
 })),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete an advisory conversation
+ */
+export const DeleteAiConversationParams = zod.object({
+  "id": zod.coerce.number()
 })
 
 

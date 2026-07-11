@@ -648,6 +648,23 @@ paths:
                 items:
                   $ref: "#/components/schemas/DiseaseReport"
 
+  /ai/disease-reports/{id}:
+    delete:
+      operationId: deleteDiseaseReport
+      tags: [ai]
+      summary: Delete a crop-disease report
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Report deleted
+        "404":
+          description: Report not found
+
   /ai/conversations:
     get:
       operationId: listAiConversations
@@ -681,6 +698,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AiConversation"
+        "404":
+          description: Conversation not found
+    delete:
+      operationId: deleteAiConversation
+      tags: [ai]
+      summary: Delete an advisory conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Conversation deleted
         "404":
           description: Conversation not found
 

@@ -2510,6 +2510,76 @@ export function useListDiseaseReports<TData = Awaited<ReturnType<typeof listDise
 
 
 
+export const getDeleteDiseaseReportUrl = (id: number,) => {
+
+
+
+
+  return `/api/ai/disease-reports/${id}`
+}
+
+/**
+ * @summary Delete a crop-disease report
+ */
+export const deleteDiseaseReport = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteDiseaseReportUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteDiseaseReportMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDiseaseReport>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteDiseaseReport>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteDiseaseReport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteDiseaseReport>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteDiseaseReport(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteDiseaseReportMutationResult = NonNullable<Awaited<ReturnType<typeof deleteDiseaseReport>>>
+
+    export type DeleteDiseaseReportMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a crop-disease report
+ */
+export const useDeleteDiseaseReport = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDiseaseReport>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteDiseaseReport>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteDiseaseReportMutationOptions(options));
+    }
+
 export const getListAiConversationsUrl = () => {
 
 
@@ -2663,6 +2733,76 @@ export function useGetAiConversation<TData = Awaited<ReturnType<typeof getAiConv
 
 
 
+
+export const getDeleteAiConversationUrl = (id: number,) => {
+
+
+
+
+  return `/api/ai/conversations/${id}`
+}
+
+/**
+ * @summary Delete an advisory conversation
+ */
+export const deleteAiConversation = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteAiConversationUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteAiConversationMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAiConversation>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAiConversation>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteAiConversation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAiConversation>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteAiConversation(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAiConversationMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAiConversation>>>
+
+    export type DeleteAiConversationMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete an advisory conversation
+ */
+export const useDeleteAiConversation = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAiConversation>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAiConversation>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteAiConversationMutationOptions(options));
+    }
 
 export const getSendChatMessageUrl = () => {
 

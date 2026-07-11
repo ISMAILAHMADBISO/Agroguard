@@ -286,6 +286,36 @@ router.get("/ai/disease-reports", async (req, res): Promise<void> => {
   res.json(reports);
 });
 
+/** DELETE /ai/disease-reports/:id — delete a report the caller owns. */
+router.delete("/ai/disease-reports/:id", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid ID" });
+    return;
+  }
+
+  const [report] = await db
+    .select()
+    .from(diseaseReportsTable)
+    .where(eq(diseaseReportsTable.id, id));
+
+  if (!report) {
+    res.status(404).json({ error: "Report not found" });
+    return;
+  }
+
+  if (
+    report.createdBy !== req.session.userId ||
+    report.createdByType !== req.session.userType
+  ) {
+    res.status(403).json({ error: "Access denied" });
+    return;
+  }
+
+  await db.delete(diseaseReportsTable).where(eq(diseaseReportsTable.id, id));
+  res.status(204).end();
+});
+
 /** GET /ai/conversations — list the current user's advisory conversations. */
 router.get("/ai/conversations", async (req, res): Promise<void> => {
   const rows = await db
@@ -335,6 +365,32 @@ router.get("/ai/conversations/:id", async (req, res): Promise<void> => {
     createdAt: conv.createdAt,
     updatedAt: conv.updatedAt,
   });
+});
+
+/** DELETE /ai/conversations/:id — delete a specific conversation */
+router.delete("/ai/conversations/:id", async (req, res): Promise<void> => {
+  const params = GetAiConversationParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [conv] = await db
+    .select()
+    .from(aiConversationsTable)
+    .where(eq(aiConversationsTable.id, params.data.id));
+
+  if (
+    !conv ||
+    conv.ownerId !== req.session.userId ||
+    conv.ownerType !== req.session.userType
+  ) {
+    res.status(404).json({ error: "Conversation not found" });
+    return;
+  }
+
+  await db.delete(aiConversationsTable).where(eq(aiConversationsTable.id, params.data.id));
+  res.status(204).end();
 });
 
 /** POST /ai/chat — send a message to the advisor, creating/continuing a conversation. */

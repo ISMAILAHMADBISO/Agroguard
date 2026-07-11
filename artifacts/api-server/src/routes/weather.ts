@@ -8,13 +8,13 @@ export const weatherRouter = Router();
 
 weatherRouter.get("/", async (req, res) => {
   try {
-    const user = req.user!;
+    const session = (req as any).session || {};
     
     // We will simulate weather for the user's primary farm
     let location = "Abuja, Nigeria";
     
-    if (user.role === "farmer" && user.farmerId) {
-      const farms = await db.select().from(farmsTable).where(eq(farmsTable.farmerId, user.farmerId));
+    if (session.userType === "farmer" && session.userId) {
+      const farms = await db.select().from(farmsTable).where(eq(farmsTable.farmerId, session.userId));
       if (farms.length > 0) {
         location = farms[0].location || location;
       }

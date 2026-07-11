@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   useSendChatMessage,
   useListAiConversations,
+  useDeleteAiConversation,
   getAiConversation,
   getListAiConversationsQueryKey,
   useGetFarmer,
@@ -14,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { apiErrorMessage } from "@/lib/api-error";
-import { Send, Loader2, Bot, User, Plus, MessageSquare, Sprout, Star, Edit2, RefreshCw, Copy, Check } from "lucide-react";
+import { Send, Loader2, Bot, User, Plus, MessageSquare, Sprout, Star, Edit2, RefreshCw, Copy, Check, Trash2 } from "lucide-react";
 import { openPricingModal } from "@/components/pricing-modal";
 import ReactMarkdown from "react-markdown";
 
@@ -35,6 +36,7 @@ export default function AiAssistantPage() {
 
   const send = useSendChatMessage();
   const { data: conversations } = useListAiConversations();
+  const deleteMutation = useDeleteAiConversation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -189,16 +191,40 @@ export default function AiAssistantPage() {
             </Button>
             <div className="space-y-1 overflow-y-auto flex-1 pr-2">
             {conversations?.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => openConversation(c.id)}
-                className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted ${
-                  c.id === conversationId ? "bg-muted font-medium" : "text-muted-foreground"
-                }`}
-              >
-                <MessageSquare className="h-4 w-4 shrink-0" />
-                <span className="truncate">{c.title}</span>
-              </button>
+              <div key={c.id} className="group flex items-center gap-1">
+                <button
+                  onClick={() => openConversation(c.id)}
+                  className={`flex flex-1 items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted ${
+                    c.id === conversationId ? "bg-muted font-medium" : "text-muted-foreground"
+                  }`}
+                >
+                  <MessageSquare className="h-4 w-4 shrink-0" />
+                  <span className="truncate max-w-[150px]">{c.title}</span>
+                </button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm("Are you sure you want to delete this chat?")) {
+                      deleteMutation.mutate(
+                        { id: c.id },
+                        {
+                          onSuccess: () => {
+                            queryClient.invalidateQueries({ queryKey: getListAiConversationsQueryKey() });
+                            if (conversationId === c.id) {
+                              startNew();
+                            }
+                          }
+                        }
+                      );
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             ))}
             {!conversations?.length && (
               <p className="px-3 py-2 text-xs text-muted-foreground">No conversations yet.</p>

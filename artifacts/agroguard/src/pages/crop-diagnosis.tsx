@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import {
   useDetectDisease,
   useListDiseaseReports,
+  useDeleteDiseaseReport,
   getListDiseaseReportsQueryKey,
   useGetFarmer,
 } from "@workspace/api-client-react";
@@ -15,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { apiErrorMessage } from "@/lib/api-error";
-import { Upload, Loader2, Leaf, ScanLine, ShieldAlert, Stethoscope, Star } from "lucide-react";
+import { Upload, Loader2, Leaf, ScanLine, ShieldAlert, Stethoscope, Star, Trash2 } from "lucide-react";
 import { openPricingModal } from "@/components/pricing-modal";
 
 // Accept large originals; we downscale before upload so the request stays small.
@@ -77,6 +78,7 @@ export default function CropDiagnosisPage() {
 
   const detect = useDetectDisease();
   const { data: reports, isLoading } = useListDiseaseReports();
+  const deleteMutation = useDeleteDiseaseReport();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -135,6 +137,19 @@ export default function CropDiagnosisPage() {
         },
       },
     );
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm("Are you sure you want to delete this diagnosis?")) {
+      deleteMutation.mutate(
+        { id },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: getListDiseaseReportsQueryKey() });
+          }
+        }
+      );
+    }
   };
 
   const latest = reports?.[0];
@@ -231,11 +246,18 @@ export default function CropDiagnosisPage() {
 
         {/* Latest result card */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Leaf className="h-5 w-5 text-primary" /> Latest diagnosis
-            </CardTitle>
-            <CardDescription>The most recent analysis result.</CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between space-y-0">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Leaf className="h-5 w-5 text-primary" /> Latest diagnosis
+              </CardTitle>
+              <CardDescription className="mt-1">The most recent analysis result.</CardDescription>
+            </div>
+            {latest && !detect.isPending && (
+              <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 shrink-0 h-8 w-8 -mt-1" onClick={() => handleDelete(latest.id)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             {detect.isPending ? (
@@ -290,12 +312,19 @@ export default function CropDiagnosisPage() {
               <Card key={r.id}>
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="text-base">{r.diagnosis}</CardTitle>
-                    {severityBadge(r.severity)}
+                    <div>
+                      <CardTitle className="text-base">{r.diagnosis}</CardTitle>
+                      {r.cropType && (
+                        <CardDescription className="capitalize mt-1">{r.cropType}</CardDescription>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {severityBadge(r.severity)}
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(r.id)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
-                  {r.cropType && (
-                    <CardDescription className="capitalize">{r.cropType}</CardDescription>
-                  )}
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-foreground/80 leading-relaxed line-clamp-3">{r.summary}</p>

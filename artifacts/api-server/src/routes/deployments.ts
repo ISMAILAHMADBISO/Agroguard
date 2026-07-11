@@ -144,7 +144,7 @@ router.post("/devices/activate", async (req, res): Promise<void> => {
   const [device] = await db
     .insert(devicesTable)
     .values({
-      serialNumber: parsed.data.serialNumber,
+      deviceId: parsed.data.serialNumber,
       farmerId: order.farmerId,
       name: `AgroGuard ${order.productType} Sensor`,
       status: "active",
