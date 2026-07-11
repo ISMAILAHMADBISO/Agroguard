@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, ShieldCheck, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { customFetch } from "@workspace/api-client-react/src/custom-fetch";
+import { customFetch } from "@workspace/api-client-react";
 
 // Temporary type since codegen might still be running
 interface SystemLog {

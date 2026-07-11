@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useListDeployments, useListOrders, getAuthToken } from "@workspace/api-client-react";
+import { useListDeployments, useListOrders } from "@workspace/api-client-react";
+import { getAuthToken } from "@/context/auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

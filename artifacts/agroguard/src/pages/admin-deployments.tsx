@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useListDeployments, useListStaff, useListOrders, getAuthToken } from "@workspace/api-client-react";
+import { useListDeployments, useListStaff, useListOrders } from "@workspace/api-client-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ export default function AdminDeploymentsPage() {
   // Wait, I can just write the frontend and then add the backend route for it. Let's assume the endpoint is PATCH /api/deployments/:id/assign
   
   const assignOfficer = async ({ deploymentId, officerId }: { deploymentId: number; officerId: number }) => {
-    const token = getAuthToken();
+    const token = localStorage.getItem("token");
     const res = await fetch(`/api/deployments/${deploymentId}/assign`, {
       method: "PATCH",
       headers: {
