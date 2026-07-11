@@ -3,12 +3,14 @@ import { db } from "@workspace/db";
 import { systemLogsTable } from "@workspace/db/schema";
 import { desc } from "drizzle-orm";
 import type { SystemLog } from "@workspace/api-zod";
-import { requireRole } from "../middleware/auth";
-
-const router = Router();
+export const systemRouter = Router();
 
 // Only Super Admin can view system logs for security audits
-router.get("/system-logs", requireRole("super_admin"), async (req: Request, res: Response) => {
+systemRouter.get("/", async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  if (!user || user.role !== "super_admin") {
+    return res.status(403).json({ error: "Only Super Admin can view system logs" });
+  }
   try {
     const logs = await db
       .select()
@@ -22,4 +24,4 @@ router.get("/system-logs", requireRole("super_admin"), async (req: Request, res:
   }
 });
 
-export default router;
+

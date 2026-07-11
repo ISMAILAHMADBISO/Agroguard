@@ -47,6 +47,7 @@ import OfficerDashboardPage from "@/pages/officer-dashboard";
 import OfficerInstallationPage from "@/pages/officer-installation";
 import FarmerCommandCenter from "@/pages/farmer-command-center";
 import KnowledgeCentre from "@/pages/knowledge-centre";
+import AdminKnowledge from "@/pages/admin-knowledge";
 
 // Attach the stored session token as `Authorization: Bearer` to every generated
 // API call. This keeps auth working inside the cross-site Replit iframe where
@@ -156,6 +157,7 @@ function Router() {
       <Route path="/admin/devices" component={() => <ProtectedRoute access="admin" component={AdminDevicesPage} />} />
       <Route path="/admin/inventory" component={() => <ProtectedRoute access="admin" component={AdminInventoryPage} />} />
       <Route path="/admin/maintenance" component={() => <ProtectedRoute access="admin" component={AdminMaintenancePage} />} />
+      <Route path="/admin/knowledge" component={() => <ProtectedRoute access="admin" component={AdminKnowledge} />} />
       <Route path="/officer/dashboard" component={() => <ProtectedRoute access="staff" component={OfficerDashboardPage} />} />
       <Route path="/officer/installation/:id" component={() => <ProtectedRoute access="staff" component={OfficerInstallationPage} />} />
       <Route path="/achievements" component={() => <ProtectedRoute access="staff" component={AchievementsPage} />} />

@@ -53,6 +53,8 @@ export * from './farmOverviewStatus.ts';
 export * from './healthStatus.ts';
 export * from './inventoryItem.ts';
 export * from './inventoryItemStatus.ts';
+export * from './knowledgeArticle.ts';
+export * from './knowledgeArticleInput.ts';
 export * from './maintenanceLog.ts';
 export * from './maintenanceLogStatus.ts';
 export * from './maintenanceLogType.ts';

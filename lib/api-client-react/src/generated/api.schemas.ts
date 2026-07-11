@@ -1022,3 +1022,22 @@ export interface AiSummaryResponse {
   tasksDueToday: number;
 }
 
+export interface KnowledgeArticle {
+  id: number;
+  title: string;
+  category: string;
+  content: string;
+  /** @nullable */
+  videoUrl?: string | null;
+  /** @nullable */
+  authorId?: number | null;
+  createdAt: string;
+}
+
+export interface KnowledgeArticleInput {
+  title: string;
+  category: string;
+  content: string;
+  videoUrl?: string;
+}
+

@@ -210,6 +210,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                       <NavLink href="/admin/logs" icon={KeyRound} isActive={location === "/admin/logs"}>
                         System Audit Logs
                       </NavLink>
+                      <NavLink href="/admin/knowledge" icon={BookOpen} isActive={location === "/admin/knowledge"}>
+                        Manage Knowledge
+                      </NavLink>
                     </SidebarMenu>
                   </SidebarGroupContent>
                 </SidebarGroup>

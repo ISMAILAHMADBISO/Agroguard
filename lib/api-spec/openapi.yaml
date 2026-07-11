@@ -924,6 +924,53 @@ paths:
               schema:
                 $ref: "#/components/schemas/AiSummaryResponse"
 
+  /knowledge:
+    get:
+      operationId: listKnowledge
+      tags: [knowledge]
+      summary: List all knowledge articles
+      responses:
+        "200":
+          description: A list of knowledge articles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/KnowledgeArticle"
+    post:
+      operationId: createKnowledge
+      tags: [knowledge]
+      summary: Create a new knowledge article
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeArticleInput"
+      responses:
+        "201":
+          description: Created article
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeArticle"
+
+  /knowledge/{id}:
+    delete:
+      operationId: deleteKnowledge
+      tags: [knowledge]
+      summary: Delete a knowledge article
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted successfully
+
 components:
   schemas:
     HealthStatus:
@@ -1981,3 +2028,36 @@ components:
           type: number
         tasksDueToday:
           type: integer
+
+    KnowledgeArticle:
+      type: object
+      required: [id, title, category, content, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        category:
+          type: string
+        content:
+          type: string
+        videoUrl:
+          type: ["string", "null"]
+        authorId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    KnowledgeArticleInput:
+      type: object
+      required: [title, category, content]
+      properties:
+        title:
+          type: string
+        category:
+          type: string
+        content:
+          type: string
+        videoUrl:
+          type: string

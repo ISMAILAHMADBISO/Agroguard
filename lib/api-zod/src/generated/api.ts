@@ -948,3 +948,37 @@ export const GetAiSummaryResponse = zod.object({
 })
 
 
+/**
+ * @summary List all knowledge articles
+ */
+export const ListKnowledgeResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "content": zod.string(),
+  "videoUrl": zod.string().nullish(),
+  "authorId": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListKnowledgeResponse = zod.array(ListKnowledgeResponseItem)
+
+
+/**
+ * @summary Create a new knowledge article
+ */
+export const CreateKnowledgeBody = zod.object({
+  "title": zod.string(),
+  "category": zod.string(),
+  "content": zod.string(),
+  "videoUrl": zod.string().optional()
+})
+
+
+/**
+ * @summary Delete a knowledge article
+ */
+export const DeleteKnowledgeParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
