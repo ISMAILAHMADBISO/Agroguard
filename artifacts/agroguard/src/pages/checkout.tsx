@@ -12,22 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, ShieldCheck, Truck } from "lucide-react";
-
-// For this example, we inject the Paystack SDK script dynamically
-const loadPaystack = () => {
-  return new Promise<void>((resolve) => {
-    if ((window as any).PaystackPop) {
-      resolve();
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://js.paystack.co/v1/inline.js';
-    script.async = true;
-    script.onload = () => resolve();
-    document.body.appendChild(script);
-  });
-};
-
+import { usePaystackPayment } from "react-paystack";
 const formSchema = z.object({
   farmName: z.string().min(2, "Farm name must be at least 2 characters"),
   farmAddress: z.string().min(5, "Please enter full delivery address"),
@@ -61,63 +46,68 @@ export default function CheckoutPage() {
     },
   });
 
+  const paystackConfig = {
+    reference: "AGRO_HW_" + new Date().getTime().toString(),
+    email: user?.email || "farmer@agroguard.test",
+    amount: price * 100, // in kobo
+    publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_REPLACE_THIS_WITH_YOUR_PAYSTACK_PUBLIC_KEY",
+  };
+
+  const initializePayment = usePaystackPayment(paystackConfig);
+
+  async function processOrderSubmission(values: z.infer<typeof formSchema>, reference: string) {
+    try {
+      const token = getAuthToken();
+      const res = await fetch("/api/orders/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          productType,
+          ...values,
+          paystackReference: reference,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to place order");
+      }
+
+      toast({
+        title: "Order Placed Successfully! 🎉",
+        description: "Your AgroGuard hardware order is being processed.",
+      });
+      setLocation("/orders");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Order Error",
+        description: error.message,
+      });
+      setIsProcessing(false);
+    }
+  }
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsProcessing(true);
     try {
-      await loadPaystack();
+      const onSuccess = (response: any) => {
+        processOrderSubmission(values, response.reference);
+      };
 
-      const paystack = (window as any).PaystackPop.setup({
-        key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
-        email: user?.email,
-        amount: price * 100, // in kobo
-        currency: "NGN",
-        callback: async (response: any) => {
-          // Payment complete, submit order to backend
-          try {
-            const token = getAuthToken();
-            const res = await fetch("/api/orders/checkout", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-              },
-              body: JSON.stringify({
-                productType,
-                ...values,
-                paystackReference: response.reference,
-              }),
-            });
+      const onClose = () => {
+        toast({
+          variant: "destructive",
+          title: "Payment Cancelled",
+          description: "You cancelled the payment process.",
+        });
+        setIsProcessing(false);
+      };
 
-            if (!res.ok) {
-              const err = await res.json();
-              throw new Error(err.error || "Failed to place order");
-            }
-
-            toast({
-              title: "Order Placed Successfully! 🎉",
-              description: "Your AgroGuard hardware order is being processed.",
-            });
-            setLocation("/orders");
-          } catch (error: any) {
-            toast({
-              variant: "destructive",
-              title: "Order Error",
-              description: error.message,
-            });
-            setIsProcessing(false);
-          }
-        },
-        onClose: () => {
-          toast({
-            variant: "destructive",
-            title: "Payment Cancelled",
-            description: "You cancelled the payment process.",
-          });
-          setIsProcessing(false);
-        },
-      });
-
-      paystack.openIframe();
+      initializePayment({ onSuccess, onClose });
     } catch (error: any) {
       toast({
         variant: "destructive",
