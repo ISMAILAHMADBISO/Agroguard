@@ -68,8 +68,8 @@ export default function SignupPage() {
       </div>
 
       {/* Right: registration form */}
-      <div className="h-full flex items-center justify-center bg-gradient-to-br from-green-50 via-background to-emerald-50 px-4 py-6 overflow-y-auto">
-        <div className="w-full max-w-md space-y-6">
+      <div className="h-full flex justify-center bg-gradient-to-br from-green-50 via-background to-emerald-50 px-4 py-6 overflow-y-auto">
+        <div className="w-full max-w-md my-auto space-y-6">
           <div className="text-center lg:hidden">
             <div className="flex items-center justify-center mb-4">
               <img src="/agroguard-logo.png" alt="AgroGuard" className="h-20 w-20 object-contain" />

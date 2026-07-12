@@ -41,8 +41,8 @@ export default function LoginPage() {
       </div>
 
       {/* Right: sign-in form */}
-      <div className="h-full flex items-center justify-center bg-gradient-to-br from-green-50 via-background to-emerald-50 px-4 py-6 overflow-y-auto">
-        <div className="w-full max-w-md space-y-6">
+      <div className="h-full flex justify-center bg-gradient-to-br from-green-50 via-background to-emerald-50 px-4 py-6 overflow-y-auto">
+        <div className="w-full max-w-md my-auto space-y-6">
           {/* Brand (mobile only — carousel carries it on desktop) */}
           <div className="text-center lg:hidden">
             <div className="flex items-center justify-center mb-4">
