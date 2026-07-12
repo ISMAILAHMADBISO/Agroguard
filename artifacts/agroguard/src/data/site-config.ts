@@ -11,7 +11,7 @@ export const socialLinks = {
   instagram: "https://www.instagram.com/agroguard_ltd?igsh=MTAyYzFva29heW5uaA==",
   twitter: "https://x.com/agroguard_ltd",
   website: "https://agroguard.tech",
-  email: "info@agroguard.tech",
+  email: "iamagroguard@gmail.com",
   phone: "+2347089459265",
 } as const;
 

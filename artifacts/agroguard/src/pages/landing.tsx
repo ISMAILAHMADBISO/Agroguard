@@ -58,7 +58,7 @@ export default function LandingPage() {
     const body = encodeURIComponent(
       `Name: ${contactName}\nEmail: ${contactEmail}\nType: ${contactType}\n\n${contactMessage}`
     );
-    window.open(`mailto:iamagroguard@gmail.com?subject=${subject}&body=${body}`, "_self");
+    window.open(`mailto:${socialLinks.email}?subject=${subject}&body=${body}`, "_self");
   };
 
   return (
