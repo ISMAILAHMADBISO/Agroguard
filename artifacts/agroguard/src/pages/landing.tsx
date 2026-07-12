@@ -451,8 +451,6 @@ export default function LandingPage() {
         {/* ─── Why Farmers Trust AgroGuard ─────────────────────────────────── */}
         <TrustSection />
 
-        {/* ─── Achievements ──────────────────────────────────────────────── */}
-        <AchievementsSection />
 
         {/* ─── Testimonials ──────────────────────────────────────────────── */}
         <section id="testimonials" className="py-24 bg-muted/30">
