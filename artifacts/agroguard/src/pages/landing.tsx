@@ -517,34 +517,34 @@ export default function LandingPage() {
         </section>
 
         {/* ─── Contact ───────────────────────────────────────────────────── */}
-        <section id="contact" className="py-24 bg-primary text-primary-foreground">
+        <section id="contact" className="py-24 bg-white text-foreground border-t border-border">
           <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-2 gap-12 items-start">
               <div>
                 <h2 className="text-3xl font-bold mb-4">Let's grow together</h2>
-                <p className="text-primary-foreground/80 mb-8 leading-relaxed max-w-md">
+                <p className="text-muted-foreground mb-8 leading-relaxed max-w-md">
                   Whether you farm one hectare or manage hundreds, our team will help you get
                   started with precision monitoring. Reach out and we will be in touch.
                 </p>
-                <ul className="space-y-4 mb-8">
+                <ul className="space-y-4 mb-8 text-foreground">
                   <li className="flex items-center gap-3">
-                    <MapPin className="h-5 w-5 shrink-0" />
+                    <MapPin className="h-5 w-5 shrink-0 text-primary" />
                     <span>Jamaa, Zaria, Kaduna State, Nigeria</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 shrink-0" />
-                    <a href={`mailto:${socialLinks.email}`} className="hover:underline">{socialLinks.email}</a>
+                    <Mail className="h-5 w-5 shrink-0 text-primary" />
+                    <a href={`mailto:${socialLinks.email}`} className="hover:text-primary transition-colors">{socialLinks.email}</a>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Phone className="h-5 w-5 shrink-0" />
-                    <a href={`tel:${socialLinks.phone}`} className="hover:underline">{socialLinks.phone}</a>
+                    <Phone className="h-5 w-5 shrink-0 text-primary" />
+                    <a href={`tel:${socialLinks.phone}`} className="hover:text-primary transition-colors">{socialLinks.phone}</a>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Clock className="h-5 w-5 shrink-0" />
+                    <Clock className="h-5 w-5 shrink-0 text-primary" />
                     <span>{businessHours.weekdays}</span>
                   </li>
                 </ul>
-                <SocialIcons variant="light" size="md" />
+                <SocialIcons variant="default" size="md" />
               </div>
 
               {/* Contact / Demo Form */}

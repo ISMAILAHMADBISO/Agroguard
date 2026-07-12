@@ -16,34 +16,14 @@ interface Slide {
 
 const SLIDES: Slide[] = [
   {
-    src: `${BASE}assets/auth/real-deploy1.jpg`,
+    src: `${BASE}assets/auth/cropped-1.jpg`,
     title: "Smart farming, in every hand",
     caption: "Real-time soil and crop insight for smallholder farmers across Nigeria.",
   },
   {
-    src: `${BASE}assets/auth/real-deploy2.jpg`,
+    src: `${BASE}assets/auth/cropped-2.jpg`,
     title: "AgroGuard in the field",
     caption: "Built for the realities of Nigerian agricultural environments.",
-  },
-  {
-    src: `${BASE}assets/auth/real-deploy4.jpg`,
-    title: "Rugged and durable",
-    caption: "Sealed hardware node designed to withstand outdoor conditions.",
-  },
-  {
-    src: `${BASE}assets/auth/real-deploy7.jpg`,
-    title: "Solar powered monitoring",
-    caption: "Automatic data logging powered by sustainable energy.",
-  },
-  {
-    src: `${BASE}assets/auth/real-deploy8.jpg`,
-    title: "Precision sensor probes",
-    caption: "High accuracy measurement of moisture and temperature at root level.",
-  },
-  {
-    src: `${BASE}assets/auth/real-deploy9.jpg`,
-    title: "Eco-friendly operations",
-    caption: "Sustainable energy options to keep monitoring active 24/7.",
   },
 ];
 
