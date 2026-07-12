@@ -25,6 +25,31 @@ const SLIDES: Slide[] = [
     title: "AgroGuard in the field",
     caption: "Built for the realities of Nigerian agricultural environments.",
   },
+  {
+    src: `${BASE}assets/auth/cropped-3.jpg`,
+    title: "Precision sensor probes",
+    caption: "High accuracy measurement of moisture and temperature at root level.",
+  },
+  {
+    src: `${BASE}assets/auth/cropped-4.jpg`,
+    title: "Eco-friendly operations",
+    caption: "Sustainable energy options to keep monitoring active 24/7.",
+  },
+  {
+    src: `${BASE}assets/auth/cropped-5.jpg`,
+    title: "Rugged and durable",
+    caption: "Sealed hardware node designed to withstand outdoor conditions.",
+  },
+  {
+    src: `${BASE}assets/auth/cropped-6.jpg`,
+    title: "Solar powered monitoring",
+    caption: "Automatic data logging powered by sustainable energy.",
+  },
+  {
+    src: `${BASE}assets/auth/cropped-7.jpg`,
+    title: "Advanced crop analytics",
+    caption: "Empowering farmers to maximize yield with data-driven precision.",
+  },
 ];
 
 const ROTATE_MS = 5000;
