@@ -71,7 +71,7 @@ export function AuthCarousel() {
             <img
               src={slide.src}
               alt={slide.title}
-              className="h-full w-full object-cover object-bottom"
+              className="h-full w-full object-cover object-top"
               loading={i === 0 ? "eager" : "lazy"}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-sidebar/95 via-sidebar/30 to-transparent" />
