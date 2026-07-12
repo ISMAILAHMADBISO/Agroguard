@@ -32,6 +32,14 @@ const SLIDES: ProductSlide[] = [
     src: `${BASE}assets/product/real-deploy4.jpg`,
     caption: "Compact sensor box installed within leafy green crops",
   },
+  {
+    src: `${BASE}assets/product/real-deploy8.jpg`,
+    caption: "Precision sensors monitoring moisture levels at the root level",
+  },
+  {
+    src: `${BASE}assets/product/real-deploy9.jpg`,
+    caption: "Hardware solar panel receiver node monitoring farm conditions",
+  },
 ];
 
 const ROTATE_MS = 4500;

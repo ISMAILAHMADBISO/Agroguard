@@ -35,6 +35,16 @@ const SLIDES: Slide[] = [
     title: "Solar powered monitoring",
     caption: "Automatic data logging powered by sustainable energy.",
   },
+  {
+    src: `${BASE}assets/auth/real-deploy8.jpg`,
+    title: "Precision sensor probes",
+    caption: "High accuracy measurement of moisture and temperature at root level.",
+  },
+  {
+    src: `${BASE}assets/auth/real-deploy9.jpg`,
+    title: "Eco-friendly operations",
+    caption: "Sustainable energy options to keep monitoring active 24/7.",
+  },
 ];
 
 const ROTATE_MS = 5000;
@@ -61,7 +71,7 @@ export function AuthCarousel() {
             <img
               src={slide.src}
               alt={slide.title}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover object-bottom"
               loading={i === 0 ? "eager" : "lazy"}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-sidebar/95 via-sidebar/30 to-transparent" />

@@ -61,7 +61,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="h-screen lg:overflow-hidden grid lg:grid-cols-2">
+    <div className="min-h-screen lg:min-h-0 lg:fixed lg:inset-0 lg:overflow-hidden grid lg:grid-cols-2">
       {/* Left: sliding imagery (hidden on small screens) */}
       <div className="hidden lg:block h-full">
         <AuthCarousel />
