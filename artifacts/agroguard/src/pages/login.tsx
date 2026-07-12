@@ -34,14 +34,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
+    <div className="h-screen lg:overflow-hidden grid lg:grid-cols-2">
       {/* Left: sliding imagery (hidden on small screens) */}
-      <div className="hidden lg:block">
+      <div className="hidden lg:block h-full">
         <AuthCarousel />
       </div>
 
       {/* Right: sign-in form */}
-      <div className="flex items-center justify-center bg-gradient-to-br from-green-50 via-background to-emerald-50 px-4 py-10">
+      <div className="h-full flex items-center justify-center bg-gradient-to-br from-green-50 via-background to-emerald-50 px-4 py-6 overflow-y-auto">
         <div className="w-full max-w-md space-y-6">
           {/* Brand (mobile only — carousel carries it on desktop) */}
           <div className="text-center lg:hidden">

@@ -81,11 +81,8 @@ export default function LandingPage() {
             <a href="#contact" className="hover:text-primary transition-colors">Contact</a>
           </nav>
           <div className="flex items-center gap-3">
-            <div className="hidden md:block">
-              <SocialIcons variant="primary" size="sm" />
-            </div>
             <Link href="/login" className="hidden md:inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
-              Login
+              Get Started
             </Link>
             <button 
               className="lg:hidden p-2 text-foreground"
@@ -109,9 +106,8 @@ export default function LandingPage() {
               <a href="#team" className="hover:text-primary transition-colors" onClick={() => setMobileMenuOpen(false)}>Team</a>
               <a href="#contact" className="hover:text-primary transition-colors" onClick={() => setMobileMenuOpen(false)}>Contact</a>
               <div className="pt-2 border-t flex flex-col gap-4">
-                <SocialIcons variant="primary" size="sm" />
                 <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
-                  Login
+                  Get Started
                 </Link>
               </div>
             </nav>

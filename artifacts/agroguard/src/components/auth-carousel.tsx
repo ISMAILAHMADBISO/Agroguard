@@ -16,24 +16,24 @@ interface Slide {
 
 const SLIDES: Slide[] = [
   {
-    src: `${BASE}assets/auth/slide1.png`,
+    src: `${BASE}assets/auth/real-deploy1.jpg`,
     title: "Smart farming, in every hand",
     caption: "Real-time soil and crop insight for smallholder farmers across Nigeria.",
   },
   {
-    src: `${BASE}assets/auth/slide2.png`,
-    title: "7-in-1 soil intelligence",
-    caption: "Moisture, temperature, pH, EC and NPK — straight from the field.",
+    src: `${BASE}assets/auth/real-deploy2.jpg`,
+    title: "AgroGuard in the field",
+    caption: "Built for the realities of Nigerian agricultural environments.",
   },
   {
-    src: `${BASE}assets/auth/slide3.png`,
-    title: "Healthier farms, bigger yields",
-    caption: "Data-driven decisions that protect every hectare you grow.",
+    src: `${BASE}assets/auth/real-deploy4.jpg`,
+    title: "Rugged and durable",
+    caption: "Sealed hardware node designed to withstand outdoor conditions.",
   },
   {
-    src: `${BASE}assets/auth/slide4.png`,
-    title: "Guidance when it matters",
-    caption: "AI recommendations and expert agronomy support, always on.",
+    src: `${BASE}assets/auth/real-deploy7.jpg`,
+    title: "Solar powered monitoring",
+    caption: "Automatic data logging powered by sustainable energy.",
   },
 ];
 

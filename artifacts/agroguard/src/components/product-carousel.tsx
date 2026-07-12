@@ -17,20 +17,20 @@ interface ProductSlide {
 
 const SLIDES: ProductSlide[] = [
   {
-    src: `${BASE}assets/product/device-and-probe.jpg`,
-    caption: "AgroGuard node with its 7-in-1 RS485 soil probe",
+    src: `${BASE}assets/product/real-deploy3.jpg`,
+    caption: "AgroGuard sensor probe deployed next to the plant roots",
   },
   {
-    src: `${BASE}assets/product/field-solar-install.jpg`,
-    caption: "Solar-powered node installed in the field",
+    src: `${BASE}assets/product/real-deploy5.jpg`,
+    caption: "Robust sensor probe in contact with farm soil",
   },
   {
-    src: `${BASE}assets/product/receiver-unit.jpg`,
-    caption: "Farmer receiver unit with on-device readout",
+    src: `${BASE}assets/product/real-deploy6.jpg`,
+    caption: "7-in-1 soil probe measuring moisture, temperature, and nutrients",
   },
   {
-    src: `${BASE}assets/product/soil-probe-field.jpg`,
-    caption: "Soil probe deployed among growing crops",
+    src: `${BASE}assets/product/real-deploy4.jpg`,
+    caption: "Compact sensor box installed within leafy green crops",
   },
 ];
 
