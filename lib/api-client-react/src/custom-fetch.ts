@@ -374,3 +374,16 @@ export async function customFetch<T = unknown>(
 
   return (await parseSuccessBody(response, responseType, requestInfo)) as T;
 }
+
+export async function apiRequest<T = any>(
+  method: string,
+  url: string,
+  data?: any
+): Promise<T> {
+  const options: CustomFetchOptions = { method };
+  if (data) {
+    options.body = JSON.stringify(data);
+    options.headers = { "Content-Type": "application/json" };
+  }
+  return customFetch<T>(url, options);
+}
