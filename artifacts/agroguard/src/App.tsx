@@ -48,6 +48,11 @@ import OfficerInstallationPage from "@/pages/officer-installation";
 import FarmerCommandCenter from "@/pages/farmer-command-center";
 import KnowledgeCentre from "@/pages/knowledge-centre";
 import AdminKnowledge from "@/pages/admin-knowledge";
+import AnalysisHistoryPage from "@/pages/analysis-history";
+import FarmingGuidePage from "@/pages/farming-guide";
+import AdminAuditLogsPage from "@/pages/admin-audit-logs";
+import SettingsPage from "@/pages/settings";
+import { LanguageProvider } from "@/context/language";
 
 // Attach the stored session token as `Authorization: Bearer` to every generated
 // API call. This keeps auth working inside the cross-site Replit iframe where
@@ -161,6 +166,11 @@ function Router() {
       <Route path="/officer/dashboard" component={() => <ProtectedRoute access="staff" component={OfficerDashboardPage} />} />
       <Route path="/officer/installation/:id" component={() => <ProtectedRoute access="staff" component={OfficerInstallationPage} />} />
       <Route path="/achievements" component={() => <ProtectedRoute access="staff" component={AchievementsPage} />} />
+      {/* New Feature Routes */}
+      <Route path="/analysis-history" component={() => <ProtectedRoute access="any" component={AnalysisHistoryPage} />} />
+      <Route path="/farming-guide" component={() => <ProtectedRoute access="any" component={FarmingGuidePage} />} />
+      <Route path="/admin/audit-logs" component={() => <ProtectedRoute access="admin" component={AdminAuditLogsPage} />} />
+      <Route path="/settings" component={() => <ProtectedRoute access="any" component={SettingsPage} />} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -171,11 +181,13 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
-          <Toaster />
-          <PricingModal />
+          <LanguageProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Router />
+            </WouterRouter>
+            <Toaster />
+            <PricingModal />
+          </LanguageProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

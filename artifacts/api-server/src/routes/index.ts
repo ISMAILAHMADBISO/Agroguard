@@ -24,6 +24,8 @@ import { systemRouter } from "./system-logs";
 import { weatherRouter } from "./weather";
 import { analyticsRouter } from "./analytics";
 import { knowledgeRouter } from "./knowledge";
+import { farmingGuidesRouter } from "./farming-guides";
+import { notificationsRouter } from "./scheduled-notifications";
 
 const router: IRouter = Router();
 
@@ -47,5 +49,7 @@ router.use("/system-logs", systemRouter);
 router.use("/weather", weatherRouter);
 router.use("/analytics", analyticsRouter);
 router.use("/knowledge", knowledgeRouter);
+router.use(farmingGuidesRouter);
+router.use(notificationsRouter);
 
 export default router;

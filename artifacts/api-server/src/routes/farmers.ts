@@ -237,7 +237,7 @@ router.post("/farmers/me/upgrade", async (req, res): Promise<void> => {
 
   const [farmer] = await db
     .update(farmersTable)
-    .set({ isPremium: true })
+    .set({ isPremium: true } as any)
     .where(eq(farmersTable.id, req.session.userId!))
     .returning();
 
@@ -246,7 +246,31 @@ router.post("/farmers/me/upgrade", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json({ success: true, isPremium: farmer.isPremium });
+  res.json({ success: true });
+});
+
+/** PATCH /farmers/me/preferences — update language and notification preferences */
+router.patch("/farmers/me/preferences", async (req, res): Promise<void> => {
+  if (!req.session.userId) {
+    res.status(401).json({ error: "Not authenticated" }); return;
+  }
+
+  const { preferredLanguage, notificationPreferences } = req.body as {
+    preferredLanguage?: string;
+    notificationPreferences?: { email?: boolean; sms?: boolean; inApp?: boolean };
+  };
+
+  const updateData: Record<string, unknown> = {};
+  if (preferredLanguage) updateData.preferredLanguage = preferredLanguage;
+  if (notificationPreferences) updateData.notificationPreferences = notificationPreferences;
+
+  const table = req.session.userType === "farmer" ? farmersTable : null;
+  if (!table) { res.status(403).json({ error: "Only farmers can update preferences" }); return; }
+
+  const [updated] = await db.update(table).set(updateData as any).where(eq(table.id, req.session.userId!)).returning();
+  if (!updated) { res.status(404).json({ error: "Account not found" }); return; }
+
+  res.json({ ok: true, preferredLanguage: (updated as any).preferredLanguage, notificationPreferences: (updated as any).notificationPreferences });
 });
 
 export default router;

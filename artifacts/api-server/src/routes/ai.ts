@@ -37,8 +37,10 @@ Respond ONLY with a JSON object of this exact shape:
 {
   "diagnosis": string,        // disease/pest/condition name, or "Healthy" if no issue
   "confidence": number,       // integer 0-100, your confidence in the diagnosis
-  "severity": "low"|"medium"|"high",  // use "low" if healthy
-  "treatment": string,        // concrete, affordable treatment & prevention steps suited to Nigerian smallholders
+  "severity": "low"|"medium"|"high"|"critical",  // use "low" if healthy
+  "treatment": string,        // concrete, affordable treatment suited to Nigerian smallholders
+  "preventionTips": string,   // 1-2 tips to prevent this disease in future
+  "recoveryTime": string,     // estimated recovery time, e.g. "7-14 days" or null if not applicable
   "summary": string           // 1-2 sentence plain-language summary of what you see
 }
 If the image is not a plant/crop, set diagnosis to "Not a crop image", confidence 0, severity "low".`;
@@ -48,7 +50,7 @@ Give practical, affordable, locally-relevant advice on crops, soil, irrigation, 
 Prefer Nigerian crops, conditions and units. Keep answers clear and concise. Do not use emojis.
 If asked something unrelated to farming or agriculture, politely steer back to farming topics.`;
 
-type Severity = "low" | "medium" | "high";
+type Severity = "low" | "medium" | "high" | "critical";
 
 /** Input guards (defence-in-depth on top of the global body limit + Zod schemas). */
 const MAX_MESSAGE_CHARS = 4000;
@@ -70,7 +72,8 @@ function clampConfidence(value: unknown): number {
 }
 
 function normaliseSeverity(value: unknown): Severity {
-  return value === "high" || value === "medium" ? value : "low";
+  if (value === "high" || value === "medium" || value === "critical") return value;
+  return "low";
 }
 
 async function checkAILimit(userId: number, userType: string, serviceType: "chat" | "disease"): Promise<string | null> {
@@ -172,6 +175,8 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
     confidence: number;
     severity: Severity;
     treatment: string;
+    preventionTips: string;
+    recoveryTime: string | null;
     summary: string;
   };
 
@@ -205,6 +210,8 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
       confidence: clampConfidence(json["confidence"]),
       severity: normaliseSeverity(json["severity"]),
       treatment: String(json["treatment"] ?? "No specific treatment suggested."),
+      preventionTips: String(json["preventionTips"] ?? ""),
+      recoveryTime: json["recoveryTime"] ? String(json["recoveryTime"]) : null,
       summary: String(json["summary"] ?? ""),
     };
   } catch (err: any) {
@@ -219,6 +226,8 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
         confidence: 94,
         severity: "medium",
         treatment: "Apply a copper-based fungicide immediately. Ensure proper spacing between plants for airflow and avoid overhead watering to keep leaves dry.",
+        preventionTips: "Avoid overhead irrigation. Rotate crops every season to break the disease cycle.",
+        recoveryTime: "7-14 days",
         summary: "I've detected signs of Early Blight on the lower leaves. Immediate fungicide application is recommended to prevent spreading."
       };
     } else if (cropLower.includes("maize") || cropLower.includes("corn")) {
@@ -227,6 +236,8 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
         confidence: 89,
         severity: "high",
         treatment: "Spray Neem oil or an affordable contact insecticide like Cypermethrin late in the evening when the caterpillars feed. Ensure spray reaches deep into the whorl of the plant.",
+        preventionTips: "Plant early in the season to avoid peak armyworm populations. Use trap crops like Napier grass around the field.",
+        recoveryTime: "3-6 weeks with treatment",
         summary: "The leaves show significant chew marks characteristic of Fall Armyworm feeding. Immediate intervention is required to save the crop yield."
       };
     } else {
@@ -235,6 +246,8 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
         confidence: 82,
         severity: "low",
         treatment: "Apply a balanced NPK or nitrogen-rich fertilizer. Ensure adequate soil moisture to help roots absorb the nutrients.",
+        preventionTips: "Perform soil tests before planting each season. Add organic matter (compost) to improve nutrient retention.",
+        recoveryTime: "2-4 weeks after fertilizer application",
         summary: "The general yellowing indicates a likely nitrogen deficiency. A quick fertilizer application should help the plant recover."
       };
     }
@@ -251,6 +264,8 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
       confidence: result.confidence,
       severity: result.severity,
       treatment: result.treatment,
+      preventionTips: result.preventionTips,
+      recoveryTime: result.recoveryTime ?? null,
       summary: result.summary,
       createdBy: req.session.userId!,
       createdByType: req.session.userType!,
@@ -259,6 +274,53 @@ router.post("/ai/disease-detection", async (req, res): Promise<void> => {
 
   res.status(201).json(report);
 });
+
+/** PATCH /ai/disease-reports/:id/feedback — submit treatment feedback. */
+router.patch("/ai/disease-reports/:id/feedback", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
+
+  const [report] = await db.select().from(diseaseReportsTable).where(eq(diseaseReportsTable.id, id));
+  if (!report) { res.status(404).json({ error: "Report not found" }); return; }
+  if (report.createdBy !== req.session.userId || report.createdByType !== req.session.userType) {
+    res.status(403).json({ error: "Access denied" }); return;
+  }
+
+  const { solved, comment } = req.body as { solved: boolean; comment?: string };
+  if (typeof solved !== "boolean") { res.status(400).json({ error: "'solved' must be a boolean" }); return; }
+
+  const [updated] = await db.update(diseaseReportsTable).set({
+    treatmentFeedback: solved,
+    treatmentFeedbackComment: comment ?? null,
+    treatmentFeedbackDate: new Date(),
+    status: solved ? "solved" : "in_progress",
+  }).where(eq(diseaseReportsTable.id, id)).returning();
+
+  res.json(updated);
+});
+
+/** PATCH /ai/disease-reports/:id/accuracy — submit AI accuracy rating (1-5 stars). */
+router.patch("/ai/disease-reports/:id/accuracy", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
+
+  const [report] = await db.select().from(diseaseReportsTable).where(eq(diseaseReportsTable.id, id));
+  if (!report) { res.status(404).json({ error: "Report not found" }); return; }
+  if (report.createdBy !== req.session.userId || report.createdByType !== req.session.userType) {
+    res.status(403).json({ error: "Access denied" }); return;
+  }
+
+  const { rating, comment } = req.body as { rating: number; comment?: string };
+  if (!rating || rating < 1 || rating > 5) { res.status(400).json({ error: "Rating must be between 1 and 5" }); return; }
+
+  const [updated] = await db.update(diseaseReportsTable).set({
+    aiAccuracyRating: Math.round(rating),
+    aiAccuracyComment: comment ?? null,
+  }).where(eq(diseaseReportsTable.id, id)).returning();
+
+  res.json(updated);
+});
+
 
 /** GET /ai/disease-reports — list reports the caller is allowed to see. */
 router.get("/ai/disease-reports", async (req, res): Promise<void> => {

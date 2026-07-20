@@ -53,8 +53,10 @@ import {
   Bot,
   Star,
   BookOpen,
+  Settings,
 } from "lucide-react";
 import { openPricingModal } from "@/components/pricing-modal";
+
 
 /** Human-readable role labels */
 const ROLE_LABELS: Record<string, string> = {
@@ -127,6 +129,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     <NavLink href="/crop-diagnosis" icon={ScanLine} isActive={location === "/crop-diagnosis"}>
                       Crop Diagnosis
                     </NavLink>
+                    <NavLink href="/analysis-history" icon={BookOpen} isActive={location === "/analysis-history"}>
+                      Analysis History
+                    </NavLink>
+                    <NavLink href="/farming-guide" icon={BookOpen} isActive={location === "/farming-guide"}>
+                      Farming Guides
+                    </NavLink>
                     <NavLink href="/ai-assistant" icon={Bot} isActive={location === "/ai-assistant"}>
                       AI Assistant
                     </NavLink>
@@ -154,6 +162,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     </NavLink>
                     <NavLink href="/knowledge" icon={BookOpen} isActive={location === "/knowledge"}>
                       Knowledge Centre
+                    </NavLink>
+                    <NavLink href="/farming-guide" icon={BookOpen} isActive={location === "/farming-guide"}>
+                      Farming Guides
                     </NavLink>
                     <NavLink href="/admin/knowledge" icon={BookOpen} isActive={location === "/admin/knowledge"}>
                       Manage Knowledge
@@ -212,6 +223,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                       </NavLink>
                       <NavLink href="/admin/logs" icon={KeyRound} isActive={location === "/admin/logs"}>
                         System Audit Logs
+                      </NavLink>
+                      <NavLink href="/admin/audit-logs" icon={KeyRound} isActive={location === "/admin/audit-logs"}>
+                        Admin Actions
                       </NavLink>
                       <NavLink href="/admin/knowledge" icon={BookOpen} isActive={location === "/admin/knowledge"}>
                         Manage Knowledge
@@ -288,6 +302,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     <span>{ROLE_LABELS[user.role] ?? user.role}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild className="cursor-pointer">
+                    <Link href="/settings">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild className="cursor-pointer">
                     <Link href="/change-password">
                       <KeyRound className="mr-2 h-4 w-4" />

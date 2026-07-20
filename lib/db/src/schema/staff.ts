@@ -19,6 +19,8 @@ export const staffTable = pgTable("staff", {
   passwordHash: text("password_hash"),
   /** Forces a password change on first login (true for admin-created accounts) */
   mustChangePassword: boolean("must_change_password").notNull().default(false),
+  /** User's preferred language (en, fr, ha, ar, sw) */
+  preferredLanguage: text("preferred_language").notNull().default("en"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -10,6 +10,7 @@ import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db, staffTable, farmersTable } from "@workspace/db";
 import { signSessionId } from "../lib/session-token";
+import { writeAuditLog } from "./system-logs";
 
 const router: IRouter = Router();
 
@@ -66,6 +67,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
         mustChangePassword: staff.mustChangePassword,
         token: signSessionId(req.sessionID),
       });
+      writeAuditLog({ action: "login", description: `Staff login: ${staff.email}`, actorId: staff.id, ipAddress: req.ip, device: req.get("user-agent") });
     });
     return;
   }
@@ -109,6 +111,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
         mustChangePassword: farmer.mustChangePassword,
         token: signSessionId(req.sessionID),
       });
+      writeAuditLog({ action: "login", description: `Farmer login: ${farmer.email}`, ipAddress: req.ip, device: req.get("user-agent") });
     });
     return;
   }
@@ -219,9 +222,14 @@ router.post("/auth/signup", async (req, res): Promise<void> => {
 });
 
 router.post("/auth/logout", (req, res): void => {
+  const email = req.session.userEmail;
+  const actorId = req.session.userId;
+  const ip = req.ip;
+  const device = req.get("user-agent");
   req.session.destroy(() => {
     res.clearCookie("agroguard.sid");
     res.json({ ok: true });
+    writeAuditLog({ action: "logout", description: `User logged out: ${email ?? "unknown"}`, actorId, ipAddress: ip, device });
   });
 });
 

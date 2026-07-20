@@ -26,3 +26,5 @@ export * from "./farms";
 export * from "./farm_tasks";
 export * from "./crop_calendar";
 export * from "./knowledge_articles";
+export * from "./farming_guides";
+export * from "./scheduled_notifications";
