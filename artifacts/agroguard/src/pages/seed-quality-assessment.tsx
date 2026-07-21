@@ -235,7 +235,7 @@ export default function SeedQualityAssessmentPage() {
       {/* Print-only Logo Header */}
       <div className="hidden print:flex items-center justify-between mb-8 border-b pb-4">
         <div className="flex items-center gap-4">
-          <img src="/assets/agroguard-logo.png" alt="AgroGuard Logo" className="h-16 w-16 object-contain" />
+          <img src="/agroguard-logo.png" alt="AgroGuard Logo" className="h-16 w-16 object-contain" />
           <div>
             <h1 className="text-2xl font-bold text-green-800">AgroGuard</h1>
             <p className="text-muted-foreground text-sm">AI Seed Quality Assessment Report</p>

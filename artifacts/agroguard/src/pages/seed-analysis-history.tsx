@@ -10,7 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@workspace/api-client-react";
 import { SeedAssessment } from "@/types/seed-assessment";
-import { Loader2, Trash2, Search, Filter, History, ChevronRight } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Loader2, Trash2, Search, History, ChevronRight, Eye, Printer, Download, Star, Leaf, Activity, Droplets, Info } from "lucide-react";
 import { Link } from "wouter";
 
 function QualityBadge({ quality }: { quality: string }) {
@@ -23,10 +24,32 @@ function QualityBadge({ quality }: { quality: string }) {
   }
 }
 
+function ProgressCircle({ value, label, color }: { value: number; label: string; color: string }) {
+  const radius = 36;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (value / 100) * circumference;
+  
+  return (
+    <div className="flex flex-col items-center justify-center">
+      <div className="relative flex items-center justify-center w-24 h-24">
+        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r={radius} fill="transparent" stroke="currentColor" strokeWidth="8" className="text-muted/30" />
+          <circle cx="50" cy="50" r={radius} fill="transparent" stroke="currentColor" strokeWidth="8" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} className={`transition-all duration-1000 ease-out ${color}`} />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-xl font-bold">{value}%</span>
+        </div>
+      </div>
+      <span className="mt-2 text-sm font-medium text-center text-muted-foreground">{label}</span>
+    </div>
+  );
+}
+
 export default function SeedAnalysisHistoryPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedReport, setSelectedReport] = useState<SeedAssessment | null>(null);
   
   const { data: assessments, isLoading } = useQuery<SeedAssessment[]>({
     queryKey: ["seed-assessments"],
@@ -141,6 +164,13 @@ export default function SeedAnalysisHistoryPage() {
                       <TableCell className="text-right">
                         <Button
                           variant="ghost" size="icon"
+                          className="text-primary hover:bg-primary/10 mr-2"
+                          onClick={() => setSelectedReport(assessment)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost" size="icon"
                           className="text-destructive hover:bg-destructive/10"
                           onClick={() => handleDelete(assessment.id)}
                         >
@@ -161,6 +191,101 @@ export default function SeedAnalysisHistoryPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!selectedReport} onOpenChange={(open) => !open && setSelectedReport(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto print:max-w-none print:w-full print:h-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none print:p-0">
+          {selectedReport && (
+            <div className="space-y-6 printable-area">
+              <div className="flex justify-between items-start border-b pb-4 print:border-b-2 print:border-black">
+                <div>
+                  <DialogTitle className="text-2xl flex items-center gap-2">
+                    {selectedReport.cropType} Seed Quality Report
+                  </DialogTitle>
+                  <p className="mt-2 text-muted-foreground">
+                    Date: {new Date(selectedReport.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-3">
+                  <QualityBadge quality={selectedReport.overallQuality} />
+                  <Button className="bg-blue-600 hover:bg-blue-700 print:hidden" onClick={() => window.print()}>
+                    <Printer className="w-4 h-4 mr-2" /> Download PDF
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap justify-around gap-6 mb-8 pb-8 border-b print:border-b-2 print:border-black">
+                <ProgressCircle value={selectedReport.qualityScore} label="Quality Score" color="text-primary" />
+                <ProgressCircle value={selectedReport.germinationProbability} label="Est. Germination" color="text-green-500" />
+                <ProgressCircle value={selectedReport.confidence} label="AI Confidence" color="text-blue-500" />
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8 mb-8">
+                <div className="space-y-6">
+                  <h4 className="font-semibold text-lg flex items-center border-b pb-2">
+                    <Activity className="w-5 h-5 mr-2 text-primary" /> Physical Assessment
+                  </h4>
+                  <div className="grid grid-cols-2 gap-y-6">
+                    <div>
+                      <p className="text-sm text-muted-foreground font-medium mb-1">Physical Condition</p>
+                      <p className="font-medium">{selectedReport.physicalCondition}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground font-medium mb-1">Seed Uniformity</p>
+                      <p className="font-medium">{selectedReport.seedUniformity}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground font-medium mb-1">Yield Potential</p>
+                      <Badge variant="outline" className={selectedReport.expectedYieldPotential === 'High' ? 'text-green-700 bg-green-50' : ''}>
+                        {selectedReport.expectedYieldPotential}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <h4 className="font-semibold text-lg flex items-center border-b pb-2">
+                    <Leaf className="w-5 h-5 mr-2 text-green-600" /> Planting Guidelines
+                  </h4>
+                  <div className="grid grid-cols-1 gap-y-6">
+                    <div>
+                      <p className="text-sm text-muted-foreground font-medium mb-1 flex items-center">
+                        <Droplets className="w-4 h-4 mr-1 text-blue-500" /> Recommended Soil Type
+                      </p>
+                      <p className="font-medium">{selectedReport.recommendedSoilType}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground font-medium mb-1 flex items-center">
+                        <Info className="w-4 h-4 mr-1 text-amber-500" /> Planting Conditions
+                      </p>
+                      <p className="font-medium">{selectedReport.recommendedPlantingConditions}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mb-8">
+                <h4 className="font-bold text-primary mb-3 flex items-center">
+                  <Star className="w-5 h-5 mr-2" /> AI Recommendation
+                </h4>
+                <p className="text-foreground/80 leading-relaxed text-base">
+                  {selectedReport.recommendation}
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-lg border-b pb-2 mb-4">Analyzed Images</h4>
+                <div className="flex gap-4 overflow-x-auto pb-4">
+                  {selectedReport.images.map((img, idx) => (
+                    <div key={idx} className="shrink-0 relative w-32 h-32 md:w-48 md:h-48 rounded-lg border overflow-hidden">
+                      <img src={img} alt={`Analyzed Seed ${idx+1}`} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
