@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Cpu, Bell, Lightbulb, MapPin, Leaf, Star } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { openPricingModal } from "@/components/pricing-modal";
 
 const SEVERITY_STYLES: Record<string, string> = {
@@ -33,6 +33,14 @@ export default function MyFarmPage() {
   const { data: devices } = useGetFarmerDevices(farmerId);
   const { data: alerts } = useListAlerts();
   const { data: recommendations } = useListRecommendations();
+  
+  const { data: seedAssessments } = useQuery({
+    queryKey: ["seed-assessments"],
+    queryFn: async () => {
+      const { apiRequest } = await import("@workspace/api-client-react");
+      return apiRequest("GET", "/api/ai/seed-assessments") as Promise<any[]>;
+    }
+  });
 
   const openAlerts = (alerts ?? []).filter((a) => a.status !== "resolved").sort((a, b) => {
     const severityWeight = { critical: 3, high: 2, medium: 1, low: 0 };
@@ -76,7 +84,7 @@ export default function MyFarmPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Devices</CardTitle>
@@ -99,12 +107,22 @@ export default function MyFarmPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Recommendations</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Advisories</CardTitle>
             <Lightbulb className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeRecs.length}</div>
-            <p className="text-xs text-muted-foreground">active advisories</p>
+            <p className="text-xs text-muted-foreground">active recs</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Seed Analyses</CardTitle>
+            <Leaf className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{seedAssessments?.length ?? 0}</div>
+            <p className="text-xs text-muted-foreground">completed</p>
           </CardContent>
         </Card>
         <Card>

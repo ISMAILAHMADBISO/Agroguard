@@ -17,6 +17,7 @@ export * from "./deployments";
 export * from "./farm_thresholds";
 export * from "./payments";
 export * from "./advisories";
+export * from "./seed_assessments";
 export * from "./inventory";
 export * from "./maintenance";
 export * from "./staff_notes";

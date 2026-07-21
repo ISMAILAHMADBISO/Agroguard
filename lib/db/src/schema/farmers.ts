@@ -34,6 +34,7 @@ export const farmersTable = pgTable("farmers", {
   subscriptionExpiryDate: timestamp("subscription_expiry_date", { withTimezone: true }),
   aiChatUsageCount: integer("ai_chat_usage_count").notNull().default(0),
   aiDiseaseUsageCount: integer("ai_disease_usage_count").notNull().default(0),
+  aiSeedUsageCount: integer("ai_seed_usage_count").notNull().default(0),
   aiUsageDate: timestamp("ai_usage_date", { withTimezone: true }),
   /** User's preferred language (en, fr, ha, ar, sw) */
   preferredLanguage: text("preferred_language").notNull().default("en"),

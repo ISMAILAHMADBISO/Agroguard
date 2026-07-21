@@ -50,6 +50,7 @@ import KnowledgeCentre from "@/pages/knowledge-centre";
 import AdminKnowledge from "@/pages/admin-knowledge";
 import AnalysisHistoryPage from "@/pages/analysis-history";
 import FarmingGuidePage from "@/pages/farming-guide";
+import SeedQualityAssessmentPage from "@/pages/seed-quality-assessment";
 import AdminAuditLogsPage from "@/pages/admin-audit-logs";
 import SettingsPage from "@/pages/settings";
 import { LanguageProvider } from "@/context/language";
@@ -150,6 +151,7 @@ function Router() {
       <Route path="/alerts" component={() => <ProtectedRoute component={AlertsPage} />} />
       <Route path="/recommendations" component={() => <ProtectedRoute component={RecommendationsPage} />} />
       <Route path="/crop-diagnosis" component={() => <ProtectedRoute access="any" component={CropDiagnosisPage} />} />
+      <Route path="/seed-quality-assessment" component={() => <ProtectedRoute access="any" component={SeedQualityAssessmentPage} />} />
       <Route path="/ai-assistant" component={() => <ProtectedRoute access="any" component={AiAssistantPage} />} />
       <Route path="/command-center" component={() => <ProtectedRoute access="farmer" component={FarmerCommandCenter} />} />
       <Route path="/knowledge" component={() => <ProtectedRoute access="any" component={KnowledgeCentre} />} />
