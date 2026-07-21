@@ -51,6 +51,7 @@ import AdminKnowledge from "@/pages/admin-knowledge";
 import AnalysisHistoryPage from "@/pages/analysis-history";
 import FarmingGuidePage from "@/pages/farming-guide";
 import SeedQualityAssessmentPage from "@/pages/seed-quality-assessment";
+import SeedAnalysisHistoryPage from "@/pages/seed-analysis-history";
 import AdminAuditLogsPage from "@/pages/admin-audit-logs";
 import SettingsPage from "@/pages/settings";
 import { LanguageProvider } from "@/context/language";
@@ -170,6 +171,7 @@ function Router() {
       <Route path="/achievements" component={() => <ProtectedRoute access="staff" component={AchievementsPage} />} />
       {/* New Feature Routes */}
       <Route path="/analysis-history" component={() => <ProtectedRoute access="any" component={AnalysisHistoryPage} />} />
+      <Route path="/seed-analysis-history" component={() => <ProtectedRoute access="any" component={SeedAnalysisHistoryPage} />} />
       <Route path="/farming-guide" component={() => <ProtectedRoute access="any" component={FarmingGuidePage} />} />
       <Route path="/admin/audit-logs" component={() => <ProtectedRoute access="admin" component={AdminAuditLogsPage} />} />
       <Route path="/settings" component={() => <ProtectedRoute access="any" component={SettingsPage} />} />

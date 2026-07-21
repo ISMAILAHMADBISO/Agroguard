@@ -97,8 +97,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full overflow-hidden bg-background">
-        <Sidebar className="border-r border-sidebar-border">
+      <div className="flex h-screen w-full overflow-hidden bg-background print:h-auto print:overflow-visible">
+        <Sidebar className="border-r border-sidebar-border print:hidden">
           <SidebarHeader className="h-16 flex items-center px-4 border-b border-sidebar-border">
             <Link href="/" className="flex items-center gap-2.5 font-bold text-lg text-sidebar-foreground">
               {/* Brand logo */}
@@ -255,9 +255,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           )}
         </Sidebar>
 
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden print:overflow-visible">
           {/* Top header */}
-          <header className="h-16 flex items-center justify-between px-4 border-b bg-card text-card-foreground">
+          <header className="h-16 flex items-center justify-between px-4 border-b bg-card text-card-foreground print:hidden">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="mr-2" />
               <h1 className="font-semibold text-lg capitalize">
@@ -352,7 +352,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto p-6">
+          <main className="flex-1 overflow-y-auto p-6 print:overflow-visible print:p-0">
             {children}
           </main>
         </div>
