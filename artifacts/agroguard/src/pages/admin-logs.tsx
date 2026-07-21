@@ -33,8 +33,8 @@ export default function AdminLogsPage() {
 
   const filteredLogs = logs?.filter(log => 
     search === "" || 
-    log.action.toLowerCase().includes(search.toLowerCase()) || 
-    log.description.toLowerCase().includes(search.toLowerCase()) ||
+    (log.action || "").toLowerCase().includes(search.toLowerCase()) || 
+    (log.description || "").toLowerCase().includes(search.toLowerCase()) ||
     (log.targetResource && log.targetResource.toLowerCase().includes(search.toLowerCase()))
   ) || [];
 
