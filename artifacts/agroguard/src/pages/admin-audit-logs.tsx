@@ -31,8 +31,8 @@ function LevelBadge({ level }: { level: string }) {
   }
 }
 
-function ActionIcon({ action }: { action: string }) {
-  const a = action.toLowerCase();
+function ActionIcon({ action }: { action: string | null }) {
+  const a = (action || "").toLowerCase();
   if (a.includes("login")) return <Shield className="h-4 w-4 text-green-500" />;
   if (a.includes("logout")) return <Shield className="h-4 w-4 text-muted-foreground" />;
   if (a.includes("delete")) return <Shield className="h-4 w-4 text-red-500" />;
@@ -130,7 +130,7 @@ export default function AdminAuditLogsPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: "Total Events", value: logs.length },
-          { label: "Login Events", value: logs.filter((l) => l.action.toLowerCase().includes("login")).length },
+          { label: "Login Events", value: logs.filter((l) => (l.action || "").toLowerCase().includes("login")).length },
           { label: "Errors", value: logs.filter((l) => l.level === "error" || l.level === "critical").length },
           { label: "User Actions", value: logs.filter((l) => l.actorId != null).length },
         ].map((s) => (
@@ -170,7 +170,7 @@ export default function AdminAuditLogsPage() {
                         <ActionIcon action={log.action} />
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-medium text-sm capitalize">{log.action.replace(/_/g, " ")}</span>
+                            <span className="font-medium text-sm capitalize">{(log.action || "unknown").replace(/_/g, " ")}</span>
                             <LevelBadge level={log.level} />
                             {log.targetResource && (
                               <Badge variant="secondary" className="text-xs font-mono">{log.targetResource}</Badge>

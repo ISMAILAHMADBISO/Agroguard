@@ -54,9 +54,10 @@ import {
   Star,
   BookOpen,
   Settings,
+  Globe,
 } from "lucide-react";
 import { openPricingModal } from "@/components/pricing-modal";
-
+import { useLanguage } from "@/context/language";
 
 /** Human-readable role labels */
 const ROLE_LABELS: Record<string, string> = {
@@ -83,6 +84,7 @@ function NavLink({ href, icon: Icon, children, isActive }: { href: string; icon:
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
+  const { language, setLanguage } = useLanguage();
 
   const initials = user?.name
     ? user.name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()
@@ -271,6 +273,24 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               )}
             </div>
 
+            <div className="flex items-center gap-2 sm:gap-4">
+              {/* Language Switcher */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-muted transition-colors text-sm font-medium">
+                    <Globe className="h-4 w-4" />
+                    <span className="hidden sm:inline-block capitalize">{language === 'en' ? 'English' : language === 'ha' ? 'Hausa' : language === 'fr' ? 'French' : language === 'ar' ? 'Arabic' : 'Swahili'}</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setLanguage('en')}>English</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage('ha')}>Hausa</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage('fr')}>French</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage('ar')}>Arabic</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage('sw')}>Swahili</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
             {/* User dropdown */}
             {user && (
               <DropdownMenu>
@@ -322,9 +342,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Sign Out</span>
                   </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           </header>
 
           <main className="flex-1 overflow-y-auto p-6">
