@@ -5,18 +5,23 @@
  */
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-export type SupportedLanguage = "en" | "ha" | "fr" | "ar" | "sw";
+export type SupportedLanguage = "en" | "ha" | "fr" | "ar" | "sw" | "yo" | "ig" | "zu" | "am" | "so";
 
 export const LANGUAGE_OPTIONS: { code: SupportedLanguage; label: string; nativeLabel: string }[] = [
   { code: "en", label: "English", nativeLabel: "English" },
   { code: "ha", label: "Hausa", nativeLabel: "Hausa" },
+  { code: "yo", label: "Yoruba", nativeLabel: "Yorùbá" },
+  { code: "ig", label: "Igbo", nativeLabel: "Igbo" },
   { code: "fr", label: "French", nativeLabel: "Français" },
   { code: "ar", label: "Arabic", nativeLabel: "العربية" },
   { code: "sw", label: "Swahili", nativeLabel: "Kiswahili" },
+  { code: "zu", label: "Zulu", nativeLabel: "isiZulu" },
+  { code: "am", label: "Amharic", nativeLabel: "አማርኛ" },
+  { code: "so", label: "Somali", nativeLabel: "Soomaali" },
 ];
 
 type TranslationDictionary = Record<string, string>;
-type Translations = Record<SupportedLanguage, TranslationDictionary>;
+type Translations = Partial<Record<SupportedLanguage, TranslationDictionary>>;
 
 const translations: Translations = {
   en: {
@@ -551,13 +556,21 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const setLanguage = (lang: SupportedLanguage) => {
     setLanguageState(lang);
     localStorage.setItem(STORAGE_KEY, lang);
-    document.documentElement.lang = lang;
-    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    document.cookie = `googtrans=/en/${lang}; path=/`;
+    document.cookie = `googtrans=/en/${lang}; path=/; domain=${window.location.hostname}`;
+    window.location.reload();
   };
 
   useEffect(() => {
     document.documentElement.lang = language;
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
+    
+    // Sync Google Translate cookie if it doesn't match
+    const expectedCookie = `/en/${language}`;
+    if (!document.cookie.includes(`googtrans=${expectedCookie}`)) {
+      document.cookie = `googtrans=${expectedCookie}; path=/`;
+      document.cookie = `googtrans=${expectedCookie}; path=/; domain=${window.location.hostname}`;
+    }
   }, [language]);
 
   const t = (key: string): string => {
