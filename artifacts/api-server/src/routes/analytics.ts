@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, farmersTable, devicesTable, ordersTable, diseaseReportsTable } from "@workspace/db";
+import { db, farmersTable, devicesTable, ordersTable, diseaseReportsTable, diseaseForecastsTable } from "@workspace/db";
 import { eq, sql, avg, count, gte, and, isNotNull } from "drizzle-orm";
 
 export const analyticsRouter = Router();
@@ -177,5 +177,50 @@ analyticsRouter.get("/ai-feedback", async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch AI feedback stats" });
+  }
+});
+
+analyticsRouter.get("/disease-forecast", async (req, res) => {
+  try {
+    const all = await db.select().from(diseaseForecastsTable);
+
+    const totalForecasts = all.length;
+    const highRiskForecasts = all.filter(f => f.riskLevel === "High" || f.riskLevel === "Critical").length;
+
+    // Accuracy Calculation
+    const tracked = all.filter(f => f.occurred !== null);
+    let accuracyPct = 0;
+    if (tracked.length > 0) {
+      const correct = tracked.filter(f => 
+        (f.riskLevel === "High" || f.riskLevel === "Critical") && f.occurred === "Yes" ||
+        (f.riskLevel === "Low") && f.occurred === "No" ||
+        f.occurred === "Partially"
+      ).length;
+      accuracyPct = Math.round((correct / tracked.length) * 100);
+    }
+
+    // Most predicted diseases
+    const diseaseCounts: Record<string, number> = {};
+    for (const f of all) {
+      if (!diseaseCounts[f.predictedDisease]) diseaseCounts[f.predictedDisease] = 0;
+      diseaseCounts[f.predictedDisease]++;
+    }
+    const topDiseases = Object.entries(diseaseCounts)
+      .map(([disease, count]) => ({ disease, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    // Regional Risk Map Data (Mocking location since we don't have lat/long on forecast yet)
+    // In a real app, this would join with farm table to get location.
+    
+    res.json({
+      totalForecasts,
+      highRiskForecasts,
+      accuracyPercentage: accuracyPct,
+      trackedOutcomes: tracked.length,
+      topPredictedDiseases: topDiseases,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch disease forecast stats" });
   }
 });

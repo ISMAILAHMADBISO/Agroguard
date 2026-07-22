@@ -56,6 +56,7 @@ import {
   Settings,
   Globe,
   Wheat,
+  CloudRain,
 } from "lucide-react";
 import { openPricingModal } from "@/components/pricing-modal";
 import { useLanguage } from "@/context/language";
@@ -134,6 +135,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     </NavLink>
                     <NavLink href="/seed-quality-assessment" icon={Wheat} isActive={location === "/seed-quality-assessment"}>
                       Seed Quality
+                    </NavLink>
+                    <NavLink href="/disease-forecast" icon={CloudRain} isActive={location === "/disease-forecast"}>
+                      Disease Forecast
                     </NavLink>
                     <NavLink href="/analysis-history" icon={BookOpen} isActive={location === "/analysis-history"}>
                       Analysis History

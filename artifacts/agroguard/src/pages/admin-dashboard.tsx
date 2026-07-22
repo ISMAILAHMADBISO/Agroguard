@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useListDevices, useListFarmers, useGetExecutiveAnalytics, apiRequest } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Activity, Cpu, Users, BellRing, MapPin, Star, ThumbsUp, ThumbsDown, Target, TrendingUp, Leaf } from "lucide-react";
+import { Loader2, Activity, Cpu, Users, BellRing, MapPin, Star, ThumbsUp, ThumbsDown, Target, TrendingUp, Leaf, CloudRain } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -55,6 +55,10 @@ export default function AdminDashboardPage() {
   const { data: seedAssessments } = useQuery({
     queryKey: ["seed-assessments-analytics"],
     queryFn: () => apiRequest("GET", "/api/ai/seed-assessments") as Promise<any[]>,
+  });
+  const { data: forecastAnalytics } = useQuery({
+    queryKey: ["analytics-disease-forecast"],
+    queryFn: () => apiRequest("GET", "/api/analytics/disease-forecast") as Promise<any>,
   });
 
   const isLoading = isDevicesLoading || isFarmersLoading || isAnalyticsLoading;
@@ -380,6 +384,66 @@ export default function AdminDashboardPage() {
               </div>
             ) : (
               <div className="text-center py-8 text-muted-foreground text-sm">No seed assessments yet</div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Disease Forecast Analytics */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <CloudRain className="h-5 w-5 text-blue-500" /> Disease Forecast Analytics
+            </CardTitle>
+            <CardDescription>System-wide early warning metrics and accuracy</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {forecastAnalytics ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-sm">Prediction Accuracy</span>
+                  <span className="text-2xl font-bold text-blue-600">{forecastAnalytics.accuracyPercentage}%</span>
+                </div>
+                <div className="h-2 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full bg-blue-500" style={{ width: `${forecastAnalytics.accuracyPercentage}%` }} />
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4 mt-4">
+                  <div className="rounded-lg bg-muted/50 p-3 text-center border">
+                    <p className="text-2xl font-bold">{forecastAnalytics.totalForecasts}</p>
+                    <p className="text-xs text-muted-foreground">Total Forecasts</p>
+                  </div>
+                  <div className="rounded-lg bg-orange-50 border border-orange-200 p-3 text-center">
+                    <p className="text-2xl font-bold text-orange-600">{forecastAnalytics.highRiskForecasts}</p>
+                    <p className="text-xs text-orange-700">High Risk Alerts</p>
+                  </div>
+                  <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-center">
+                    <p className="text-2xl font-bold text-blue-700">{forecastAnalytics.trackedOutcomes}</p>
+                    <p className="text-xs text-blue-800">Tracked Outcomes</p>
+                  </div>
+                </div>
+
+                {forecastAnalytics.topPredictedDiseases?.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Top Predicted Diseases</p>
+                    <div className="space-y-2">
+                      {forecastAnalytics.topPredictedDiseases.map((d: any) => {
+                        const percentage = Math.round((d.count / forecastAnalytics.totalForecasts) * 100);
+                        return (
+                          <div key={d.disease} className="flex items-center gap-2 text-sm">
+                            <span className="w-24 truncate">{d.disease}</span>
+                            <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                              <div className="h-full bg-blue-400" style={{ width: `${percentage}%` }} />
+                            </div>
+                            <span className="w-10 text-right font-medium">{d.count}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground text-sm">No forecast data yet</div>
             )}
           </CardContent>
         </Card>
