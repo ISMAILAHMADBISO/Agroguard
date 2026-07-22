@@ -27,6 +27,7 @@ import {
   ChevronRight,
   Menu,
 } from "lucide-react";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { ProductCarousel } from "@/components/product-carousel";
 import AchievementsSection from "@/components/AchievementsSection";
 import AboutSection from "@/components/AboutSection";
@@ -81,6 +82,7 @@ export default function LandingPage() {
             <a href="#contact" className="hover:text-primary transition-colors">Contact</a>
           </nav>
           <div className="flex items-center gap-3">
+            <LanguageSwitcher />
             <Link href="/login" className="hidden md:inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
               Get Started
             </Link>

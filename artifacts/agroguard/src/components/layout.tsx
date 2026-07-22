@@ -60,6 +60,7 @@ import {
 } from "lucide-react";
 import { openPricingModal } from "@/components/pricing-modal";
 import { useLanguage } from "@/context/language";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 /** Human-readable role labels */
 const ROLE_LABELS: Record<string, string> = {
@@ -115,44 +116,44 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <SidebarContent>
             {isFarmer && (
               <SidebarGroup>
-                <SidebarGroupLabel>My Farm</SidebarGroupLabel>
+                <SidebarGroupLabel>{t("My Farm")}</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <NavLink href="/my-farm" icon={LayoutDashboard} isActive={location === "/my-farm"}>
-                      Overview
+                      {t("Overview")}
                     </NavLink>
                     <NavLink href="/devices" icon={Cpu} isActive={location.startsWith("/devices")}>
-                      My Devices
+                      {t("My Devices")}
                     </NavLink>
                     <NavLink href="/shop" icon={ScanLine} isActive={location.startsWith("/shop")}>
-                      Buy Hardware
+                      {t("Buy Hardware")}
                     </NavLink>
                     <NavLink href="/orders" icon={User} isActive={location === "/orders"}>
-                      My Orders
+                      {t("My Orders")}
                     </NavLink>
                     <NavLink href="/crop-diagnosis" icon={ScanLine} isActive={location === "/crop-diagnosis"}>
-                      Crop Diagnosis
+                      {t("Crop Diagnosis")}
                     </NavLink>
                     <NavLink href="/seed-quality-assessment" icon={Wheat} isActive={location === "/seed-quality-assessment"}>
-                      Seed Quality
+                      {t("Seed Quality")}
                     </NavLink>
                     <NavLink href="/disease-forecast" icon={CloudRain} isActive={location === "/disease-forecast"}>
-                      Disease Forecast
+                      {t("Disease Forecast")}
                     </NavLink>
                     <NavLink href="/analysis-history" icon={BookOpen} isActive={location === "/analysis-history"}>
-                      Analysis History
+                      {t("Analysis History")}
                     </NavLink>
                     <NavLink href="/farming-guide" icon={BookOpen} isActive={location === "/farming-guide"}>
-                      Farming Guides
+                      {t("Farming Guides")}
                     </NavLink>
                     <NavLink href="/ai-assistant" icon={Bot} isActive={location === "/ai-assistant"}>
-                      AI Assistant
+                      {t("AI Assistant")}
                     </NavLink>
                     <NavLink href="/command-center" icon={LayoutDashboard} isActive={location === "/command-center"}>
-                      Command Center
+                      {t("Command Center")}
                     </NavLink>
                     <NavLink href="/knowledge" icon={BookOpen} isActive={location === "/knowledge"}>
-                      Knowledge Centre
+                      {t("Knowledge Centre")}
                     </NavLink>
                   </SidebarMenu>
                 </SidebarGroupContent>
@@ -161,26 +162,26 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
             {!isFarmer && !isAdmin && (
               <SidebarGroup>
-                <SidebarGroupLabel>Field Officer</SidebarGroupLabel>
+                <SidebarGroupLabel>{t("Field Officer")}</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <NavLink href="/officer/dashboard" icon={LayoutDashboard} isActive={location === "/officer/dashboard"}>
-                      My Tasks
+                      {t("My Tasks")}
                     </NavLink>
                     <NavLink href="/farmers" icon={Users} isActive={location.startsWith("/farmers")}>
-                      Farmers Directory
+                      {t("Farmers Directory")}
                     </NavLink>
                     <NavLink href="/knowledge" icon={BookOpen} isActive={location === "/knowledge"}>
-                      Knowledge Centre
+                      {t("Knowledge Centre")}
                     </NavLink>
                     <NavLink href="/farming-guide" icon={BookOpen} isActive={location === "/farming-guide"}>
-                      Farming Guides
+                      {t("Farming Guides")}
                     </NavLink>
                     <NavLink href="/disease-forecast" icon={CloudRain} isActive={location === "/disease-forecast"}>
-                      Disease Forecast
+                      {t("Disease Forecast")}
                     </NavLink>
                     <NavLink href="/admin/knowledge" icon={BookOpen} isActive={location === "/admin/knowledge"}>
-                      Manage Knowledge
+                      {t("Manage Knowledge")}
                     </NavLink>
                   </SidebarMenu>
                 </SidebarGroupContent>
@@ -190,58 +191,58 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {isAdmin && (
               <>
                 <SidebarGroup>
-                  <SidebarGroupLabel>Platform</SidebarGroupLabel>
+                  <SidebarGroupLabel>{t("Platform")}</SidebarGroupLabel>
                   <SidebarGroupContent>
                     <SidebarMenu>
                       <NavLink href="/admin/dashboard" icon={LayoutDashboard} isActive={location === "/admin/dashboard" || location === "/dashboard"}>
-                        Dashboard
+                        {t("Dashboard")}
                       </NavLink>
                       <NavLink href="/farmers" icon={Users} isActive={location.startsWith("/farmers")}>
-                        Farmers
+                        {t("Farmers")}
                       </NavLink>
                       <NavLink href="/admin/deployments" icon={Cpu} isActive={location === "/admin/deployments"}>
-                        Deployments
+                        {t("Deployments")}
                       </NavLink>
                       <NavLink href="/admin/devices" icon={Cpu} isActive={location === "/admin/devices"}>
-                        All Devices
+                        {t("All Devices")}
                       </NavLink>
                       <NavLink href="/admin/inventory" icon={ScanLine} isActive={location === "/admin/inventory"}>
-                        Hardware Inventory
+                        {t("Hardware Inventory")}
                       </NavLink>
                       <NavLink href="/admin/maintenance" icon={ShieldCheck} isActive={location === "/admin/maintenance"}>
-                        Maintenance Logs
+                        {t("Maintenance Logs")}
                       </NavLink>
                       <NavLink href="/alerts" icon={Bell} isActive={location === "/alerts"}>
-                        Alerts
+                        {t("Alerts")}
                       </NavLink>
                       <NavLink href="/analytics" icon={LineChart} isActive={location === "/analytics"}>
-                        Analytics
+                        {t("Analytics")}
                       </NavLink>
                       <NavLink href="/knowledge" icon={BookOpen} isActive={location === "/knowledge"}>
-                        Knowledge Centre
+                        {t("Knowledge Centre")}
                       </NavLink>
                     </SidebarMenu>
                   </SidebarGroupContent>
                 </SidebarGroup>
 
                 <SidebarGroup>
-                  <SidebarGroupLabel>Administration</SidebarGroupLabel>
+                  <SidebarGroupLabel>{t("Administration")}</SidebarGroupLabel>
                   <SidebarGroupContent>
                     <SidebarMenu>
                       <NavLink href="/staff" icon={UsersRound} isActive={location === "/staff"}>
-                        Staff
+                        {t("Staff")}
                       </NavLink>
                       <NavLink href="/achievements" icon={Lightbulb} isActive={location === "/achievements"}>
-                        Achievements
+                        {t("Achievements")}
                       </NavLink>
                       <NavLink href="/admin/logs" icon={KeyRound} isActive={location === "/admin/logs"}>
-                        System Audit Logs
+                        {t("System Audit Logs")}
                       </NavLink>
                       <NavLink href="/admin/audit-logs" icon={KeyRound} isActive={location === "/admin/audit-logs"}>
-                        Admin Actions
+                        {t("Admin Actions")}
                       </NavLink>
                       <NavLink href="/admin/knowledge" icon={BookOpen} isActive={location === "/admin/knowledge"}>
-                        Manage Knowledge
+                        {t("Manage Knowledge")}
                       </NavLink>
                     </SidebarMenu>
                   </SidebarGroupContent>
@@ -286,21 +287,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
             <div className="flex items-center gap-2 sm:gap-4">
               {/* Language Switcher */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-muted transition-colors text-sm font-medium">
-                    <Globe className="h-4 w-4" />
-                    <span className="hidden sm:inline-block capitalize">{language === 'en' ? 'English' : language === 'ha' ? 'Hausa' : language === 'fr' ? 'French' : language === 'ar' ? 'Arabic' : 'Swahili'}</span>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setLanguage('en')}>English</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguage('ha')}>Hausa</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguage('fr')}>French</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguage('ar')}>Arabic</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguage('sw')}>Swahili</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <LanguageSwitcher />
 
             {/* User dropdown */}
             {user && (

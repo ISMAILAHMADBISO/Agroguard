@@ -10,6 +10,7 @@ import { AuthCarousel } from "@/components/auth-carousel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -34,7 +35,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen lg:min-h-0 lg:fixed lg:inset-0 lg:overflow-hidden flex flex-col lg:flex-row">
+    <div className="min-h-screen lg:min-h-0 lg:fixed lg:inset-0 lg:overflow-hidden flex flex-col lg:flex-row relative">
+      {/* Absolute Language Switcher */}
+      <div className="absolute top-4 right-4 z-50 bg-background/50 backdrop-blur-sm rounded-lg border shadow-sm">
+        <LanguageSwitcher />
+      </div>
+
       {/* Left: sliding imagery (hidden on small screens) */}
       <div className="hidden lg:block lg:w-1/2 lg:relative h-[300px] lg:h-full shrink-0 overflow-hidden bg-sidebar">
         <AuthCarousel />
@@ -42,7 +48,7 @@ export default function LoginPage() {
 
       {/* Right: sign-in form */}
       <div className="flex-1 flex bg-gradient-to-br from-green-50 via-background to-emerald-50 px-4 py-6 overflow-y-auto">
-        <div className="w-full max-w-md m-auto space-y-6">
+        <div className="w-full max-w-md m-auto space-y-6 pt-10 lg:pt-0">
           {/* Brand (mobile only — carousel carries it on desktop) */}
           <div className="text-center lg:hidden">
             <div className="flex items-center justify-center mb-4">
