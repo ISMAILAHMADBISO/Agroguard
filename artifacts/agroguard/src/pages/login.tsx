@@ -11,10 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { useLanguage } from "@/context/language";
 
 export default function LoginPage() {
   const { login } = useAuth();
   const [, setLocation] = useLocation();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -55,19 +57,19 @@ export default function LoginPage() {
               <img src="/agroguard-logo.png" alt="AgroGuard" className="h-20 w-20 object-contain" />
             </div>
             <h1 className="text-2xl font-bold text-primary">AgroGuard Limited</h1>
-            <p className="text-muted-foreground text-sm mt-1">Agricultural IoT Platform</p>
+            <p className="text-muted-foreground text-sm mt-1">{t("Agricultural IoT Platform")}</p>
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Welcome back</h2>
+            <h2 className="text-2xl font-bold tracking-tight">{t("Welcome back")}</h2>
             <p className="text-muted-foreground text-sm mt-1">
-              Sign in with your staff or farmer credentials to access the platform.
+              {t("Sign in with your staff or farmer credentials to access the platform.")}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email">{t("Email Address")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -80,11 +82,11 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("Password")}</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="********"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -100,20 +102,20 @@ export default function LoginPage() {
             )}
 
             <Button type="submit" className="w-full h-11 text-base" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? t("Signing in...") : t("Sign In")}
             </Button>
           </form>
 
           <p className="text-sm text-center text-muted-foreground">
-            New farmer?{" "}
+            {t("Don't have an account?")}{" "}
             <Link href="/signup" className="font-semibold text-primary hover:underline">
-              Create an account
+              {t("Sign up as a farmer")}
             </Link>
           </p>
 
           
           <p className="text-center text-xs text-muted-foreground">
-            <a href="/" className="hover:text-primary transition-colors">Back to homepage</a>
+            <a href="/" className="hover:text-primary transition-colors">{t("Back to homepage")}</a>
           </p>
         </div>
       </div>

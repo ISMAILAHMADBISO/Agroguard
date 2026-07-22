@@ -11,10 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { useLanguage } from "@/context/language";
 
 export default function SignupPage() {
   const { signup } = useAuth();
   const [, setLocation] = useLocation();
+  const { t } = useLanguage();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -81,61 +83,61 @@ export default function SignupPage() {
               <img src="/agroguard-logo.png" alt="AgroGuard" className="h-20 w-20 object-contain" />
             </div>
             <h1 className="text-2xl font-bold text-primary">AgroGuard Limited</h1>
-            <p className="text-muted-foreground text-sm mt-1">Agricultural IoT Platform</p>
+            <p className="text-muted-foreground text-sm mt-1">{t("Agricultural IoT Platform")}</p>
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Create your farmer account</h2>
+            <h2 className="text-2xl font-bold tracking-tight">{t("Create your farmer account")}</h2>
             <p className="text-muted-foreground text-sm mt-1">
-              Register to monitor your farm, receive alerts and get AI guidance.
+              {t("Register to monitor your farm, receive alerts and get AI guidance.")}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">{t("Full Name")}</Label>
               <Input id="name" value={form.name} onChange={set("name")} required placeholder="Emeka Chukwu" className="h-11" />
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">{t("Email Address")}</Label>
                 <Input id="email" type="email" value={form.email} onChange={set("email")} required autoComplete="email" placeholder="you@farm.ng" className="h-11" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">{t("Phone Number")}</Label>
                 <Input id="phone" value={form.phone} onChange={set("phone")} required placeholder="+234 803 000 0000" className="h-11" />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("Password")}</Label>
               <Input id="password" type="password" value={form.password} onChange={set("password")} required autoComplete="new-password" placeholder="At least 8 characters" className="h-11" />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="location">Location (State / LGA)</Label>
+              <Label htmlFor="location">{t("Location (State / LGA)")}</Label>
               <Input id="location" value={form.location} onChange={set("location")} required placeholder="Zaria, Kaduna State" className="h-11" />
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="farmName">Farm Name <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <Label htmlFor="farmName">{t("Farm Name")} <span className="text-muted-foreground font-normal">(optional)</span></Label>
                 <Input id="farmName" value={form.farmName} onChange={set("farmName")} placeholder="Green Valley Farm" className="h-11" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="farmSizeHectares">Farm Size (ha) <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <Label htmlFor="farmSizeHectares">{t("Farm Size (ha)")} <span className="text-muted-foreground font-normal">(optional)</span></Label>
                 <Input id="farmSizeHectares" type="number" min="0" step="0.1" value={form.farmSizeHectares} onChange={set("farmSizeHectares")} placeholder="2.5" className="h-11" />
               </div>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="cropTypes">Crops <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <Label htmlFor="cropTypes">{t("Crops")} <span className="text-muted-foreground font-normal">(optional)</span></Label>
                 <Input id="cropTypes" value={form.cropTypes} onChange={set("cropTypes")} placeholder="Maize, Tomato" className="h-11" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="whatsappNumber">WhatsApp <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <Label htmlFor="whatsappNumber">{t("WhatsApp")} <span className="text-muted-foreground font-normal">(optional)</span></Label>
                 <Input id="whatsappNumber" value={form.whatsappNumber} onChange={set("whatsappNumber")} placeholder="+234 803 000 0000" className="h-11" />
               </div>
             </div>
@@ -147,19 +149,19 @@ export default function SignupPage() {
             )}
 
             <Button type="submit" className="w-full h-11 text-base" disabled={loading}>
-              {loading ? "Creating account..." : "Create Account"}
+              {loading ? t("Creating account...") : t("Create Account")}
             </Button>
           </form>
 
           <p className="text-sm text-center text-muted-foreground">
-            Already have an account?{" "}
+            {t("Already have an account?")}{" "}
             <Link href="/login" className="font-semibold text-primary hover:underline">
-              Sign in
+              {t("Sign in")}
             </Link>
           </p>
 
           <p className="text-center text-xs text-muted-foreground">
-            <a href="/" className="hover:text-primary transition-colors">Back to homepage</a>
+            <a href="/" className="hover:text-primary transition-colors">{t("Back to homepage")}</a>
           </p>
         </div>
       </div>
