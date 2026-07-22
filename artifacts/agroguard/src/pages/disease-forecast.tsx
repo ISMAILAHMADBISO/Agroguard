@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { apiErrorMessage } from "@/lib/api-error";
-import { apiRequest, useGetFarmer } from "@workspace/api-client-react";
+import { apiRequest, useGetFarmer, useGetWeather } from "@workspace/api-client-react";
 import { DiseaseForecast } from "@/types/disease-forecast";
 import {
   CloudRain, Droplets, ThermometerSun, Leaf, Activity, ChevronRight, ChevronLeft, Calendar, Loader2, Printer, MapPin, History, Star, AlertTriangle, ShieldCheck
@@ -45,6 +45,7 @@ export default function DiseaseForecastPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { data: farmer } = useGetFarmer(user?.id ?? 0, { query: { enabled: user?.userType === "farmer" } });
+  const { data: weather } = useGetWeather();
 
   const remainingForecasts = farmer && farmer.subscriptionPlan === "free"
     ? Math.max(0, 5 - (farmer.aiDiseaseUsageCount ?? 0)) // Just reusing disease usage limit for now, backend uses custom limit or shared limit
@@ -63,13 +64,22 @@ export default function DiseaseForecastPage() {
     }
     
     setStep(3);
-    forecastMutation.mutate({ 
+    
+    const payload: any = {
       cropType, 
       plantingDate, 
       growthStage, 
       farmSize,
-      farmerId: user?.userType === "farmer" ? user.id : undefined 
-    }, {
+      farmerId: user?.userType === "farmer" ? user.id : undefined
+    };
+
+    if (weather) {
+      payload.temperature = weather.temperature;
+      payload.humidity = weather.humidity;
+      payload.weatherCondition = weather.condition;
+    }
+
+    forecastMutation.mutate(payload, {
       onSuccess: (data) => {
         setForecast(data);
         toast({ title: "Forecast generated successfully" });
@@ -378,7 +388,7 @@ export default function DiseaseForecastPage() {
                   </div>
 
                   <div className="mt-8 text-xs text-muted-foreground text-center border-t pt-4">
-                    Disclaimer: This forecast is generated using AI analysis of simulated and historical environmental data. It is an early warning tool and should be used alongside regular manual farm inspections.
+                    Disclaimer: This forecast is generated using AI analysis of your real-time farm environmental data. It is an early warning tool and should be used alongside regular manual farm inspections.
                   </div>
                 </CardContent>
               </Card>

@@ -842,11 +842,14 @@ router.post("/ai/disease-forecast", async (req, res): Promise<void> => {
 
   const { z } = require("zod");
   const bodySchema = z.object({
-    cropType: z.string().min(1).max(80),
+    cropType: z.string().min(1),
     plantingDate: z.string().optional(),
     growthStage: z.string().optional(),
     farmSize: z.string().optional(),
-    farmerId: z.number().optional(),
+    farmerId: z.coerce.number().optional(),
+    temperature: z.number().optional(),
+    humidity: z.number().optional(),
+    weatherCondition: z.string().optional(),
   });
 
   const parsed = bodySchema.safeParse(req.body);
@@ -855,7 +858,7 @@ router.post("/ai/disease-forecast", async (req, res): Promise<void> => {
     return;
   }
 
-  const { cropType, plantingDate, growthStage, farmSize, farmerId } = parsed.data;
+  const { cropType, plantingDate, growthStage, farmSize, farmerId, temperature, humidity, weatherCondition } = parsed.data;
 
   if (farmerId != null && !(await canAccessFarmer(req, farmerId))) {
     res.status(403).json({ error: "Access denied" });
@@ -871,12 +874,16 @@ router.post("/ai/disease-forecast", async (req, res): Promise<void> => {
   let result;
   
   try {
+    const weatherString = (temperature !== undefined && humidity !== undefined && weatherCondition)
+      ? `Real-time Data: ${temperature}°C, ${humidity}% humidity, ${weatherCondition}.`
+      : `Simulated continuous rainfall and high humidity over the past 48 hours.`;
+
     const promptDetails = `
       Crop Type: ${cropType}
       Planting Date: ${plantingDate || "Unknown"}
       Growth Stage: ${growthStage || "Unknown"}
       Farm Size: ${farmSize || "Unknown"}
-      Weather: Simulated continuous rainfall and high humidity over the past 48 hours.
+      Weather: ${weatherString}
       Historical Data: Nearby farms reported early signs of fungal infections.
     `;
 

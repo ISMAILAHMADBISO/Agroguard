@@ -176,6 +176,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     <NavLink href="/farming-guide" icon={BookOpen} isActive={location === "/farming-guide"}>
                       Farming Guides
                     </NavLink>
+                    <NavLink href="/disease-forecast" icon={CloudRain} isActive={location === "/disease-forecast"}>
+                      Disease Forecast
+                    </NavLink>
                     <NavLink href="/admin/knowledge" icon={BookOpen} isActive={location === "/admin/knowledge"}>
                       Manage Knowledge
                     </NavLink>
